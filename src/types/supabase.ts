@@ -61,6 +61,86 @@ export interface Database {
         }
         Relationships: []
       }
+      organizations: {
+        Row: {
+          id: string
+          name: string
+          type: string
+          address: string
+          city: string
+          province_state: string
+          country: string
+          postal_code: string
+          latitude: number
+          longitude: number
+          contact_name: string
+          contact_phone: string
+          contact_email: string
+          website: string | null
+          facebook: string | null
+          instagram: string | null
+          twitter: string | null
+          prayer_times_url: string | null
+          is_active: boolean
+          approved_at: string | null
+          geom: string | null
+        }
+        Insert: Partial<
+          Database['public']['Tables']['organizations']['Row']
+        > & {
+          name: string
+          type: string
+          address: string
+          city: string
+          province_state: string
+          country: string
+          postal_code: string
+          contact_name: string
+          contact_email: string
+        }
+        Update: Partial<Database['public']['Tables']['organizations']['Row']>
+        Relationships: []
+      }
+      organization_applications: {
+        Row: {
+          id: string
+          organization_name: string
+          organization_type: string
+          contact_name: string
+          contact_email: string
+          contact_phone: string
+          website: string | null
+          facebook: string | null
+          instagram: string | null
+          twitter: string | null
+          prayer_times_url: string | null
+          application_status: 'submitted' | 'approved' | 'rejected'
+          created_at: string
+          updated_at: string
+          address: string
+          city: string
+          province_state: string
+          country: string
+          postal_code: string
+          user_id: string
+        }
+        Insert: Partial<
+          Database['public']['Tables']['organization_applications']['Row']
+        > & {
+          organization_name: string
+          organization_type: string
+          contact_name: string
+          contact_email: string
+          address: string
+          city: string
+          country: string
+          application_status: 'submitted' | 'approved' | 'rejected'
+        }
+        Update: Partial<
+          Database['public']['Tables']['organization_applications']['Row']
+        >
+        Relationships: []
+      }
     }
     Views: Record<string, never>
     Functions: Record<string, never>

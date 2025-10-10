@@ -1,20 +1,65 @@
-import { StatusBar } from 'expo-status-bar'
-import { StyleSheet, Text, View } from 'react-native'
+import React, { useEffect } from 'react'
+import { NavigationContainer } from '@react-navigation/native'
+import { createStackNavigator } from '@react-navigation/stack'
+import RootNavigator from './src/Screens/Navigation/RootNavigator'
+import SignIn from './src/Screens/Auth/SignIn'
+import SignUp from './src/Screens/Auth/SignUp'
+import OrganizationSignUp from './src/Screens/Auth/OrganizationSignUp'
+import UserTypeSelection from './src/Screens/Auth/UserTypeSelection'
+import { AuthProvider, useAuth } from './src/Auth/AuthProvider'
+import { supabase } from './src/Supabase/supabaseClient'
+import { ENV } from './src/core/env'
 
-export default function App() {
+const Stack = createStackNavigator()
+
+const TESTING_MODE = ENV.TESTING.enabled
+const TEST_EMAIL = ENV.TESTING.email
+const TEST_PASSWORD = ENV.TESTING.password
+
+function AppNavigator() {
+  const { session, setSession } = useAuth()
+
+  useEffect(() => {
+    async function autoLogin() {
+      if (__DEV__ && TESTING_MODE && !session && TEST_EMAIL && TEST_PASSWORD) {
+        const { data } = await supabase.auth.signInWithPassword({
+          email: TEST_EMAIL,
+          password: TEST_PASSWORD,
+        })
+        if (data?.session) setSession(data.session)
+      }
+    }
+    autoLogin()
+  }, [session, setSession])
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <NavigationContainer>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {session ? (
+          <Stack.Screen name="Root" component={RootNavigator} />
+        ) : (
+          <>
+            <Stack.Screen name="SignIn" component={SignIn} />
+            <Stack.Screen
+              name="UserTypeSelection"
+              component={UserTypeSelection}
+            />
+            <Stack.Screen name="SignUp" component={SignUp} />
+            <Stack.Screen
+              name="OrganizationSignUp"
+              component={OrganizationSignUp}
+            />
+          </>
+        )}
+      </Stack.Navigator>
+    </NavigationContainer>
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-})
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppNavigator />
+    </AuthProvider>
+  )
+}

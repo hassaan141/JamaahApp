@@ -8,8 +8,12 @@
     "strict": true,
     "skipLibCheck": true,
     "baseUrl": ".",
-    "paths": { "@/*": ["src/*"] },
+    "paths": {
+      "@/*": ["src/*"],
+      "@/types": ["src/types/index.ts"]
+    },
     "types": ["react", "react-native"]
   },
-  "include": ["**/*.ts", "**/*.tsx", "app.config.ts", "index.ts"]
+  "include": ["**/*.ts", "**/*.tsx", "app.config.ts", "index.ts"],
+  "extends": "expo/tsconfig.base"
 }

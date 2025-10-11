@@ -1,0 +1,150 @@
+// Source of truth for DB types used in the app.
+// Hand-maintained minimal shapes (start with the tables we use and expand as needed).
+// If desired later, this file can be replaced with generated types from the Supabase CLI without changing imports.
+
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export interface Database {
+  public: {
+    Tables: {
+      profiles: {
+        Row: {
+          id: string
+          email: string | null
+          first_name: string | null
+          last_name: string | null
+          phone: string | null
+          country: string | null
+          created_at: string
+          updated_at: string
+          mode: string | null
+          pinned_org_id: string | null
+          is_org: boolean
+          org_id: string | null
+          pending_org_name: string | null
+        }
+        Insert: {
+          id: string
+          email?: string | null
+          first_name?: string | null
+          last_name?: string | null
+          phone?: string | null
+          country?: string | null
+          created_at?: string
+          updated_at?: string
+          mode?: string | null
+          pinned_org_id?: string | null
+          is_org?: boolean
+          org_id?: string | null
+          pending_org_name?: string | null
+        }
+        Update: {
+          id?: string
+          email?: string | null
+          first_name?: string | null
+          last_name?: string | null
+          phone?: string | null
+          country?: string | null
+          created_at?: string
+          updated_at?: string
+          mode?: string | null
+          pinned_org_id?: string | null
+          is_org?: boolean
+          org_id?: string | null
+          pending_org_name?: string | null
+        }
+        Relationships: []
+      }
+      organizations: {
+        Row: {
+          id: string
+          name: string
+          type: string
+          address: string
+          city: string
+          province_state: string
+          country: string
+          postal_code: string
+          latitude: number
+          longitude: number
+          contact_name: string
+          contact_phone: string
+          contact_email: string
+          website: string | null
+          facebook: string | null
+          instagram: string | null
+          twitter: string | null
+          prayer_times_url: string | null
+          is_active: boolean
+          approved_at: string | null
+          geom: string | null
+        }
+        Insert: Partial<
+          Database['public']['Tables']['organizations']['Row']
+        > & {
+          name: string
+          type: string
+          address: string
+          city: string
+          province_state: string
+          country: string
+          postal_code: string
+          contact_name: string
+          contact_email: string
+        }
+        Update: Partial<Database['public']['Tables']['organizations']['Row']>
+        Relationships: []
+      }
+      organization_applications: {
+        Row: {
+          id: string
+          organization_name: string
+          organization_type: string
+          contact_name: string
+          contact_email: string
+          contact_phone: string
+          website: string | null
+          facebook: string | null
+          instagram: string | null
+          twitter: string | null
+          prayer_times_url: string | null
+          application_status: 'submitted' | 'approved' | 'rejected'
+          created_at: string
+          updated_at: string
+          address: string
+          city: string
+          province_state: string
+          country: string
+          postal_code: string
+          user_id: string
+        }
+        Insert: Partial<
+          Database['public']['Tables']['organization_applications']['Row']
+        > & {
+          organization_name: string
+          organization_type: string
+          contact_name: string
+          contact_email: string
+          address: string
+          city: string
+          country: string
+          application_status: 'submitted' | 'approved' | 'rejected'
+        }
+        Update: Partial<
+          Database['public']['Tables']['organization_applications']['Row']
+        >
+        Relationships: []
+      }
+    }
+    Views: Record<string, never>
+    Functions: Record<string, never>
+    Enums: Record<string, never>
+    CompositeTypes: Record<string, never>
+  }
+}

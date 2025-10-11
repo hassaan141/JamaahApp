@@ -6,7 +6,7 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import prettier from 'eslint-config-prettier'
 
 export default [
-  { ignores: ['node_modules', 'build', 'dist', '.expo'] },
+  { ignores: ['node_modules', 'build', 'dist', '.expo', 'babel.config.js'] },
 
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,

@@ -14,7 +14,7 @@ import Feather from '@expo/vector-icons/Feather'
 import { Dropdown } from 'react-native-element-dropdown'
 import { Country, State, City } from 'country-state-city'
 import { supabase } from '../../Supabase/supabaseClient'
-import type { Database } from '@/types'
+import type { Database } from '../../types'
 
 type Nav = { navigate: (route: string) => void; goBack: () => void }
 

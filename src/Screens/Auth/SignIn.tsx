@@ -72,10 +72,7 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
 
         if (!orgError && orgData) {
           updateData.user_type = 'organization'
-          const orgName =
-            orgData && typeof orgData === 'object' && 'name' in orgData
-              ? ((orgData as { name?: string }).name ?? undefined)
-              : undefined
+          const orgName = orgData?.name
           if (orgName) {
             updateData.organization_name = orgName
             if (!updateData.display_name) {

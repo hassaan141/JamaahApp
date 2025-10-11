@@ -20,7 +20,7 @@ const Stack = createStackNavigator()
 function TabNavigator() {
   return (
     <Tab.Navigator
-      screenOptions={({ route }: { route: { name: keyof TabParamList } }) => ({
+      screenOptions={({ route }) => ({
         tabBarIcon: ({ color, size }: { color: string; size: number }) => {
           let iconName: React.ComponentProps<typeof Feather>['name'] = 'home'
           if (route.name === 'Home') iconName = 'home'

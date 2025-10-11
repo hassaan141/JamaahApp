@@ -7,6 +7,7 @@ import Map from '../BottomNav/Map'
 import Account from '../BottomNav/Account'
 import Programs from '../BottomNav/Programs'
 import { View, Text } from 'react-native'
+import Masjids from '@/Screens/Navigation/Masjids'
 
 type TabParamList = {
   Home: undefined
@@ -55,10 +56,7 @@ export default function RootNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Tabs" component={TabNavigator} />
-      <Stack.Screen
-        name="Masjids"
-        children={() => <PlaceholderScreen title="Masjids" />}
-      />
+      <Stack.Screen name="Masjids" component={Masjids} />
       <Stack.Screen
         name="OrganizationDetail"
         children={() => <PlaceholderScreen title="Organization Detail" />}

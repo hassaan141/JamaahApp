@@ -5,7 +5,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -15,6 +14,7 @@ import { Dropdown } from 'react-native-element-dropdown'
 import { Country, State, City } from 'country-state-city'
 import { supabase } from '../../Supabase/supabaseClient'
 import type { Database } from '../../types'
+import { toast } from '@/components/Toast/toast'
 
 type Nav = { navigate: (route: string) => void; goBack: () => void }
 
@@ -88,17 +88,17 @@ export default function OrganizationSignUp({
 
   const handleSignUp = async () => {
     if (!email || !password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in email and password fields')
+      toast.error('Please fill in email and password fields', 'Error')
       return
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match')
+      toast.error('Passwords do not match', 'Error')
       return
     }
 
     if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters')
+      toast.error('Password must be at least 6 characters', 'Error')
       return
     }
 
@@ -114,12 +114,12 @@ export default function OrganizationSignUp({
       const msg = requiresProvince
         ? 'Please fill in all required fields (Province/State is required for the selected country)'
         : 'Please fill in all required fields'
-      Alert.alert('Error', msg)
+      toast.error(msg, 'Error')
       return
     }
 
     if (!email.includes('@')) {
-      Alert.alert('Error', 'Please enter a valid email address')
+      toast.error('Please enter a valid email address', 'Error')
       return
     }
 
@@ -170,11 +170,11 @@ export default function OrganizationSignUp({
 
       if (error) throw error
 
-      Alert.alert(
+      toast.success(
+        'Account created! Your organization application is under review. Access will be limited until approved.',
         'Success',
-        'Account created! Your organization application is under review. You can log in, but access will be limited until approved.',
-        [{ text: 'OK', onPress: () => navigation.navigate('SignIn') }],
       )
+      navigation.navigate('SignIn')
 
       setEmail('')
       setPassword('')
@@ -195,7 +195,7 @@ export default function OrganizationSignUp({
       setPrayerTimesUrl('')
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : String(e)
-      Alert.alert('Error', message)
+      toast.error(message, 'Error')
     } finally {
       setLoading(false)
     }

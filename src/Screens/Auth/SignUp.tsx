@@ -5,7 +5,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -14,6 +13,7 @@ import Feather from '@expo/vector-icons/Feather'
 import { Dropdown } from 'react-native-element-dropdown'
 import { Country } from 'country-state-city'
 import { supabase } from '../../Supabase/supabaseClient'
+import { toast } from '@/components/Toast/toast'
 
 type Nav = { navigate: (route: string) => void; goBack: () => void }
 
@@ -41,7 +41,7 @@ export default function SignUp({ navigation }: { navigation: Nav }) {
 
   const handleSignUp = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please enter both email and password')
+      toast.error('Please enter both email and password', 'Error')
       return
     }
 
@@ -69,9 +69,8 @@ export default function SignUp({ navigation }: { navigation: Nav }) {
 
       if (error) throw error
 
-      Alert.alert('Success', 'Please check your email to verify your account', [
-        { text: 'OK', onPress: () => navigation.navigate('SignIn') },
-      ])
+      toast.success('Please check your email to verify your account', 'Success')
+      navigation.navigate('SignIn')
 
       setEmail('')
       setPassword('')
@@ -81,7 +80,7 @@ export default function SignUp({ navigation }: { navigation: Nav }) {
       setCountry('')
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : String(e)
-      Alert.alert('Error', message)
+      toast.error(message, 'Error')
     } finally {
       setLoading(false)
     }

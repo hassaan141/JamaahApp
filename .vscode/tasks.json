@@ -8,6 +8,12 @@
       "args": ["run", "-s", "typecheck", "&&", "npm", "run", "-s", "lint"],
       "problemMatcher": ["$tsc", "$eslint-stylish"],
       "group": "build"
+    },
+    {
+      "label": "Typecheck and Lint",
+      "type": "shell",
+      "command": "npm run -s typecheck && npm run -s lint",
+      "problemMatcher": ["$tsc", "$eslint - stylish"]
     }
   ]
 }

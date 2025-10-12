@@ -1,0 +1,149 @@
+import React, { useEffect, useRef } from 'react'
+import {
+  Animated,
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Easing,
+} from 'react-native'
+
+type Props = {
+  visible: boolean
+  message?: string
+  onHide?: () => void
+  duration?: number
+  title?: string
+}
+
+export default function ToastError({
+  visible,
+  message,
+  onHide,
+  duration = 3000,
+  title = 'Error',
+}: Props) {
+  const opacity = useRef(new Animated.Value(0)).current
+  const translateY = useRef(new Animated.Value(10)).current
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined
+    if (visible) {
+      Animated.parallel([
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 180,
+          useNativeDriver: true,
+          easing: Easing.out(Easing.cubic),
+        }),
+        Animated.timing(translateY, {
+          toValue: 0,
+          duration: 180,
+          useNativeDriver: true,
+          easing: Easing.out(Easing.cubic),
+        }),
+      ]).start()
+      timer = setTimeout(() => {
+        hide()
+      }, duration)
+    } else {
+      hide(true)
+    }
+    return () => {
+      if (timer) clearTimeout(timer)
+    }
+  }, [visible, duration])
+
+  const hide = (skipCb = false) => {
+    Animated.parallel([
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+      Animated.timing(translateY, {
+        toValue: 10,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      if (!skipCb && onHide) onHide()
+    })
+  }
+
+  if (!visible) return null
+
+  return (
+    <Animated.View
+      style={[styles.container, { opacity, transform: [{ translateY }] }]}
+      pointerEvents="box-none"
+    >
+      <View style={styles.toast}>
+        <View style={styles.leftStripe} />
+        <View style={styles.content}>
+          <Text style={styles.title}>{title}</Text>
+          {!!message && <Text style={styles.message}>{message}</Text>}
+        </View>
+        <TouchableOpacity onPress={() => hide()} style={styles.closeBtn}>
+          <Text style={styles.closeText}>×</Text>
+        </TouchableOpacity>
+      </View>
+    </Animated.View>
+  )
+}
+
+const RED = '#DC3545'
+
+const styles = StyleSheet.create({
+  container: {
+    position: 'absolute',
+    bottom: 40,
+    left: 16,
+    right: 16,
+    alignItems: 'center',
+  },
+  toast: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    width: '100%',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  leftStripe: {
+    width: 4,
+    height: '100%',
+    backgroundColor: RED,
+    borderTopLeftRadius: 10,
+    borderBottomLeftRadius: 10,
+    marginRight: 10,
+  },
+  content: {
+    flex: 1,
+  },
+  title: {
+    color: RED,
+    fontWeight: '700',
+    fontSize: 14,
+    marginBottom: 2,
+  },
+  message: {
+    color: '#1D4732',
+    fontSize: 13,
+  },
+  closeBtn: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  closeText: {
+    fontSize: 20,
+    lineHeight: 20,
+    color: '#6C757D',
+  },
+})

@@ -1,19 +1,20 @@
 import { supabase } from './supabaseClient'
 import { getUserId } from '@/Utils/getUserID'
+import type { Organization } from '@/types'
 
 export async function searchOrganizations({ query = '' } = {}): Promise<
-  Record<string, unknown>[]
+  (Organization & { is_following?: boolean })[]
 > {
   try {
     const q = query?.trim() || ''
-    let orgs: Record<string, unknown>[] = []
+    let orgs: Organization[] = []
     if (!q) {
       const { data, error } = await supabase
         .from('organizations')
         .select('*')
         .limit(50)
       if (error) throw error
-      orgs = (data ?? []) as Record<string, unknown>[]
+      orgs = (data ?? []) as Organization[]
     } else {
       const { data, error } = await supabase
         .from('organizations')
@@ -21,27 +22,25 @@ export async function searchOrganizations({ query = '' } = {}): Promise<
         .ilike('name', `%${q}%`)
         .limit(50)
       if (error) throw error
-      orgs = (data ?? []) as Record<string, unknown>[]
+      orgs = (data ?? []) as Organization[]
     }
 
     // Annotate with is_following for the current user (if authenticated)
     try {
       const profileId = await getUserId()
       const { data: followsData, error: followsErr } = await supabase
-        .from('organization_follows')
+        .from('organization_subscriptions')
         .select('organization_id')
         .eq('profile_id', profileId)
       if (!followsErr && Array.isArray(followsData)) {
         const followedSet = new Set(
-          followsData.map((r: Record<string, unknown>) =>
-            String(r.organization_id),
+          followsData.map(
+            (r: { organization_id: string }) => r.organization_id,
           ),
         )
         return orgs.map((o) => ({
-          ...(o as Record<string, unknown>),
-          is_following: followedSet.has(
-            String((o as Record<string, unknown>).id),
-          ),
+          ...o,
+          is_following: followedSet.has(o.id),
         }))
       }
     } catch (e) {

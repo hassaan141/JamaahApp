@@ -1,8 +1,9 @@
 import { supabase } from './supabaseClient'
+import type { OrgPost } from '@/types'
 
 export async function fetchAnnouncements(
   opts: { limit?: number } = {},
-): Promise<Record<string, unknown>[]> {
+): Promise<OrgPost[]> {
   try {
     const { limit = 50 } = opts
     const { data, error } = await supabase
@@ -11,9 +12,9 @@ export async function fetchAnnouncements(
       .order('created_at', { ascending: false })
       .limit(limit)
     if (error) throw error
-    return (data ?? []) as Record<string, unknown>[]
+    return (data ?? []) as OrgPost[]
   } catch (e) {
     console.error('[fetchAnnouncements] Supabase error:', e)
-    return []
+    return [] as OrgPost[]
   }
 }

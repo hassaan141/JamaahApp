@@ -9,11 +9,14 @@ import {
   RefreshControl,
 } from 'react-native'
 import { searchOrganizations } from '@/Supabase/fetchOrganizations'
+import type { Organization } from '@/types'
 import CommunityItem from './CommunityItem'
 
 export default function CommunitiesTab() {
   const [loading, setLoading] = useState(false)
-  const [communities, setCommunities] = useState<Record<string, unknown>[]>([])
+  const [communities, setCommunities] = useState<
+    (Organization & { is_following?: boolean })[]
+  >([])
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedQuery, setDebouncedQuery] = useState('')
 
@@ -28,9 +31,7 @@ export default function CommunitiesTab() {
     setLoading(true)
     try {
       const data = await searchOrganizations({ query: q || '' })
-      setCommunities(
-        Array.isArray(data) ? (data as Record<string, unknown>[]) : [],
-      )
+      setCommunities(Array.isArray(data) ? data : [])
     } catch (e) {
       console.error('loadCommunities error', e)
       setCommunities([])
@@ -79,7 +80,7 @@ export default function CommunitiesTab() {
           }
         >
           {communities.map((c) => {
-            const id = String((c as Record<string, unknown>).id ?? '')
+            const id = String(c.id ?? '')
             return <CommunityItem key={id} community={c} />
           })}
         </ScrollView>

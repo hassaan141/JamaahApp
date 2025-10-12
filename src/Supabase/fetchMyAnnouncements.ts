@@ -51,8 +51,7 @@ export async function fetchMyAnnouncements(
       author_profile_id,
       title,
       body,
-      created_at,
-      organizations ( id, name, type, city, province_state, country )
+      created_at
     `,
     )
     .in('organization_id', orgIds)
@@ -66,5 +65,5 @@ export async function fetchMyAnnouncements(
     console.error('[fetchMyAnnouncements] Supabase error:', error)
     throw error
   }
-  return (data ?? []) as Announcement[]
+  return (data as unknown as Announcement[]) ?? []
 }

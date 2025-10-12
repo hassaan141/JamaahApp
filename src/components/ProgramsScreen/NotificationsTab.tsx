@@ -8,14 +8,13 @@ import {
   Text,
 } from 'react-native'
 import NotificationItem from './NotificationItem'
+import type { OrgPost } from '@/types'
 import { fetchAnnouncements } from '@/Supabase/fetchAllAnnouncements'
 import { timeAgo } from '@/Utils/datetime'
 
 export default function NotificationsTab() {
   const [refreshing, setRefreshing] = useState(false)
-  const [announcements, setAnnouncements] = useState<Record<string, unknown>[]>(
-    [],
-  )
+  const [announcements, setAnnouncements] = useState<OrgPost[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -24,8 +23,7 @@ export default function NotificationsTab() {
     setError(null)
     try {
       const data = await fetchAnnouncements()
-      const rows = Array.isArray(data) ? data : []
-      setAnnouncements(rows)
+      setAnnouncements(Array.isArray(data) ? data : [])
     } catch (_e) {
       console.error('loadAnnouncements error:', _e)
       setError('Failed to load announcements')
@@ -95,12 +93,11 @@ export default function NotificationsTab() {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
     >
-      {announcements.map((post) => {
-        const p = post as Record<string, unknown>
-        const id = String(p.id ?? '')
-        const created_at = String(p.created_at ?? '')
-        const title = String(p.title ?? '')
-        const body = typeof p.body === 'string' ? (p.body as string) : undefined
+      {announcements.map((p) => {
+        const id = p.id
+        const created_at = p.created_at
+        const title = p.title
+        const body = p.body ?? undefined
         return (
           <NotificationItem
             key={id}

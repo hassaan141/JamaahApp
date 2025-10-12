@@ -10,14 +10,13 @@ import {
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import * as OrgFollow from '@/Supabase/organizationFollow'
+import type { Organization } from '@/types'
 
-type Props = { community: Record<string, unknown> }
+type Props = { community: Organization & { is_following?: boolean } }
 
 export default function CommunityItem({ community }: Props) {
   const navigation = useNavigation()
-  const [following, setFollowing] = useState(
-    !!(community.is_following as boolean | undefined),
-  )
+  const [following, setFollowing] = useState(!!community.is_following)
   const [loading, setLoading] = useState(false)
 
   const followFn = OrgFollow.followOrganization
@@ -29,10 +28,10 @@ export default function CommunityItem({ community }: Props) {
     try {
       if (following) {
         setFollowing(false)
-        await unfollowFn(String(community.id as string | number))
+        await unfollowFn(String(community.id))
       } else {
         setFollowing(true)
-        await followFn(String(community.id as string | number))
+        await followFn(String(community.id))
       }
     } catch (_err) {
       // Revert optimistic update on error
@@ -67,15 +66,13 @@ export default function CommunityItem({ community }: Props) {
     navigation.navigate('OrganizationDetail', { org: community })
   }
 
-  const name = String(community.name ?? '')
-  const type = String(community.type ?? 'Organization')
-  const description = String(community.description ?? 'No description provided')
-  const contact_phone =
-    typeof community.contact_phone === 'string'
-      ? community.contact_phone
-      : undefined
-  const website =
-    typeof community.website === 'string' ? community.website : undefined
+  const name = community.name
+  const type = community.type ?? 'Organization'
+  const description =
+    (community as unknown as { description?: string }).description ??
+    'No description provided'
+  const contact_phone = community.contact_phone
+  const website = community.website ?? undefined
 
   return (
     <TouchableOpacity

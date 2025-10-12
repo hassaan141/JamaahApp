@@ -34,4 +34,16 @@ export const ENV = {
     email: TEST_EMAIL,
     password: TEST_PASSWORD,
   },
+  // Feature flags for development/testing. Do not enable in production.
+  // legacy/compat flag
+  TEST_PROGRAMS_SCREEN:
+    __DEV__ &&
+    (process.env.EXPO_PUBLIC_TEST_PROGRAMS_SCREEN === '1' ||
+      process.env.EXPO_PUBLIC_TEST_PROGRAMS_SCREEN === 'true'),
+  // user-requested single flag (editable via EXPO_PUBLIC_TESTING_PROGRAMS_SCREN)
+  // NOTE: environment variable name chosen to match user request; set EXPO_PUBLIC_TESTING_PROGRAMS_SCREN=1 to enable in dev
+  testing_Programs_scren:
+    __DEV__ &&
+    (process.env.EXPO_PUBLIC_TESTING_PROGRAMS_SCREN === '1' ||
+      process.env.EXPO_PUBLIC_TESTING_PROGRAMS_SCREN === 'true'),
 } as const

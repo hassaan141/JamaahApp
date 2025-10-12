@@ -6,8 +6,9 @@ import Home from '../BottomNav/Home'
 import Map from '../BottomNav/Map'
 import Account from '../BottomNav/Account'
 import Programs from '../BottomNav/Programs'
-import { View, Text } from 'react-native'
+// (no direct react-native view/text needed in this file)
 import Masjids from '@/Screens/Navigation/Masjids'
+import OrganizationDetail from '@/Screens/Navigation/OrganizationDetail'
 
 type TabParamList = {
   Home: undefined
@@ -44,23 +45,12 @@ function TabNavigator() {
 }
 
 // Placeholder extra screens (e.g., Masjids, OrganizationDetail) – wire real ones later
-function PlaceholderScreen({ title }: { title: string }) {
-  return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      <Text>{title}</Text>
-    </View>
-  )
-}
-
 export default function RootNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Tabs" component={TabNavigator} />
       <Stack.Screen name="Masjids" component={Masjids} />
-      <Stack.Screen
-        name="OrganizationDetail"
-        children={() => <PlaceholderScreen title="Organization Detail" />}
-      />
+      <Stack.Screen name="OrganizationDetail" component={OrganizationDetail} />
     </Stack.Navigator>
   )
 }

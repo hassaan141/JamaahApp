@@ -141,9 +141,98 @@ export interface Database {
         >
         Relationships: []
       }
+      organization_subscriptions: {
+        Row: {
+          organization_id: string
+          profile_id: string
+          push_enabled: boolean
+          created_at: string | null
+        }
+        Insert: {
+          organization_id: string
+          profile_id: string
+          push_enabled?: boolean
+          created_at?: string | null
+        }
+        Update: {
+          organization_id?: string
+          profile_id?: string
+          push_enabled?: boolean
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'organization_subscriptions_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'organization_subscriptions_profile_id_fkey'
+            columns: ['profile_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      org_posts: {
+        Row: {
+          id: string
+          organization_id: string
+          author_profile_id: string | null
+          title: string
+          body: string | null
+          type: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          author_profile_id?: string | null
+          title: string
+          body?: string | null
+          type?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          author_profile_id?: string | null
+          title?: string
+          body?: string | null
+          type?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'org_posts_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views: Record<string, never>
-    Functions: Record<string, never>
+    Functions: {
+      get_closest_organizations_masjids: {
+        Args: {
+          user_lat: number
+          user_lon: number
+          q: string
+          lim: number
+        }
+        Returns: Array<{
+          id: string
+          name: string
+          address: string
+          distance_km: number | null
+        }>
+      }
+    }
     Enums: Record<string, never>
     CompositeTypes: Record<string, never>
   }

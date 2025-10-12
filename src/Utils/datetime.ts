@@ -1,6 +1,11 @@
 export function todayISO(): string {
+  // Return local date (YYYY-MM-DD), not UTC. Using toISOString() caused an off-by-one
+  // for timezones west/east of UTC, which broke daily_prayer_times lookups.
   const d = new Date()
-  return d.toISOString().slice(0, 10)
+  const yyyy = d.getFullYear()
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd}`
 }
 
 export function minutesSince(ts: string | number | Date): number {

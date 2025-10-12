@@ -22,12 +22,15 @@ export type DailyPrayerTimes = {
   jumah_time_3: string | null
 }
 
-export async function getPrayerTimes(orgId: string): Promise<DailyPrayerTimes> {
+export async function getPrayerTimes(
+  orgId: string,
+): Promise<DailyPrayerTimes | null> {
   const { data, error } = await supabase
     .from('daily_prayer_times')
     .select('*')
     .eq('organization_id', orgId)
-    .single()
+    .maybeSingle()
   if (error) throw error
+  if (!data) return null
   return data as DailyPrayerTimes
 }

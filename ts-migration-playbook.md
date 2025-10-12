@@ -248,6 +248,32 @@ For **each component/screen/feature**:
 
 ---
 
+## 5.1) Legacy → TS migration notes (Home screen + prayer times)
+
+Context: Legacy Home used a single `usePrayerTimes` hook that returned a merged blob of organization metadata (org, distance) and the day’s times. If the org had no `daily_prayer_times` row, the UI lost org/distance too, hiding the Masjid button.
+
+What we changed (TS app):
+
+- Split the UI state: the hook now returns three separate fields so views don’t depend on times being present.
+  - `org: { id?: string; name?: string; address?: string } | null`
+  - `distance_m: number | null`
+  - `times: DailyPrayerTimes | null`
+- Fetching times: match legacy behavior by selecting via `organization_id` only and tolerating missing rows (using `maybeSingle()`). Optionally order by `prayer_date desc` if determinism is needed later.
+- Home wiring: components get only what they need.
+  - `MasjidButton` receives `{ org, distance_m }` so it always renders.
+  - `NextPrayerCard` and `PrayerTimesTable` receive `times` (or `null`) and render empty states when missing.
+
+Why: This keeps UI resilient when an org exists but hasn’t published times for the day yet, and mirrors the legacy behavior without coupling UI visibility to times.
+
+Status: Implemented in
+
+- `src/Hooks/usePrayerTimes.ts` (split state)
+- `src/Utils/prayerTimes.ts` (tolerate no row)
+- `src/Screens/BottomNav/Home.tsx` (prop wiring)
+- Components unchanged except for props shape where needed.
+
+---
+
 ## 6) Tests (optional, focused)
 
 Add tests where they pay off most:

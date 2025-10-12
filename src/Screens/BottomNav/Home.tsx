@@ -15,7 +15,8 @@ type NavigationLike = {
 }
 
 export default function Home({ navigation }: { navigation: NavigationLike }) {
-  const { loading, prayerTimes, refetchPrayerTimes } = usePrayerTimes()
+  const { loading, org, distance_m, times, refetchPrayerTimes } =
+    usePrayerTimes()
   const [refreshing, setRefreshing] = useState(false)
   const route = useRoute() as { params?: HomeRouteParams }
 
@@ -52,13 +53,16 @@ export default function Home({ navigation }: { navigation: NavigationLike }) {
       <Header title="Jamaah" showDate={false} showClock={false} />
 
       <View style={{ height: 8 }} />
-      <NextPrayerCard prayerTimes={prayerTimes} />
+      <NextPrayerCard prayerTimes={times} />
       <MasjidButton
-        prayerTimes={prayerTimes ?? undefined}
+        prayerTimes={{
+          org: org ?? undefined,
+          distance_m: distance_m ?? undefined,
+        }}
         navigation={navigation}
         onRefreshPrayerTimes={refetchPrayerTimes}
       />
-      <PrayerTimesTable loading={loading} prayerTimes={prayerTimes} />
+      <PrayerTimesTable loading={loading} prayerTimes={times} />
       <NotificationList />
     </ScrollView>
   )

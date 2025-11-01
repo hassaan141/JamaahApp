@@ -1,17 +1,18 @@
-import { Platform, Linking, Alert } from 'react-native'
+import { Platform, Linking } from 'react-native'
+import { toast } from '@/components/Toast/toast'
 
 async function safeOpenURL(url: string, humanLabel = 'this link') {
   try {
     const supported = await Linking.canOpenURL(url)
     if (!supported) {
-      Alert.alert('Unable to open', `Your device can't open ${humanLabel}.`)
+      toast.error(`Your device can't open ${humanLabel}.`, 'Unable to open')
       return false
     }
     await Linking.openURL(url)
     return true
   } catch (err) {
     console.error('Linking error:', err)
-    Alert.alert('Error', `Something went wrong opening ${humanLabel}.`)
+    toast.error(`Something went wrong opening ${humanLabel}.`, 'Error')
     return false
   }
 }
@@ -68,16 +69,16 @@ export async function openDirections({
 
 export async function openCall(rawPhone?: string | null) {
   if (!rawPhone || typeof rawPhone !== 'string') {
-    Alert.alert(
-      'No phone number',
+    toast.error(
       "This organization hasn't added a phone number.",
+      'No phone number',
     )
     return false
   }
 
   const normalized = rawPhone.replace(/[^\\d+]/g, '')
   if (!normalized) {
-    Alert.alert('Invalid phone', 'The phone number provided is not valid.')
+    toast.error('The phone number provided is not valid.', 'Invalid phone')
     return false
   }
 

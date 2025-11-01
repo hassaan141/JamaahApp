@@ -9,6 +9,8 @@ import UserTypeSelection from './src/Screens/Auth/UserTypeSelection'
 import { AuthProvider, useAuth } from './src/Auth/AuthProvider'
 import { supabase } from './src/Supabase/supabaseClient'
 import { ENV } from './src/core/env'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
+import ToastHost from './src/components/Toast/ToastHost'
 
 const Stack = createStackNavigator()
 
@@ -58,8 +60,11 @@ function AppNavigator() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AppNavigator />
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <AppNavigator />
+        <ToastHost />
+      </AuthProvider>
+    </SafeAreaProvider>
   )
 }

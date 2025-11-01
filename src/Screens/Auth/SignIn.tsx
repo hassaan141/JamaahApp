@@ -5,7 +5,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -13,6 +12,7 @@ import {
 import Feather from '@expo/vector-icons/Feather'
 import { supabase } from '../../Supabase/supabaseClient'
 import AuthHeader from '../../components/Auth/AuthHeader'
+import { toast } from '@/components/Toast/toast'
 
 type Nav = { navigate: (route: string) => void; goBack: () => void }
 
@@ -24,7 +24,7 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
 
   const handleSignIn = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please enter both email and password')
+      toast.error('Please enter both email and password', 'Error')
       return
     }
 
@@ -98,7 +98,7 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
       }
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : String(e)
-      Alert.alert('Error', message)
+      toast.error(message, 'Error')
     } finally {
       setLoading(false)
     }

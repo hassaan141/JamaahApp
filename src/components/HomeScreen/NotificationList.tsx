@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react'
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
 import NotificationItem, { type Notification } from './NotificationItem'
-import { timeAgo, isNewAnnouncement } from '../../Utils/datetime'
+import { timeAgo, isNewAnnouncement } from '@/Utils/datetime'
 import {
   fetchMyAnnouncements,
   type Announcement,
-} from '../../Supabase/fetchMyAnnouncements'
+} from '@/Supabase/fetchMyAnnouncements'
 
 const NotificationList: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false)

@@ -4,6 +4,7 @@ import type {
   Session as SupabaseSession,
   AuthChangeEvent,
 } from '@supabase/supabase-js'
+import { ensureProfileExists } from '../Supabase/ensureProfileExists'
 
 type Session = SupabaseSession | null
 
@@ -42,6 +43,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       data.subscription.unsubscribe()
     }
   }, [])
+
+  // Ensure a profile row exists whenever we have a signed-in user
+  useEffect(() => {
+    const id = session?.user?.id
+    if (!id) return
+    // Fire and forget; internal function handles its own errors
+    ensureProfileExists(id)
+  }, [session?.user?.id])
 
   const setSession = (s: NonNullable<Session>) => setSessionState(s)
 

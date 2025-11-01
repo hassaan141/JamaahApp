@@ -152,6 +152,8 @@ export default function OrganizationSignUp({
           city,
           country,
           application_status: 'submitted',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
           // Optional fields
           contact_phone: contactPhone || undefined,
           province_state: provinceState || undefined,

@@ -24,11 +24,17 @@ export function useProfile() {
           .from('profiles')
           .select('*')
           .eq('id', userId)
-          .single()
+          .maybeSingle()
 
         if (error) throw error
-        setProfile(data as Profile)
-        if (cacheKey) await AsyncStorage.setItem(cacheKey, JSON.stringify(data))
+        if (data) {
+          setProfile(data as Profile)
+          if (cacheKey)
+            await AsyncStorage.setItem(cacheKey, JSON.stringify(data))
+        } else {
+          setProfile(null)
+          if (cacheKey) await AsyncStorage.removeItem(cacheKey)
+        }
       } catch (e) {
         setError(e as Error)
       } finally {

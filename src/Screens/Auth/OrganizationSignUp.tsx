@@ -44,7 +44,8 @@ export default function OrganizationSignUp({
   const [facebook, setFacebook] = useState('')
   const [instagram, setInstagram] = useState('')
   const [twitter, setTwitter] = useState('')
-  const [prayerTimesUrl, setPrayerTimesUrl] = useState('')
+  const [donateLink, setDonateLink] = useState('')
+  const [description, setDescription] = useState('')
 
   type Option = { label: string; value: string }
   const countryOptions = useMemo<Option[]>(
@@ -162,7 +163,9 @@ export default function OrganizationSignUp({
           facebook: facebook || null,
           instagram: instagram || null,
           twitter: twitter || null,
-          prayer_times_url: prayerTimesUrl || null,
+          donate_link: donateLink || undefined,
+          description: description || undefined,
+
           ...(authData.user?.id ? { user_id: authData.user.id } : {}),
         }
 
@@ -194,7 +197,8 @@ export default function OrganizationSignUp({
       setFacebook('')
       setInstagram('')
       setTwitter('')
-      setPrayerTimesUrl('')
+      setDonateLink('')
+      setDescription('')
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : String(e)
       toast.error(message, 'Error')
@@ -314,6 +318,29 @@ export default function OrganizationSignUp({
               value={type}
               onChangeText={setType}
               autoCapitalize="words"
+              placeholderTextColor="#A0AEC0"
+            />
+          </View>
+
+          <View
+            style={[
+              styles.inputContainer,
+              { height: 110, paddingVertical: 12 },
+            ]}
+          >
+            <Feather
+              name="align-left"
+              size={20}
+              color="#48BB78"
+              style={styles.inputIcon}
+            />
+            <TextInput
+              style={[styles.input, { textAlignVertical: 'top' }]}
+              placeholder="Description / Details"
+              value={description}
+              onChangeText={setDescription}
+              multiline
+              numberOfLines={4}
               placeholderTextColor="#A0AEC0"
             />
           </View>
@@ -561,9 +588,9 @@ export default function OrganizationSignUp({
             />
             <TextInput
               style={styles.input}
-              placeholder="Prayer Times URL"
-              value={prayerTimesUrl}
-              onChangeText={setPrayerTimesUrl}
+              placeholder="Donation Link URL"
+              value={donateLink}
+              onChangeText={setDonateLink}
               autoCapitalize="none"
               keyboardType="url"
               placeholderTextColor="#A0AEC0"

@@ -113,7 +113,8 @@ export interface Database {
           facebook: string | null
           instagram: string | null
           twitter: string | null
-          prayer_times_url: string | null
+          donate_link: string | null
+          description: string | null
           application_status: 'submitted' | 'approved' | 'rejected'
           created_at: string
           updated_at: string

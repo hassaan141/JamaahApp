@@ -8,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Switch,
 } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
 import { Dropdown } from 'react-native-element-dropdown'
@@ -44,7 +45,15 @@ export default function OrganizationSignUp({
   const [facebook, setFacebook] = useState('')
   const [instagram, setInstagram] = useState('')
   const [twitter, setTwitter] = useState('')
-  const [prayerTimesUrl, setPrayerTimesUrl] = useState('')
+  const [donateLink, setDonateLink] = useState('')
+  const [description, setDescription] = useState('')
+  const [amenities, setAmenities] = useState({
+    street_parking: false,
+    women_washroom: false,
+    on_site_parking: false,
+    women_prayer_space: false,
+    wheelchair_accessible: false,
+  })
 
   type Option = { label: string; value: string }
   const countryOptions = useMemo<Option[]>(
@@ -69,6 +78,19 @@ export default function OrganizationSignUp({
       value: ct.name,
     }))
   }, [countryCode, provinceStateCode])
+
+  const orgTypeOptions = useMemo<Option[]>(
+    () => [
+      { label: 'Masjid', value: 'masjid' },
+      { label: 'Islamic School', value: 'islamic_school' },
+      { label: 'Sisters Group', value: 'sisters_group' },
+      { label: 'Youth Group', value: 'youth_group' },
+      { label: 'Book Club', value: 'book_club' },
+      { label: 'Book Store', value: 'book_store' },
+      { label: 'Run Club', value: 'run_club' },
+    ],
+    [],
+  )
 
   const handleCountryChange = (item: Option) => {
     setCountryCode(item.value)
@@ -142,29 +164,33 @@ export default function OrganizationSignUp({
 
       if (authError) throw authError
 
-      const organizationData: Database['public']['Tables']['organization_applications']['Insert'] =
-        {
-          organization_name: name,
-          organization_type: type,
-          contact_name: contactName,
-          contact_email: email,
-          address,
-          city,
-          country,
-          application_status: 'submitted',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          // Optional fields
-          contact_phone: contactPhone || undefined,
-          province_state: provinceState || undefined,
-          postal_code: postalCode || undefined,
-          website: website || null,
-          facebook: facebook || null,
-          instagram: instagram || null,
-          twitter: twitter || null,
-          prayer_times_url: prayerTimesUrl || null,
-          ...(authData.user?.id ? { user_id: authData.user.id } : {}),
-        }
+      const organizationData: Database['public']['Tables']['organization_applications']['Insert'] & {
+        amenities?: typeof amenities
+      } = {
+        organization_name: name,
+        organization_type: type,
+        contact_name: contactName,
+        contact_email: email,
+        address,
+        city,
+        country,
+        application_status: 'submitted',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        // Optional fields
+        contact_phone: contactPhone || undefined,
+        province_state: provinceState || undefined,
+        postal_code: postalCode || undefined,
+        website: website || null,
+        facebook: facebook || null,
+        instagram: instagram || null,
+        twitter: twitter || null,
+        donate_link: donateLink || undefined,
+        description: description || undefined,
+        amenities: type === 'masjid' ? amenities : undefined,
+
+        ...(authData.user?.id ? { user_id: authData.user.id } : {}),
+      }
 
       const { error } = await supabase
         .from('organization_applications')
@@ -194,7 +220,8 @@ export default function OrganizationSignUp({
       setFacebook('')
       setInstagram('')
       setTwitter('')
-      setPrayerTimesUrl('')
+      setDonateLink('')
+      setDescription('')
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : String(e)
       toast.error(message, 'Error')
@@ -308,15 +335,115 @@ export default function OrganizationSignUp({
               color="#48BB78"
               style={styles.inputIcon}
             />
-            <TextInput
-              style={styles.input}
-              placeholder="Organization Type (e.g., Masjid, Islamic Center) *"
+            <Dropdown
+              style={styles.dropdownInputBox}
+              containerStyle={styles.dropdownMenuContainer}
+              data={orgTypeOptions}
+              labelField="label"
+              valueField="value"
+              placeholder="Select organization type"
               value={type}
-              onChangeText={setType}
-              autoCapitalize="words"
+              onChange={(item: Option) => setType(item.value)}
+              placeholderStyle={styles.dropdownPlaceholder}
+              selectedTextStyle={styles.dropdownSelectedText}
+              itemTextStyle={styles.dropdownItemText}
+              iconStyle={styles.dropdownArrow}
+            />
+          </View>
+
+          {/* Description moved directly under Type */}
+          <View
+            style={[
+              styles.inputContainer,
+              { height: 110, paddingVertical: 12 },
+            ]}
+          >
+            <Feather
+              name="align-left"
+              size={20}
+              color="#48BB78"
+              style={styles.inputIcon}
+            />
+            <TextInput
+              style={[styles.input, { textAlignVertical: 'top' }]}
+              placeholder="Description (optional)"
+              value={description}
+              onChangeText={setDescription}
+              multiline
+              numberOfLines={4}
               placeholderTextColor="#A0AEC0"
             />
           </View>
+
+          {/* Amenities: only show when organization type is masjid */}
+          {type === 'masjid' && (
+            <View style={{ marginBottom: 10 }}>
+              <Text style={[styles.sectionTitle, { marginBottom: 8 }]}>
+                Amenities (optional)
+              </Text>
+              {/* Each amenity is a row with label + switch */}
+              <View style={styles.switchRow}>
+                <Text style={styles.amenityLabel}>Street parking</Text>
+                <Switch
+                  value={amenities.street_parking}
+                  onValueChange={() =>
+                    setAmenities((p) => ({
+                      ...p,
+                      street_parking: !p.street_parking,
+                    }))
+                  }
+                />
+              </View>
+              <View style={styles.switchRow}>
+                <Text style={styles.amenityLabel}>Women washroom</Text>
+                <Switch
+                  value={amenities.women_washroom}
+                  onValueChange={() =>
+                    setAmenities((p) => ({
+                      ...p,
+                      women_washroom: !p.women_washroom,
+                    }))
+                  }
+                />
+              </View>
+              <View style={styles.switchRow}>
+                <Text style={styles.amenityLabel}>On-site parking</Text>
+                <Switch
+                  value={amenities.on_site_parking}
+                  onValueChange={() =>
+                    setAmenities((p) => ({
+                      ...p,
+                      on_site_parking: !p.on_site_parking,
+                    }))
+                  }
+                />
+              </View>
+              <View style={styles.switchRow}>
+                <Text style={styles.amenityLabel}>Women prayer space</Text>
+                <Switch
+                  value={amenities.women_prayer_space}
+                  onValueChange={() =>
+                    setAmenities((p) => ({
+                      ...p,
+                      women_prayer_space: !p.women_prayer_space,
+                    }))
+                  }
+                />
+              </View>
+              <View style={styles.switchRow}>
+                <Text style={styles.amenityLabel}>Wheelchair accessible</Text>
+                <Switch
+                  value={amenities.wheelchair_accessible}
+                  onValueChange={() =>
+                    setAmenities((p) => ({
+                      ...p,
+                      wheelchair_accessible: !p.wheelchair_accessible,
+                    }))
+                  }
+                />
+              </View>
+            </View>
+          )}
 
           <Text style={styles.sectionTitle}>Location</Text>
 
@@ -561,9 +688,9 @@ export default function OrganizationSignUp({
             />
             <TextInput
               style={styles.input}
-              placeholder="Prayer Times URL"
-              value={prayerTimesUrl}
-              onChangeText={setPrayerTimesUrl}
+              placeholder="Donation Link URL"
+              value={donateLink}
+              onChangeText={setDonateLink}
               autoCapitalize="none"
               keyboardType="url"
               placeholderTextColor="#A0AEC0"
@@ -723,4 +850,17 @@ const styles = StyleSheet.create({
   switchContainer: { marginTop: 30, alignItems: 'center' },
   switchText: { color: '#718096', fontSize: 16 },
   switchTextBold: { color: '#48BB78', fontWeight: '600' },
+  switchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 10,
+    marginBottom: 12,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 15,
+    height: 55,
+  },
+  amenityLabel: { color: '#2D3748', fontSize: 16 },
 })

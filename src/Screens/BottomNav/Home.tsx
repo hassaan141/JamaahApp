@@ -14,6 +14,7 @@ type NavigationLike = {
   navigate: (route: string, params?: Record<string, unknown>) => void
 }
 
+// main function
 export default function Home({ navigation }: { navigation: NavigationLike }) {
   const { loading, org, distance_m, times, refetchPrayerTimes } =
     usePrayerTimes()

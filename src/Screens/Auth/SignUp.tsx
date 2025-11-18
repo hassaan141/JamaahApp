@@ -13,6 +13,7 @@ import Feather from '@expo/vector-icons/Feather'
 import { Dropdown } from 'react-native-element-dropdown'
 import { Country } from 'country-state-city'
 import { supabase } from '../../Supabase/supabaseClient'
+import { ensureProfileExists } from '@/Supabase/ensureProfileExists'
 import { toast } from '@/components/Toast/toast'
 
 type Nav = { navigate: (route: string) => void; goBack: () => void }
@@ -52,10 +53,13 @@ export default function SignUp({ navigation }: { navigation: Nav }) {
           ? `${firstName || ''} ${lastName || ''}`.trim()
           : email.split('@')[0]
 
-      const { error } = await supabase.auth.signUp({
+      const { data: authData, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
+          // If your Supabase project requires an email redirect, set
+          // EXPO_PUBLIC_EMAIL_REDIRECT_TO in your env to the app/site URL.
+          emailRedirectTo: process.env.EXPO_PUBLIC_EMAIL_REDIRECT_TO,
           data: {
             user_type: 'individual',
             first_name: firstName || null,
@@ -68,6 +72,12 @@ export default function SignUp({ navigation }: { navigation: Nav }) {
       })
 
       if (error) throw error
+
+      // Best-effort: if a session is immediately available (email verification disabled),
+      // ensure the profile row exists now. Otherwise AuthProvider will create it on first login.
+      if (authData?.user?.id && authData?.session) {
+        await ensureProfileExists(authData.user.id)
+      }
 
       toast.success('Please check your email to verify your account', 'Success')
       navigation.navigate('SignIn')

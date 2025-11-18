@@ -48,7 +48,7 @@ export default function Home({ navigation }: { navigation: NavigationLike }) {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
     >
-      <View style={{ height: 16 }} />
+      <View style={{ height: 56 }} />
       <View style={styles.topRow}>
         <View style={styles.masjidContainer}>
           <MasjidButton
@@ -76,13 +76,16 @@ const styles = StyleSheet.create({
   topRow: {
     flexDirection: 'row',
     paddingHorizontal: 20,
-    marginBottom: 20,
-    alignItems: 'flex-start',
+    marginBottom: 8,
+    alignItems: 'center',
   },
   masjidContainer: {
     flex: 1,
   },
   notificationWrapper: {
     marginLeft: 12,
+    marginBottom: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 })

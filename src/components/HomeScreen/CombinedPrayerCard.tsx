@@ -175,68 +175,79 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
     return () => clearInterval(interval)
   }, [prayerTimes])
 
-  const PrayerCard = ({
-    prayerName,
-    adhanTime,
-    iqaamahTime,
-  }: {
-    prayerName: string
-    adhanTime?: string
-    iqaamahTime?: string | null
-  }) => (
-    <View style={styles.prayerCard}>
-      <Text style={styles.prayerName}>{prayerName}</Text>
-      <Text style={styles.adhanTime}>
-        {formatTime(adhanTime ?? '', prayerName)}
-      </Text>
-      {!!iqaamahTime && (
-        <Text style={styles.iqaamahTime}>
-          {formatTime(iqaamahTime, prayerName)}
-        </Text>
-      )}
-    </View>
-  )
-
   return (
     <View style={styles.container}>
-      <View style={styles.nextPrayerSection}>
-        <View style={styles.nextPrayerHeader}>
-          <View style={styles.leftSection}>
-            <Feather name="clock" size={20} color="#FFFFFF" />
-            <Text style={styles.nextPrayerLabel}>Next: {nextPrayer.name}</Text>
-          </View>
-          <View style={styles.rightSection}>
-            <Text style={styles.timeRemaining}>{timeRemaining}</Text>
-          </View>
+      <View style={styles.nextPrayerHeader}>
+        <View style={styles.nextPrayerInfo}>
+          <Feather name="clock" size={18} color="#FFFFFF" />
+          <Text style={styles.nextPrayerText}>Next: {nextPrayer.name}</Text>
         </View>
-        <View style={styles.prayerTimesRow}>
-          <Text style={styles.prayerTime}>
-            Adhan: {formatTime(nextPrayer.adhan, nextPrayer.name)}
-          </Text>
-          <Text style={styles.bulletDot}>•</Text>
-          <Text style={styles.prayerTime}>
-            Iqaamah: {formatTime(nextPrayer.iqaamah, nextPrayer.name)}
-          </Text>
-        </View>
+        <Text style={styles.timeRemaining}>{timeRemaining}</Text>
+      </View>
+
+      <View style={styles.timesLine}>
+        <Text style={styles.timesText}>
+          {formatTime(nextPrayer.adhan, nextPrayer.name)} • Iqamah:{' '}
+          {formatTime(nextPrayer.iqaamah, nextPrayer.name)}
+        </Text>
       </View>
 
       {prayerTimes ? (
         <View style={styles.prayerGrid}>
-          <PrayerCard
-            prayerName="Dhuhr"
-            adhanTime={prayerTimes.dhuhr_azan}
-            iqaamahTime={(prayerTimes.dhuhr_iqamah as string) ?? null}
-          />
-          <PrayerCard
-            prayerName="Asr"
-            adhanTime={prayerTimes.asr_azan}
-            iqaamahTime={(prayerTimes.asr_iqamah as string) ?? null}
-          />
-          <PrayerCard
-            prayerName="Maghrib"
-            adhanTime={prayerTimes.maghrib_azan}
-            iqaamahTime={(prayerTimes.maghrib_iqamah as string) ?? null}
-          />
+          {/* Fajr */}
+          <View style={styles.prayerColumn}>
+            <Text style={styles.prayerName}>Fajr</Text>
+            <Text style={styles.adhanTime}>
+              {formatTime(prayerTimes.fajr_azan, 'Fajr')}
+            </Text>
+            <Text style={styles.iqamahTime}>
+              {formatTime(prayerTimes.fajr_iqamah, 'Fajr')}
+            </Text>
+          </View>
+
+          {/* Dhuhr */}
+          <View style={styles.prayerColumn}>
+            <Text style={styles.prayerName}>Dhuhr</Text>
+            <Text style={styles.adhanTime}>
+              {formatTime(prayerTimes.dhuhr_azan, 'Dhuhr')}
+            </Text>
+            <Text style={styles.iqamahTime}>
+              {formatTime(prayerTimes.dhuhr_iqamah, 'Dhuhr')}
+            </Text>
+          </View>
+
+          {/* Asr */}
+          <View style={styles.prayerColumn}>
+            <Text style={styles.prayerName}>Asr</Text>
+            <Text style={styles.adhanTime}>
+              {formatTime(prayerTimes.asr_azan, 'Asr')}
+            </Text>
+            <Text style={styles.iqamahTime}>
+              {formatTime(prayerTimes.asr_iqamah, 'Asr')}
+            </Text>
+          </View>
+
+          {/* Maghrib */}
+          <View style={styles.prayerColumn}>
+            <Text style={styles.prayerName}>Maghrib</Text>
+            <Text style={styles.adhanTime}>
+              {formatTime(prayerTimes.maghrib_azan, 'Maghrib')}
+            </Text>
+            <Text style={styles.iqamahTime}>
+              {formatTime(prayerTimes.maghrib_iqamah, 'Maghrib')}
+            </Text>
+          </View>
+
+          {/* Isha */}
+          <View style={styles.prayerColumn}>
+            <Text style={styles.prayerName}>Isha</Text>
+            <Text style={styles.adhanTime}>
+              {formatTime(prayerTimes.isha_azan, 'Isha')}
+            </Text>
+            <Text style={styles.iqamahTime}>
+              {formatTime(prayerTimes.isha_iqamah, 'Isha')}
+            </Text>
+          </View>
         </View>
       ) : null}
     </View>
@@ -248,83 +259,75 @@ const styles = StyleSheet.create({
     backgroundColor: '#50b962ff',
     marginHorizontal: 20,
     marginBottom: 20,
-    borderRadius: 10,
+    borderRadius: 16,
     overflow: 'hidden',
-  },
-  nextPrayerSection: {
-    padding: 15,
+    paddingVertical: 16,
   },
   nextPrayerHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    marginBottom: 12,
   },
-  leftSection: {
+  nextPrayerInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
+    gap: 8,
   },
-  nextPrayerLabel: {
+  nextPrayerText: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '600',
     color: '#FFFFFF',
-    marginLeft: 10,
-  },
-  rightSection: {
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
   },
   timeRemaining: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  timesLine: {
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    marginHorizontal: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 12,
+    marginBottom: 14,
+  },
+  timesText: {
     fontSize: 14,
-    fontWeight: 'bold',
     color: '#FFFFFF',
-  },
-  prayerTimesRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  bulletDot: {
-    color: '#FFFFFF',
-    fontSize: 12,
-  },
-  prayerTime: {
-    fontSize: 13,
-    color: '#FFFFFF',
-    opacity: 0.95,
+    fontWeight: '500',
   },
   prayerGrid: {
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginHorizontal: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    borderRadius: 12,
     gap: 8,
-    paddingHorizontal: 15,
-    paddingBottom: 15,
   },
-  prayerCard: {
+  prayerColumn: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    borderRadius: 8,
-    padding: 10,
     alignItems: 'center',
   },
   prayerName: {
-    fontSize: 12,
-    color: '#FFFFFF',
+    fontSize: 13,
     fontWeight: '600',
-    marginBottom: 4,
+    color: '#FFFFFF',
+    marginBottom: 6,
   },
   adhanTime: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#FFFFFF',
-    fontWeight: '700',
+    fontWeight: '500',
     marginBottom: 2,
   },
-  iqaamahTime: {
-    fontSize: 10,
+  iqamahTime: {
+    fontSize: 11,
     color: 'rgba(255, 255, 255, 0.8)',
+    fontWeight: '400',
   },
 })
 

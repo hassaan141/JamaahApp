@@ -85,7 +85,7 @@ export default function Account() {
         <UserProfileSection
           profile={profile}
           isVerified={isVerified}
-          isOrganization={!!isOrganization}
+          isOrganization={isOrganization}
         />
 
         {isOrganization ? (

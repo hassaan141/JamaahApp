@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native'
 import type { Profile } from '@/types'
 import { fetchOrgFollowerCount } from '@/Supabase/fetchOrgFollowerCount'
 import { fetchOrgPostCount } from '@/Supabase/fetchOrgPostCount'
+import { fetchOrganizationByProfileId } from '@/Supabase/fetchOrgFromProfileId'
 import { toast } from '@/components/Toast/toast'
 
 type MinimalNav = {
@@ -24,6 +25,22 @@ export default function UserProfileSection({
   const navigation = useNavigation() as unknown as MinimalNav
   const [postCount, setPostCount] = useState(0)
   const [followerCount, setFollowerCount] = useState(0)
+  const [organizationName, setOrganizationName] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchOrganizationName = async () => {
+      if (!isOrganization) return
+
+      try {
+        const organization = await fetchOrganizationByProfileId()
+        setOrganizationName(organization?.name || null)
+      } catch (error) {
+        console.error('Error fetching organization:', error)
+      }
+    }
+
+    fetchOrganizationName()
+  }, [isOrganization])
 
   const loadOrgCounts = useCallback(async () => {
     if (!isOrganization || !profile?.org_id) {
@@ -76,6 +93,10 @@ export default function UserProfileSection({
       'Settings',
     )
   }, [navigation])
+
+  const displayName = isOrganization
+    ? organizationName || 'Organization'
+    : profile?.first_name || 'User'
 
   const styles = StyleSheet.create({
     container: {
@@ -132,20 +153,25 @@ export default function UserProfileSection({
               <Text
                 style={{ fontSize: 20, fontWeight: '600', color: '#1D4732' }}
               >
-                {profile?.first_name || 'User'}
+                {displayName}
               </Text>
             </View>
 
-            <View style={{ flexDirection: 'row', marginBottom: 4 }}>
-              <Text style={{ fontSize: 14, color: '#1D4732', marginRight: 16 }}>
-                <Text style={{ fontWeight: '600' }}>{postCount}</Text>
-                <Text style={{ color: '#6C757D' }}> posts</Text>
-              </Text>
-              <Text style={{ fontSize: 14, color: '#1D4732' }}>
-                <Text style={{ fontWeight: '600' }}>{followerCount}</Text>
-                <Text style={{ color: '#6C757D' }}> followers</Text>
-              </Text>
-            </View>
+            {/* Only show posts and followers for organizations */}
+            {isOrganization && (
+              <View style={{ flexDirection: 'row', marginBottom: 4 }}>
+                <Text
+                  style={{ fontSize: 14, color: '#1D4732', marginRight: 16 }}
+                >
+                  <Text style={{ fontWeight: '600' }}>{postCount}</Text>
+                  <Text style={{ color: '#6C757D' }}> posts</Text>
+                </Text>
+                <Text style={{ fontSize: 14, color: '#1D4732' }}>
+                  <Text style={{ fontWeight: '600' }}>{followerCount}</Text>
+                  <Text style={{ color: '#6C757D' }}> followers</Text>
+                </Text>
+              </View>
+            )}
 
             {isOrganization && (
               <View
@@ -190,7 +216,7 @@ export default function UserProfileSection({
         </View>
 
         <View>
-          {profile?.first_name && profile?.last_name && (
+          {!isOrganization && profile?.first_name && profile?.last_name && (
             <Text
               style={{
                 fontSize: 15,

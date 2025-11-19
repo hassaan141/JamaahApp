@@ -14,7 +14,7 @@ export async function fetchOrganizationByProfileId() {
 
     const { data: organization } = await supabase
       .from('organizations')
-      .select('name')
+      .select('name, description')
       .eq('id', profile.org_id)
       .single()
 

@@ -84,6 +84,7 @@ export interface Database {
           is_active: boolean
           approved_at: string | null
           geom: string | null
+          description?: string | null
         }
         Insert: Partial<
           Database['public']['Tables']['organizations']['Row']

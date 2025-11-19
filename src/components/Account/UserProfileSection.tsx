@@ -26,20 +26,24 @@ export default function UserProfileSection({
   const [postCount, setPostCount] = useState(0)
   const [followerCount, setFollowerCount] = useState(0)
   const [organizationName, setOrganizationName] = useState<string | null>(null)
+  const [organizationDescription, setOrganizationDescription] = useState<
+    string | null
+  >(null)
 
   useEffect(() => {
-    const fetchOrganizationName = async () => {
+    const fetchOrganizationDetails = async () => {
       if (!isOrganization) return
 
       try {
         const organization = await fetchOrganizationByProfileId()
         setOrganizationName(organization?.name || null)
+        setOrganizationDescription(organization?.description || null)
       } catch (error) {
         console.error('Error fetching organization:', error)
       }
     }
 
-    fetchOrganizationName()
+    fetchOrganizationDetails()
   }, [isOrganization])
 
   const loadOrgCounts = useCallback(async () => {
@@ -245,7 +249,10 @@ export default function UserProfileSection({
           )}
 
           <Text style={{ fontSize: 13, color: '#495057', lineHeight: 18 }}>
-            Serving the Islamic community with announcements and events
+            {isOrganization
+              ? organizationDescription ||
+                'Serving the Islamic community with announcements and events'
+              : 'Serving the Islamic community with announcements and events'}
           </Text>
         </View>
       </View>

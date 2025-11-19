@@ -1,10 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { ScrollView, RefreshControl, View } from 'react-native'
+import { ScrollView, RefreshControl, View, StyleSheet } from 'react-native'
 import { useFocusEffect, useRoute } from '@react-navigation/native'
-import Header from '@/components/Header/Header'
-import NextPrayerCard from '@/components/HomeScreen/NextPrayerCard'
+import CombinedPrayerCard from '@/components/HomeScreen/CombinedPrayerCard'
 import MasjidButton from '@/components/HomeScreen/MasjidButton'
-import PrayerTimesTable from '@/components/HomeScreen/PrayerTimesTable'
+import NotificationCard from '@/components/HomeScreen/NotificationButton'
 import NotificationList from '@/components/HomeScreen/NotificationList'
 import { usePrayerTimes } from '@/Hooks/usePrayerTimes'
 
@@ -14,10 +13,8 @@ type NavigationLike = {
   navigate: (route: string, params?: Record<string, unknown>) => void
 }
 
-// main function
 export default function Home({ navigation }: { navigation: NavigationLike }) {
-  const { loading, org, distance_m, times, refetchPrayerTimes } =
-    usePrayerTimes()
+  const { org, distance_m, times, refetchPrayerTimes } = usePrayerTimes()
   const [refreshing, setRefreshing] = useState(false)
   const route = useRoute() as { params?: HomeRouteParams }
 
@@ -51,20 +48,44 @@ export default function Home({ navigation }: { navigation: NavigationLike }) {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
     >
-      <Header title="Jamaah" showDate={false} showClock={false} />
+      <View style={{ height: 56 }} />
+      <View style={styles.topRow}>
+        <View style={styles.masjidContainer}>
+          <MasjidButton
+            prayerTimes={{
+              org: org ?? undefined,
+              distance_m: distance_m ?? undefined,
+            }}
+            navigation={navigation}
+            onRefreshPrayerTimes={refetchPrayerTimes}
+          />
+        </View>
+        <View style={styles.notificationWrapper}>
+          <NotificationCard navigation={navigation} />
+        </View>
+      </View>
 
-      <View style={{ height: 8 }} />
-      <NextPrayerCard prayerTimes={times} />
-      <MasjidButton
-        prayerTimes={{
-          org: org ?? undefined,
-          distance_m: distance_m ?? undefined,
-        }}
-        navigation={navigation}
-        onRefreshPrayerTimes={refetchPrayerTimes}
-      />
-      <PrayerTimesTable loading={loading} prayerTimes={times} />
+      <CombinedPrayerCard prayerTimes={times} />
+
       <NotificationList />
     </ScrollView>
   )
 }
+
+const styles = StyleSheet.create({
+  topRow: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    marginBottom: 8,
+    alignItems: 'center',
+  },
+  masjidContainer: {
+    flex: 1,
+  },
+  notificationWrapper: {
+    marginLeft: 12,
+    marginBottom: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+})

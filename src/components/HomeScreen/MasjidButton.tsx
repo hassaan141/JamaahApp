@@ -37,17 +37,18 @@ const MasjidButton: React.FC<Props> = ({
             <Feather name="map-pin" size={20} color="#48BB78" />
           </View>
           <View style={styles.textContainer}>
-            <Text style={styles.masjidName}>
+            <Text style={styles.masjidName} numberOfLines={1}>
               {prayerTimes?.org?.name ?? ''}
             </Text>
-            <Text style={styles.masjidAddress}>
-              {prayerTimes?.org?.address ?? ''}
+            <Text style={styles.metaLine} numberOfLines={1}>
+              {(prayerTimes?.org?.address ?? '') +
+                (prayerTimes?.distance_m != null
+                  ? ` • ${formatDistance(prayerTimes?.distance_m)}`
+                  : '')}
             </Text>
           </View>
-          <View style={styles.distanceContainer}>
-            <Text style={styles.distanceText}>
-              {formatDistance(prayerTimes?.distance_m ?? undefined)}
-            </Text>
+          <View style={styles.chevronContainer}>
+            <Feather name="chevron-right" size={18} color="#2D3748" />
           </View>
         </View>
       </TouchableOpacity>
@@ -67,41 +68,40 @@ const styles = StyleSheet.create({
   masjidButton: {
     backgroundColor: '#ffffffff',
     borderRadius: 10,
-    padding: 15,
-    marginHorizontal: 20,
-    marginBottom: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginBottom: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 3,
   },
   masjidButtonContent: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   iconContainer: {
-    marginRight: 12,
+    marginRight: 10,
+    backgroundColor: '#FFFFFF',
+    padding: 8,
+    borderRadius: 10,
   },
   textContainer: {
     flex: 1,
   },
   masjidName: {
-    fontSize: 16,
+    fontSize: 15,
     color: '#2D3748',
     fontWeight: '600',
-    marginBottom: 4,
+    marginBottom: 2,
   },
-  masjidAddress: {
-    fontSize: 14,
-    color: '#718096',
-  },
-  distanceContainer: {
-    marginLeft: 8,
-  },
-  distanceText: {
+  metaLine: {
     fontSize: 12,
-    color: '#718096',
+    color: '#4A5568',
+  },
+  chevronContainer: {
+    marginLeft: 10,
   },
 })
 

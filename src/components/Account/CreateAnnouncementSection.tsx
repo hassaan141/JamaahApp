@@ -13,6 +13,11 @@ export default function CreateAnnouncementSection({
   const [showAnnouncementModal, setShowAnnouncementModal] = useState(false)
   const [announcementTitle, setAnnouncementTitle] = useState('')
   const [announcementBody, setAnnouncementBody] = useState('')
+  const [startTime, setStartTime] = useState<string | null>(null)
+  const [endTime, setEndTime] = useState<string | null>(null)
+  const [postType, setPostType] = useState<string | null>(null)
+  const [demographic, setDemographic] = useState<string | null>(null)
+  const [sendPush, setSendPush] = useState<boolean>(false)
   const [posting, setPosting] = useState(false)
 
   const handlePostAnnouncement = async () => {
@@ -27,7 +32,11 @@ export default function CreateAnnouncementSection({
         author_profile_id: profile.id,
         title: announcementTitle.trim() || 'Announcement',
         body: announcementBody.trim(),
-        send_push: false,
+        send_push: sendPush,
+        post_type: postType ?? null,
+        demographic: demographic ?? null,
+        start_time: startTime ?? null,
+        end_time: endTime ?? null,
       })
       if (!ok || !data) {
         toast.error(error || 'Unknown error', 'Error posting announcement')
@@ -39,6 +48,11 @@ export default function CreateAnnouncementSection({
       )
       setAnnouncementTitle('')
       setAnnouncementBody('')
+      setStartTime(null)
+      setEndTime(null)
+      setPostType(null)
+      setDemographic(null)
+      setSendPush(false)
       setShowAnnouncementModal(false)
     } finally {
       setPosting(false)
@@ -69,6 +83,16 @@ export default function CreateAnnouncementSection({
         setAnnouncementTitle={setAnnouncementTitle}
         announcementBody={announcementBody}
         setAnnouncementBody={setAnnouncementBody}
+        startTime={startTime}
+        setStartTime={setStartTime}
+        endTime={endTime}
+        setEndTime={setEndTime}
+        postType={postType}
+        setPostType={setPostType}
+        demographic={demographic}
+        setDemographic={setDemographic}
+        sendPush={sendPush}
+        setSendPush={setSendPush}
         posting={posting}
         handlePostAnnouncement={handlePostAnnouncement}
       />

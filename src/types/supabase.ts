@@ -187,6 +187,11 @@ export interface Database {
           title: string
           body: string | null
           type: string | null
+          post_type: string | null
+          demographic: string | null
+          start_time: string | null
+          end_time: string | null
+          send_push: boolean
           created_at: string
         }
         Insert: {
@@ -196,6 +201,11 @@ export interface Database {
           title: string
           body?: string | null
           type?: string | null
+          post_type?: string | null
+          demographic?: string | null
+          start_time?: string | null
+          end_time?: string | null
+          send_push?: boolean
           created_at?: string
         }
         Update: {
@@ -205,6 +215,11 @@ export interface Database {
           title?: string
           body?: string | null
           type?: string | null
+          post_type?: string | null
+          demographic?: string | null
+          start_time?: string | null
+          end_time?: string | null
+          send_push?: boolean
           created_at?: string
         }
         Relationships: [

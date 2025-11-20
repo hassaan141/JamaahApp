@@ -1,5 +1,13 @@
 import React from 'react'
-import { Modal, View, Text, TouchableOpacity, TextInput } from 'react-native'
+import {
+  Modal,
+  View,
+  Text,
+  TouchableOpacity,
+  TextInput,
+  Switch,
+  ScrollView,
+} from 'react-native'
 import { Feather } from '@expo/vector-icons'
 
 export default function AnnouncementModal({
@@ -9,6 +17,16 @@ export default function AnnouncementModal({
   setAnnouncementTitle,
   announcementBody,
   setAnnouncementBody,
+  startTime,
+  setStartTime,
+  endTime,
+  setEndTime,
+  postType,
+  setPostType,
+  demographic,
+  setDemographic,
+  sendPush,
+  setSendPush,
   posting,
   handlePostAnnouncement,
 }: {
@@ -18,6 +36,16 @@ export default function AnnouncementModal({
   setAnnouncementTitle: (v: string) => void
   announcementBody: string
   setAnnouncementBody: (v: string) => void
+  startTime: string | null
+  setStartTime: (v: string | null) => void
+  endTime: string | null
+  setEndTime: (v: string | null) => void
+  postType: string | null
+  setPostType: (v: string | null) => void
+  demographic: string | null
+  setDemographic: (v: string | null) => void
+  sendPush: boolean
+  setSendPush: (v: boolean) => void
   posting: boolean
   handlePostAnnouncement: () => Promise<void> | void
 }) {
@@ -41,16 +69,19 @@ export default function AnnouncementModal({
           style={{
             backgroundColor: '#FFFFFF',
             borderRadius: 12,
-            padding: 20,
+            paddingTop: 16,
             width: '100%',
             maxWidth: 400,
+            maxHeight: 520,
+            overflow: 'hidden',
           }}
         >
           <View
             style={{
               flexDirection: 'row',
               alignItems: 'center',
-              marginBottom: 20,
+              paddingHorizontal: 20,
+              marginBottom: 12,
             }}
           >
             <Feather
@@ -74,69 +105,242 @@ export default function AnnouncementModal({
             </TouchableOpacity>
           </View>
 
-          <View style={{ marginBottom: 16 }}>
-            <Text
-              style={{
-                fontSize: 14,
-                fontWeight: '600',
-                color: '#1D4732',
-                marginBottom: 8,
-              }}
-            >
-              Title
+          <ScrollView
+            style={{ flexGrow: 0 }}
+            contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 12 }}
+            showsVerticalScrollIndicator
+          >
+            <View style={{ marginBottom: 16 }}>
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: '600',
+                  color: '#1D4732',
+                  marginBottom: 8,
+                }}
+              >
+                Title
+              </Text>
+              <TextInput
+                value={announcementTitle}
+                onChangeText={setAnnouncementTitle}
+                placeholder="E.g. Ramadan night program"
+                placeholderTextColor="#6C757D"
+                style={{
+                  backgroundColor: '#F8F9FA',
+                  borderRadius: 8,
+                  borderWidth: 1,
+                  borderColor: '#DEE2E6',
+                  paddingHorizontal: 12,
+                  paddingVertical: 10,
+                  fontSize: 15,
+                  color: '#1D4732',
+                }}
+              />
+            </View>
+
+            <View style={{ marginBottom: 12 }}>
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: '600',
+                  color: '#1D4732',
+                  marginBottom: 8,
+                }}
+              >
+                Details
+              </Text>
+              <TextInput
+                value={announcementBody}
+                onChangeText={setAnnouncementBody}
+                placeholder="Add timing, location, or supporting notes"
+                placeholderTextColor="#6C757D"
+                style={{
+                  backgroundColor: '#F8F9FA',
+                  borderRadius: 8,
+                  borderWidth: 1,
+                  borderColor: '#DEE2E6',
+                  paddingHorizontal: 12,
+                  paddingVertical: 10,
+                  fontSize: 15,
+                  color: '#1D4732',
+                  minHeight: 100,
+                  textAlignVertical: 'top',
+                }}
+                multiline
+                numberOfLines={4}
+              />
+            </View>
+
+            <View style={{ marginBottom: 12 }}>
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: '600',
+                  color: '#1D4732',
+                  marginBottom: 8,
+                }}
+              >
+                Schedule (optional)
+              </Text>
+              <View style={{ flexDirection: 'row' }}>
+                <TextInput
+                  value={startTime ?? ''}
+                  onChangeText={(v) => setStartTime(v === '' ? null : v)}
+                  placeholder="Start (YYYY-MM-DD HH:MM)"
+                  placeholderTextColor="#6C757D"
+                  style={{
+                    backgroundColor: '#F8F9FA',
+                    borderRadius: 8,
+                    borderWidth: 1,
+                    borderColor: '#DEE2E6',
+                    paddingHorizontal: 12,
+                    paddingVertical: 10,
+                    fontSize: 15,
+                    color: '#1D4732',
+                    flex: 1,
+                    marginRight: 8,
+                  }}
+                />
+                <TextInput
+                  value={endTime ?? ''}
+                  onChangeText={(v) => setEndTime(v === '' ? null : v)}
+                  placeholder="End (YYYY-MM-DD HH:MM)"
+                  placeholderTextColor="#6C757D"
+                  style={{
+                    backgroundColor: '#F8F9FA',
+                    borderRadius: 8,
+                    borderWidth: 1,
+                    borderColor: '#DEE2E6',
+                    paddingHorizontal: 12,
+                    paddingVertical: 10,
+                    fontSize: 15,
+                    color: '#1D4732',
+                    flex: 1,
+                  }}
+                />
+              </View>
+            </View>
+
+            <View style={{ marginBottom: 12 }}>
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: '600',
+                  color: '#1D4732',
+                  marginBottom: 8,
+                }}
+              >
+                Type (optional)
+              </Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                {[
+                  { label: 'Event', value: 'Event' },
+                  { label: 'Repeating', value: 'Repeating_classes' },
+                  { label: 'Janazah', value: 'Janazah' },
+                  { label: 'Volunteering', value: 'Volunteerng' },
+                ].map((opt) => {
+                  const active = postType === opt.value
+                  return (
+                    <TouchableOpacity
+                      key={opt.value}
+                      onPress={() => setPostType(active ? null : opt.value)}
+                      style={{
+                        backgroundColor: active ? '#2F855A' : '#F8F9FA',
+                        borderColor: active ? '#2F855A' : '#DEE2E6',
+                        borderWidth: 1,
+                        borderRadius: 16,
+                        paddingVertical: 6,
+                        paddingHorizontal: 12,
+                        marginRight: 8,
+                        marginBottom: 8,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: active ? '#FFFFFF' : '#1D4732',
+                          fontSize: 13,
+                          fontWeight: '600',
+                        }}
+                      >
+                        {opt.label}
+                      </Text>
+                    </TouchableOpacity>
+                  )
+                })}
+              </View>
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: '600',
+                  color: '#1D4732',
+                  marginBottom: 8,
+                  marginTop: 4,
+                }}
+              >
+                Audience (optional)
+              </Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                {[
+                  { label: 'Men', value: 'Brothers' },
+                  { label: 'Women', value: 'Sisters' },
+                  { label: 'Mixed', value: 'Mixed' },
+                ].map((opt) => {
+                  const active = demographic === opt.value
+                  return (
+                    <TouchableOpacity
+                      key={opt.value}
+                      onPress={() => setDemographic(active ? null : opt.value)}
+                      style={{
+                        backgroundColor: active ? '#2F855A' : '#F8F9FA',
+                        borderColor: active ? '#2F855A' : '#DEE2E6',
+                        borderWidth: 1,
+                        borderRadius: 16,
+                        paddingVertical: 6,
+                        paddingHorizontal: 12,
+                        marginRight: 8,
+                        marginBottom: 8,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: active ? '#FFFFFF' : '#1D4732',
+                          fontSize: 13,
+                          fontWeight: '600',
+                        }}
+                      >
+                        {opt.label}
+                      </Text>
+                    </TouchableOpacity>
+                  )
+                })}
+              </View>
+            </View>
+          </ScrollView>
+
+          <View
+            style={{
+              marginBottom: 20,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              paddingHorizontal: 20,
+            }}
+          >
+            <Text style={{ fontSize: 14, color: '#1D4732', fontWeight: '600' }}>
+              Send push notification
             </Text>
-            <TextInput
-              value={announcementTitle}
-              onChangeText={setAnnouncementTitle}
-              placeholder="E.g. Ramadan night program"
-              placeholderTextColor="#ADB5BD"
-              style={{
-                backgroundColor: '#F8F9FA',
-                borderRadius: 8,
-                borderWidth: 1,
-                borderColor: '#DEE2E6',
-                paddingHorizontal: 12,
-                paddingVertical: 10,
-                fontSize: 15,
-                color: '#1D4732',
-              }}
-            />
+            <Switch value={sendPush} onValueChange={setSendPush} />
           </View>
 
-          <View style={{ marginBottom: 20 }}>
-            <Text
-              style={{
-                fontSize: 14,
-                fontWeight: '600',
-                color: '#1D4732',
-                marginBottom: 8,
-              }}
-            >
-              Details
-            </Text>
-            <TextInput
-              value={announcementBody}
-              onChangeText={setAnnouncementBody}
-              placeholder="Add timing, location, or supporting notes"
-              placeholderTextColor="#ADB5BD"
-              style={{
-                backgroundColor: '#F8F9FA',
-                borderRadius: 8,
-                borderWidth: 1,
-                borderColor: '#DEE2E6',
-                paddingHorizontal: 12,
-                paddingVertical: 10,
-                fontSize: 15,
-                color: '#1D4732',
-                minHeight: 100,
-                textAlignVertical: 'top',
-              }}
-              multiline
-              numberOfLines={4}
-            />
-          </View>
-
-          <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'flex-end',
+              paddingHorizontal: 20,
+              paddingBottom: 16,
+            }}
+          >
             <TouchableOpacity
               style={{
                 paddingVertical: 10,
@@ -152,7 +356,6 @@ export default function AnnouncementModal({
                 Cancel
               </Text>
             </TouchableOpacity>
-
             <TouchableOpacity
               style={{
                 backgroundColor: '#2F855A',

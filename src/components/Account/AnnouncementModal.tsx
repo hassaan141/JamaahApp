@@ -20,6 +20,8 @@ export default function AnnouncementModal({
   setEndTime,
   recurringDays,
   setRecurringDays,
+  date,
+  setDate,
   postType,
   setPostType,
   demographic,
@@ -39,6 +41,8 @@ export default function AnnouncementModal({
   setEndTime: (v: string | null) => void
   recurringDays: number[]
   setRecurringDays: (days: number[]) => void
+  date?: string | null
+  setDate?: (d: string | null) => void
   postType: string | null
   setPostType: (v: string | null) => void
   demographic: string | null
@@ -124,6 +128,8 @@ export default function AnnouncementModal({
               postType={postType}
               recurringDays={recurringDays}
               setRecurringDays={setRecurringDays}
+              date={date}
+              setDate={setDate}
             />
 
             <TimeInputSection

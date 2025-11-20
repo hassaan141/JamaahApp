@@ -18,6 +18,7 @@ export default function CreateAnnouncementSection({
   const [postType, setPostType] = useState<string | null>(null)
   const [demographic, setDemographic] = useState<string | null>(null)
   const [recurringDays, setRecurringDays] = useState<number[]>([])
+  const [date, setDate] = useState<string | null>(null)
   const [posting, setPosting] = useState(false)
 
   const handlePostAnnouncement = async () => {
@@ -37,6 +38,7 @@ export default function CreateAnnouncementSection({
         recurs_on_days: recurringDays.length > 0 ? recurringDays : null,
         start_time: startTime ?? null,
         end_time: endTime ?? null,
+        date: date ?? null,
       })
       if (!ok || !data) {
         toast.error(error || 'Unknown error', 'Error posting announcement')
@@ -53,6 +55,7 @@ export default function CreateAnnouncementSection({
       setPostType(null)
       setDemographic(null)
       setRecurringDays([])
+      setDate(null)
       setShowAnnouncementModal(false)
     } finally {
       setPosting(false)
@@ -93,6 +96,8 @@ export default function CreateAnnouncementSection({
         setPostType={setPostType}
         demographic={demographic}
         setDemographic={setDemographic}
+        date={date}
+        setDate={setDate}
         posting={posting}
         handlePostAnnouncement={handlePostAnnouncement}
       />

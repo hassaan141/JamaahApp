@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import {
   Modal,
   View,
@@ -9,6 +9,7 @@ import {
   ScrollView,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
+import DateTimePicker from '@react-native-community/datetimepicker'
 
 export default function AnnouncementModal({
   visible,
@@ -49,6 +50,25 @@ export default function AnnouncementModal({
   posting: boolean
   handlePostAnnouncement: () => Promise<void> | void
 }) {
+  // Local state for showing pickers
+  const [showStartPicker, setShowStartPicker] = useState(false)
+  const [showEndPicker, setShowEndPicker] = useState(false)
+
+  // Helper to parse and format date/time
+  const formatDateTime = (dt: string | null) => {
+    if (!dt) return ''
+    const d = new Date(dt)
+    if (isNaN(d.getTime())) return dt
+    return d.toLocaleString()
+  }
+
+  // Convert string to Date or undefined
+  const parseDate = (dt: string | null) => {
+    if (!dt) return undefined
+    const d = new Date(dt)
+    return isNaN(d.getTime()) ? undefined : d
+  }
+
   return (
     <Modal
       visible={visible}
@@ -184,42 +204,96 @@ export default function AnnouncementModal({
                 Schedule (optional)
               </Text>
               <View style={{ flexDirection: 'row' }}>
-                <TextInput
-                  value={startTime ?? ''}
-                  onChangeText={(v) => setStartTime(v === '' ? null : v)}
-                  placeholder="Start (YYYY-MM-DD HH:MM)"
-                  placeholderTextColor="#6C757D"
+                <TouchableOpacity
                   style={{
-                    backgroundColor: '#F8F9FA',
+                    backgroundColor: startTime ? '#2F855A' : '#FFFFFF',
                     borderRadius: 8,
-                    borderWidth: 1,
-                    borderColor: '#DEE2E6',
+                    borderWidth: 2,
+                    borderColor: '#2F855A',
                     paddingHorizontal: 12,
-                    paddingVertical: 10,
-                    fontSize: 15,
-                    color: '#1D4732',
+                    paddingVertical: 12,
                     flex: 1,
                     marginRight: 8,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    shadowColor: '#2F855A',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.08,
+                    shadowRadius: 4,
+                    elevation: startTime ? 2 : 0,
                   }}
-                />
-                <TextInput
-                  value={endTime ?? ''}
-                  onChangeText={(v) => setEndTime(v === '' ? null : v)}
-                  placeholder="End (YYYY-MM-DD HH:MM)"
-                  placeholderTextColor="#6C757D"
+                  onPress={() => setShowStartPicker(true)}
+                  activeOpacity={0.85}
+                >
+                  <Text
+                    style={{
+                      fontSize: 15,
+                      color: startTime ? '#FFFFFF' : '#2F855A',
+                      fontWeight: '600',
+                    }}
+                  >
+                    {startTime
+                      ? formatDateTime(startTime)
+                      : 'Start (pick date/time)'}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
                   style={{
-                    backgroundColor: '#F8F9FA',
+                    backgroundColor: endTime ? '#2F855A' : '#FFFFFF',
                     borderRadius: 8,
-                    borderWidth: 1,
-                    borderColor: '#DEE2E6',
+                    borderWidth: 2,
+                    borderColor: '#2F855A',
                     paddingHorizontal: 12,
-                    paddingVertical: 10,
-                    fontSize: 15,
-                    color: '#1D4732',
+                    paddingVertical: 12,
                     flex: 1,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    shadowColor: '#2F855A',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.08,
+                    shadowRadius: 4,
+                    elevation: endTime ? 2 : 0,
+                  }}
+                  onPress={() => setShowEndPicker(true)}
+                  activeOpacity={0.85}
+                >
+                  <Text
+                    style={{
+                      fontSize: 15,
+                      color: endTime ? '#FFFFFF' : '#2F855A',
+                      fontWeight: '600',
+                    }}
+                  >
+                    {endTime ? formatDateTime(endTime) : 'End (pick date/time)'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              {showStartPicker && (
+                <DateTimePicker
+                  value={parseDate(startTime) ?? new Date()}
+                  mode="datetime"
+                  display="default"
+                  onChange={(event, date) => {
+                    setShowStartPicker(false)
+                    if (event.type === 'set' && date) {
+                      setStartTime(date.toISOString())
+                    }
                   }}
                 />
-              </View>
+              )}
+              {showEndPicker && (
+                <DateTimePicker
+                  value={parseDate(endTime) ?? new Date()}
+                  mode="datetime"
+                  display="default"
+                  onChange={(event, date) => {
+                    setShowEndPicker(false)
+                    if (event.type === 'set' && date) {
+                      setEndTime(date.toISOString())
+                    }
+                  }}
+                />
+              )}
             </View>
 
             <View style={{ marginBottom: 12 }}>

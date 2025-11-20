@@ -25,6 +25,11 @@ export type Announcement = {
   title: string
   body: string | null
   created_at: string
+  post_type: string | null
+  demographic: string | null
+  recurs_on_days: number[] | null
+  start_time: string | null
+  end_time: string | null
   organizations: {
     id: string
     name: string
@@ -51,7 +56,20 @@ export async function fetchMyAnnouncements(
       author_profile_id,
       title,
       body,
-      created_at
+      created_at,
+      post_type,
+      demographic,
+      recurs_on_days,
+      start_time,
+      end_time,
+      organizations!inner(
+        id,
+        name,
+        type,
+        city,
+        province_state,
+        country
+      )
     `,
     )
     .in('organization_id', orgIds)

@@ -189,6 +189,7 @@ export interface Database {
           type: string | null
           post_type: string | null
           demographic: string | null
+          recurs_on_days: number[] | null
           start_time: string | null
           end_time: string | null
           send_push: boolean
@@ -203,6 +204,7 @@ export interface Database {
           type?: string | null
           post_type?: string | null
           demographic?: string | null
+          recurs_on_days?: number[] | null
           start_time?: string | null
           end_time?: string | null
           send_push?: boolean
@@ -217,6 +219,7 @@ export interface Database {
           type?: string | null
           post_type?: string | null
           demographic?: string | null
+          recurs_on_days?: number[] | null
           start_time?: string | null
           end_time?: string | null
           send_push?: boolean

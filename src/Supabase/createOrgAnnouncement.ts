@@ -6,11 +6,11 @@ export async function createOrgAnnouncement(input: {
   author_profile_id: string
   title: string
   body?: string
-  send_push?: boolean
   post_type?: string | null
   demographic?: string | null
-  start_time?: string | null // ISO / timestampz
-  end_time?: string | null
+  recurs_on_days?: number[] | null // Array of day numbers 1-7
+  start_time?: string | null // HH:MM format
+  end_time?: string | null // HH:MM format
 }): Promise<{ ok: boolean; data?: OrgPost; error?: string }> {
   try {
     const payload = {
@@ -18,12 +18,12 @@ export async function createOrgAnnouncement(input: {
       author_profile_id: input.author_profile_id,
       title: input.title,
       body: input.body ?? null,
-      send_push: input.send_push ?? false,
+      send_push: true, // Default to true as per your schema
       post_type: input.post_type ?? null,
       demographic: input.demographic ?? null,
+      recurs_on_days: input.recurs_on_days ?? null,
       start_time: input.start_time ?? null,
       end_time: input.end_time ?? null,
-      // type or send_push handling can be added later if needed
     }
     const { data, error } = await supabase
       .from('org_posts')

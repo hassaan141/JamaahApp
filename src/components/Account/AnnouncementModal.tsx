@@ -5,12 +5,207 @@ import {
   Text,
   TouchableOpacity,
   TextInput,
-  Switch,
   ScrollView,
+  Platform,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import DateTimePicker from '@react-native-community/datetimepicker'
 
+function TimeInput({
+  label,
+  time,
+  setTime,
+  isOpen,
+  onToggle,
+}: {
+  label: string
+  time: string | null
+  setTime: (t: string) => void
+  isOpen: boolean
+  onToggle: () => void
+}) {
+  const displayTime = time
+    ? new Date(`2000-01-01T${time}:00`).toLocaleTimeString(undefined, {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      })
+    : 'Select Time'
+
+  const handleChange = (event: unknown, selectedTime?: Date) => {
+    if (Platform.OS === 'android') {
+      onToggle()
+    }
+    if (selectedTime) {
+      const hours = selectedTime.getHours().toString().padStart(2, '0')
+      const minutes = selectedTime.getMinutes().toString().padStart(2, '0')
+      setTime(`${hours}:${minutes}`)
+    }
+  }
+
+  return (
+    <View style={{ flex: 1 }}>
+      <TouchableOpacity
+        onPress={onToggle}
+        activeOpacity={0.8}
+        style={{
+          backgroundColor: isOpen ? '#F0FFF4' : '#F8F9FA',
+          borderColor: isOpen ? '#2F855A' : '#DEE2E6',
+          borderWidth: 1,
+          borderRadius: 10,
+          padding: 10,
+          marginBottom: isOpen ? 4 : 0,
+        }}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View
+            style={{
+              backgroundColor: isOpen ? 'rgba(47, 133, 90, 0.1)' : '#E9ECEF',
+              borderRadius: 6,
+              padding: 6,
+              marginRight: 10,
+            }}
+          >
+            <Feather
+              name="clock"
+              size={16}
+              color={isOpen ? '#2F855A' : '#6C757D'}
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text
+              style={{
+                fontSize: 10,
+                color: '#6C757D',
+                fontWeight: '600',
+                textTransform: 'uppercase',
+              }}
+            >
+              {label}
+            </Text>
+            <Text
+              numberOfLines={1}
+              style={{
+                fontSize: 13,
+                fontWeight: '600',
+                color: '#1D4732',
+                marginTop: 2,
+              }}
+            >
+              {displayTime}
+            </Text>
+          </View>
+        </View>
+      </TouchableOpacity>
+
+      {isOpen && (
+        <View
+          style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: 10,
+            borderWidth: 1,
+            borderColor: '#E9ECEF',
+            overflow: 'hidden',
+            marginBottom: 12,
+            height: 130,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <DateTimePicker
+            value={time ? new Date(`2000-01-01T${time}:00`) : new Date()}
+            mode="time"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            onChange={handleChange}
+            textColor="#1D4732"
+            accentColor="#2F855A"
+            style={{
+              width: 320,
+              marginLeft: -10,
+              transform: [{ scale: 0.55 }],
+            }}
+          />
+        </View>
+      )}
+    </View>
+  )
+}
+
+function DaySelector({
+  selectedDays,
+  setSelectedDays,
+}: {
+  selectedDays: number[]
+  setSelectedDays: (days: number[]) => void
+}) {
+  const days = [
+    { label: 'Mon', value: 1 },
+    { label: 'Tue', value: 2 },
+    { label: 'Wed', value: 3 },
+    { label: 'Thu', value: 4 },
+    { label: 'Fri', value: 5 },
+    { label: 'Sat', value: 6 },
+    { label: 'Sun', value: 7 },
+  ]
+
+  const toggleDay = (dayValue: number) => {
+    if (selectedDays.includes(dayValue)) {
+      setSelectedDays(selectedDays.filter((d) => d !== dayValue))
+    } else {
+      setSelectedDays([...selectedDays, dayValue].sort())
+    }
+  }
+
+  return (
+    <View>
+      <Text
+        style={{
+          fontSize: 14,
+          fontWeight: '600',
+          color: '#1D4732',
+          marginBottom: 10,
+        }}
+      >
+        Recurring Days
+      </Text>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+        {days.map((day) => {
+          const isSelected = selectedDays.includes(day.value)
+          return (
+            <TouchableOpacity
+              key={day.value}
+              onPress={() => toggleDay(day.value)}
+              style={{
+                backgroundColor: isSelected ? '#2F855A' : '#F8F9FA',
+                borderColor: isSelected ? '#2F855A' : '#DEE2E6',
+                borderWidth: 1,
+                borderRadius: 20,
+                paddingVertical: 8,
+                paddingHorizontal: 16,
+                marginRight: 8,
+                marginBottom: 8,
+                minWidth: 50,
+                alignItems: 'center',
+              }}
+            >
+              <Text
+                style={{
+                  color: isSelected ? '#FFFFFF' : '#1D4732',
+                  fontSize: 13,
+                  fontWeight: '600',
+                }}
+              >
+                {day.label}
+              </Text>
+            </TouchableOpacity>
+          )
+        })}
+      </View>
+    </View>
+  )
+}
+
+// --- MAIN COMPONENT ---
 export default function AnnouncementModal({
   visible,
   onClose,
@@ -22,12 +217,12 @@ export default function AnnouncementModal({
   setStartTime,
   endTime,
   setEndTime,
+  recurringDays,
+  setRecurringDays,
   postType,
   setPostType,
   demographic,
   setDemographic,
-  sendPush,
-  setSendPush,
   posting,
   handlePostAnnouncement,
 }: {
@@ -41,33 +236,17 @@ export default function AnnouncementModal({
   setStartTime: (v: string | null) => void
   endTime: string | null
   setEndTime: (v: string | null) => void
+  recurringDays: number[]
+  setRecurringDays: (days: number[]) => void
   postType: string | null
   setPostType: (v: string | null) => void
   demographic: string | null
   setDemographic: (v: string | null) => void
-  sendPush: boolean
-  setSendPush: (v: boolean) => void
   posting: boolean
   handlePostAnnouncement: () => Promise<void> | void
 }) {
-  // Local state for showing pickers
   const [showStartPicker, setShowStartPicker] = useState(false)
   const [showEndPicker, setShowEndPicker] = useState(false)
-
-  // Helper to parse and format date/time
-  const formatDateTime = (dt: string | null) => {
-    if (!dt) return ''
-    const d = new Date(dt)
-    if (isNaN(d.getTime())) return dt
-    return d.toLocaleString()
-  }
-
-  // Convert string to Date or undefined
-  const parseDate = (dt: string | null) => {
-    if (!dt) return undefined
-    const d = new Date(dt)
-    return isNaN(d.getTime()) ? undefined : d
-  }
 
   return (
     <Modal
@@ -92,10 +271,11 @@ export default function AnnouncementModal({
             paddingTop: 16,
             width: '100%',
             maxWidth: 400,
-            maxHeight: 520,
+            maxHeight: 600, // Increased slightly to fit pickers if open
             overflow: 'hidden',
           }}
         >
+          {/* Header */}
           <View
             style={{
               flexDirection: 'row',
@@ -130,6 +310,7 @@ export default function AnnouncementModal({
             contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 12 }}
             showsVerticalScrollIndicator
           >
+            {/* Title Input */}
             <View style={{ marginBottom: 16 }}>
               <Text
                 style={{
@@ -159,7 +340,8 @@ export default function AnnouncementModal({
               />
             </View>
 
-            <View style={{ marginBottom: 12 }}>
+            {/* Details Input */}
+            <View style={{ marginBottom: 16 }}>
               <Text
                 style={{
                   fontSize: 14,
@@ -192,110 +374,58 @@ export default function AnnouncementModal({
               />
             </View>
 
-            <View style={{ marginBottom: 12 }}>
+            {/* SCHEDULE SECTION */}
+            <View style={{ marginBottom: 16 }}>
               <Text
                 style={{
                   fontSize: 14,
                   fontWeight: '600',
                   color: '#1D4732',
-                  marginBottom: 8,
+                  marginBottom: 10,
                 }}
               >
                 Schedule (optional)
               </Text>
+
+              {/* Conditional rendering based on post type */}
+              {postType === 'Repeating_classes' && (
+                <View style={{ marginBottom: 12 }}>
+                  <DaySelector
+                    selectedDays={recurringDays}
+                    setSelectedDays={setRecurringDays}
+                  />
+                </View>
+              )}
+
+              {/* Time Inputs */}
               <View style={{ flexDirection: 'row' }}>
-                <TouchableOpacity
-                  style={{
-                    backgroundColor: startTime ? '#2F855A' : '#FFFFFF',
-                    borderRadius: 8,
-                    borderWidth: 2,
-                    borderColor: '#2F855A',
-                    paddingHorizontal: 12,
-                    paddingVertical: 12,
-                    flex: 1,
-                    marginRight: 8,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    shadowColor: '#2F855A',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.08,
-                    shadowRadius: 4,
-                    elevation: startTime ? 2 : 0,
-                  }}
-                  onPress={() => setShowStartPicker(true)}
-                  activeOpacity={0.85}
-                >
-                  <Text
-                    style={{
-                      fontSize: 15,
-                      color: startTime ? '#FFFFFF' : '#2F855A',
-                      fontWeight: '600',
-                    }}
-                  >
-                    {startTime
-                      ? formatDateTime(startTime)
-                      : 'Start (pick date/time)'}
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={{
-                    backgroundColor: endTime ? '#2F855A' : '#FFFFFF',
-                    borderRadius: 8,
-                    borderWidth: 2,
-                    borderColor: '#2F855A',
-                    paddingHorizontal: 12,
-                    paddingVertical: 12,
-                    flex: 1,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    shadowColor: '#2F855A',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.08,
-                    shadowRadius: 4,
-                    elevation: endTime ? 2 : 0,
-                  }}
-                  onPress={() => setShowEndPicker(true)}
-                  activeOpacity={0.85}
-                >
-                  <Text
-                    style={{
-                      fontSize: 15,
-                      color: endTime ? '#FFFFFF' : '#2F855A',
-                      fontWeight: '600',
-                    }}
-                  >
-                    {endTime ? formatDateTime(endTime) : 'End (pick date/time)'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-              {showStartPicker && (
-                <DateTimePicker
-                  value={parseDate(startTime) ?? new Date()}
-                  mode="datetime"
-                  display="default"
-                  onChange={(event, date) => {
-                    setShowStartPicker(false)
-                    if (event.type === 'set' && date) {
-                      setStartTime(date.toISOString())
-                    }
-                  }}
-                />
-              )}
-              {showEndPicker && (
-                <DateTimePicker
-                  value={parseDate(endTime) ?? new Date()}
-                  mode="datetime"
-                  display="default"
-                  onChange={(event, date) => {
+                <TimeInput
+                  label="Start Time"
+                  time={startTime}
+                  setTime={setStartTime}
+                  isOpen={showStartPicker}
+                  onToggle={() => {
+                    setShowStartPicker(!showStartPicker)
                     setShowEndPicker(false)
-                    if (event.type === 'set' && date) {
-                      setEndTime(date.toISOString())
-                    }
                   }}
                 />
-              )}
+
+                <View style={{ width: 10 }} />
+
+                <TimeInput
+                  label="End Time"
+                  time={endTime}
+                  setTime={setEndTime}
+                  isOpen={showEndPicker}
+                  onToggle={() => {
+                    setShowEndPicker(!showEndPicker)
+                    setShowStartPicker(false)
+                  }}
+                />
+              </View>
             </View>
 
+            {/* Types & Demographics */}
             <View style={{ marginBottom: 12 }}>
               <Text
                 style={{
@@ -305,7 +435,7 @@ export default function AnnouncementModal({
                   marginBottom: 8,
                 }}
               >
-                Type (optional)
+                Type
               </Text>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
                 {[
@@ -343,6 +473,7 @@ export default function AnnouncementModal({
                   )
                 })}
               </View>
+
               <Text
                 style={{
                   fontSize: 14,
@@ -352,7 +483,7 @@ export default function AnnouncementModal({
                   marginTop: 4,
                 }}
               >
-                Audience (optional)
+                Audience
               </Text>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
                 {[
@@ -392,21 +523,7 @@ export default function AnnouncementModal({
             </View>
           </ScrollView>
 
-          <View
-            style={{
-              marginBottom: 20,
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              paddingHorizontal: 20,
-            }}
-          >
-            <Text style={{ fontSize: 14, color: '#1D4732', fontWeight: '600' }}>
-              Send push notification
-            </Text>
-            <Switch value={sendPush} onValueChange={setSendPush} />
-          </View>
-
+          {/* Footer Actions */}
           <View
             style={{
               flexDirection: 'row',

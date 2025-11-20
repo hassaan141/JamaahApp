@@ -17,7 +17,7 @@ export default function CreateAnnouncementSection({
   const [endTime, setEndTime] = useState<string | null>(null)
   const [postType, setPostType] = useState<string | null>(null)
   const [demographic, setDemographic] = useState<string | null>(null)
-  const [sendPush, setSendPush] = useState<boolean>(false)
+  const [recurringDays, setRecurringDays] = useState<number[]>([])
   const [posting, setPosting] = useState(false)
 
   const handlePostAnnouncement = async () => {
@@ -32,9 +32,9 @@ export default function CreateAnnouncementSection({
         author_profile_id: profile.id,
         title: announcementTitle.trim() || 'Announcement',
         body: announcementBody.trim(),
-        send_push: sendPush,
         post_type: postType ?? null,
         demographic: demographic ?? null,
+        recurs_on_days: recurringDays.length > 0 ? recurringDays : null,
         start_time: startTime ?? null,
         end_time: endTime ?? null,
       })
@@ -52,7 +52,7 @@ export default function CreateAnnouncementSection({
       setEndTime(null)
       setPostType(null)
       setDemographic(null)
-      setSendPush(false)
+      setRecurringDays([])
       setShowAnnouncementModal(false)
     } finally {
       setPosting(false)
@@ -83,6 +83,8 @@ export default function CreateAnnouncementSection({
         setAnnouncementTitle={setAnnouncementTitle}
         announcementBody={announcementBody}
         setAnnouncementBody={setAnnouncementBody}
+        recurringDays={recurringDays}
+        setRecurringDays={setRecurringDays}
         startTime={startTime}
         setStartTime={setStartTime}
         endTime={endTime}
@@ -91,8 +93,6 @@ export default function CreateAnnouncementSection({
         setPostType={setPostType}
         demographic={demographic}
         setDemographic={setDemographic}
-        sendPush={sendPush}
-        setSendPush={setSendPush}
         posting={posting}
         handlePostAnnouncement={handlePostAnnouncement}
       />

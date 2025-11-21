@@ -192,6 +192,7 @@ export interface Database {
           recurs_on_days: number[] | null
           start_time: string | null
           end_time: string | null
+          date: string | null
           send_push: boolean
           created_at: string
         }
@@ -207,6 +208,7 @@ export interface Database {
           recurs_on_days?: number[] | null
           start_time?: string | null
           end_time?: string | null
+          date?: string | null
           send_push?: boolean
           created_at?: string
         }
@@ -222,6 +224,7 @@ export interface Database {
           recurs_on_days?: number[] | null
           start_time?: string | null
           end_time?: string | null
+          date?: string | null
           send_push?: boolean
           created_at?: string
         }

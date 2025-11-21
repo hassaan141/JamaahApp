@@ -30,6 +30,8 @@ export type Announcement = {
   recurs_on_days: number[] | null
   start_time: string | null
   end_time: string | null
+  date: string | null
+  send_push: boolean
   organizations: {
     id: string
     name: string
@@ -62,6 +64,8 @@ export async function fetchMyAnnouncements(
       recurs_on_days,
       start_time,
       end_time,
+      date,
+      send_push,
       organizations!inner(
         id,
         name,

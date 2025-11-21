@@ -86,7 +86,7 @@ export default function NotificationsTab() {
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, { paddingHorizontal: 12 }]}
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />

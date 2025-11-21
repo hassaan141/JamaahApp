@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import { View, StyleSheet } from 'react-native'
-import Header from '@/components/Header/Header'
 import TabNavigation from '@/components/ProgramsScreen/TabNavigation'
 import NotificationsTab from '@/components/ProgramsScreen/NotificationsTab'
 import CommunitiesTab from '@/components/ProgramsScreen/CommunitiesTab'
@@ -23,7 +22,6 @@ export default function Programs() {
 
   return (
     <View style={styles.container}>
-      <Header title="Community" showDate={false} showClock={false} />
       <TabNavigation
         tabs={tabs}
         activeTab={activeTab}

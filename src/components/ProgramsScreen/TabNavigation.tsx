@@ -38,6 +38,7 @@ const styles = StyleSheet.create({
     padding: 4,
     marginHorizontal: 20,
     marginBottom: 20,
+    marginTop: 60,
   },
   tab: {
     flex: 1,

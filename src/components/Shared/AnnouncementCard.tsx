@@ -74,7 +74,7 @@ const getEventTypeColor = (postType: string | null) => {
 }
 
 interface AnnouncementCardProps {
-  announcement: OrgPost & { organizations?: { name?: string } }
+  announcement: OrgPost & { organizations?: { name?: string } | null }
   showEditButton?: boolean
   onEdit?: () => void
   showPublishedDate?: boolean

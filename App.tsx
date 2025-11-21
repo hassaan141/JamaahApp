@@ -14,9 +14,9 @@ import ToastHost from './src/components/Toast/ToastHost'
 
 const Stack = createStackNavigator()
 
-const TESTING_MODE = ENV.TESTING.enabled
-const TEST_EMAIL = ENV.TESTING.email
-const TEST_PASSWORD = ENV.TESTING.password
+const TESTING_MODE = false
+const TEST_EMAIL = 'm2farooq@uwaterloo.ca'
+const TEST_PASSWORD = String(ENV.TESTING.password)
 
 function AppNavigator() {
   const { session, setSession } = useAuth()

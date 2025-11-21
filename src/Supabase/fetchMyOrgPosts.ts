@@ -15,9 +15,10 @@ export async function fetchMyOrgPosts(): Promise<OrgPost[]> {
   if (!orgId) return []
   const { data, error } = await supabase
     .from('org_posts')
-    .select('*')
+    .select('*, organizations (name)')
     .eq('organization_id', orgId)
     .order('created_at', { ascending: false })
   if (error) throw error
+  console.log('Fetched org posts:', data)
   return (data ?? []) as OrgPost[]
 }

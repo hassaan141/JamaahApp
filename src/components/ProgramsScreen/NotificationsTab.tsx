@@ -7,10 +7,9 @@ import {
   View,
   Text,
 } from 'react-native'
-import NotificationItem from './NotificationItem'
+import AnnouncementCard from '@/components/Shared/AnnouncementCard'
 import type { OrgPost } from '@/types'
 import { fetchAnnouncements } from '@/Supabase/fetchAllAnnouncements'
-import { timeAgo } from '@/Utils/datetime'
 
 export default function NotificationsTab() {
   const [refreshing, setRefreshing] = useState(false)
@@ -87,30 +86,20 @@ export default function NotificationsTab() {
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, { paddingHorizontal: 12 }]}
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
     >
-      {announcements.map((p) => {
-        const id = p.id
-        const created_at = p.created_at
-        const title = p.title
-        const body = p.body ?? undefined
-        return (
-          <NotificationItem
-            key={id}
-            notification={{
-              id,
-              time: timeAgo(created_at),
-              title,
-              description: body,
-              isNew: false,
-            }}
-          />
-        )
-      })}
+      {announcements.map((announcement) => (
+        <AnnouncementCard
+          key={announcement.id}
+          announcement={announcement}
+          showEditButton={false}
+          showPublishedDate={false}
+        />
+      ))}
     </ScrollView>
   )
 }

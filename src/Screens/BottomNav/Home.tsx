@@ -67,7 +67,7 @@ export default function Home({ navigation }: { navigation: NavigationLike }) {
 
       <CombinedPrayerCard prayerTimes={times} />
 
-      <NotificationList />
+      <NotificationList refreshKey={refreshing} />
     </ScrollView>
   )
 }

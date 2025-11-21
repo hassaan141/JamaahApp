@@ -1,3 +1,5 @@
+//Depreciated, remove soon
+
 import { supabase } from './supabaseClient'
 
 export type OrgAnnouncement = {
@@ -8,6 +10,7 @@ export type OrgAnnouncement = {
   body?: string | null
   type?: string | null
   created_at: string
+  organization_name?: string | null
 }
 
 export async function fetchOrgAnnouncements(

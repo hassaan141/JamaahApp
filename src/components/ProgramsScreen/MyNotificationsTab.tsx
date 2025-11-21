@@ -7,14 +7,15 @@ import {
   View,
   Text,
 } from 'react-native'
-import MyNotificationItem from './MyNotificationItem'
-import { fetchMyAnnouncements } from '@/Supabase/fetchMyAnnouncements'
+import AnnouncementCard from '@/components/Shared/AnnouncementCard'
+import {
+  fetchMyAnnouncements,
+  type Announcement,
+} from '@/Supabase/fetchMyAnnouncements'
 
 export default function MyNotificationsTab() {
   const [refreshing, setRefreshing] = useState(false)
-  const [announcements, setAnnouncements] = useState<Record<string, unknown>[]>(
-    [],
-  )
+  const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -23,8 +24,7 @@ export default function MyNotificationsTab() {
     setError(null)
     try {
       const data = await fetchMyAnnouncements()
-      const rows = Array.isArray(data) ? data : []
-      setAnnouncements(rows)
+      setAnnouncements(Array.isArray(data) ? data : [])
     } catch (_e) {
       console.error('loadMyAnnouncements error', _e)
       setError('Failed to load announcements')
@@ -94,25 +94,14 @@ export default function MyNotificationsTab() {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
     >
-      {announcements.map((post) => {
-        const p = post as Record<string, unknown>
-        const id = String(p.id ?? '')
-        const created_at = String(p.created_at ?? '')
-        const title = String(p.title ?? '')
-        const body = typeof p.body === 'string' ? (p.body as string) : undefined
-        return (
-          <MyNotificationItem
-            key={id}
-            notification={{
-              id,
-              time: created_at,
-              title,
-              description: body,
-              isNew: false,
-            }}
-          />
-        )
-      })}
+      {announcements.map((announcement) => (
+        <AnnouncementCard
+          key={announcement.id}
+          announcement={announcement}
+          showEditButton={false}
+          showPublishedDate={true}
+        />
+      ))}
     </ScrollView>
   )
 }

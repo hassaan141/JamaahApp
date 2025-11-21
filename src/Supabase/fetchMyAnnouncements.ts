@@ -25,6 +25,13 @@ export type Announcement = {
   title: string
   body: string | null
   created_at: string
+  post_type: string | null
+  demographic: string | null
+  recurs_on_days: number[] | null
+  start_time: string | null
+  end_time: string | null
+  date: string | null
+  send_push: boolean
   organizations: {
     id: string
     name: string
@@ -44,16 +51,7 @@ export async function fetchMyAnnouncements(
 
   let q = supabase
     .from('org_posts')
-    .select(
-      `
-      id,
-      organization_id,
-      author_profile_id,
-      title,
-      body,
-      created_at
-    `,
-    )
+    .select('*, organizations (name)') // Only join organization name
     .in('organization_id', orgIds)
     .order('created_at', { ascending: false })
     .limit(limit)
@@ -65,5 +63,6 @@ export async function fetchMyAnnouncements(
     console.error('[fetchMyAnnouncements] Supabase error:', error)
     throw error
   }
+  console.log('[fetchMyAnnouncements] returned rows:', (data ?? []).length)
   return (data as unknown as Announcement[]) ?? []
 }

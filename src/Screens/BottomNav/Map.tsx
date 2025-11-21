@@ -10,7 +10,6 @@ import {
 } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
 import DetailedMap from '@/components/Map/DetailedMap'
-import { Header } from '@/components/Header/Header'
 import MasjidSearchBar from '@/components/MasjidScreen/MasjidSearchBar'
 import MapHeader from '@/components/Map/MapHeader'
 import CompactMapView from '@/components/Map/CompactMapView'
@@ -127,7 +126,6 @@ export default function MapScreen() {
 
   return (
     <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
-      <Header title="Map" showDate={false} showClock={false} />
       <ScrollView
         style={styles.content}
         refreshControl={
@@ -196,7 +194,7 @@ export default function MapScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F7FAFC' },
   content: { flex: 1 },
-  searchContainer: { padding: 20, paddingBottom: 10 },
+  searchContainer: { padding: 20, paddingBottom: 10, marginTop: 40 },
   compactMapContainer: {
     backgroundColor: '#FFFFFF',
     marginHorizontal: 20,

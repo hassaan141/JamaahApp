@@ -84,6 +84,7 @@ export interface Database {
           is_active: boolean
           approved_at: string | null
           geom: string | null
+          description?: string | null
         }
         Insert: Partial<
           Database['public']['Tables']['organizations']['Row']
@@ -185,7 +186,13 @@ export interface Database {
           author_profile_id: string | null
           title: string
           body: string | null
-          type: string | null
+          post_type: string | null
+          demographic: string | null
+          recurs_on_days: number[] | null
+          start_time: string | null
+          end_time: string | null
+          date: string | null
+          send_push: boolean
           created_at: string
         }
         Insert: {
@@ -194,7 +201,13 @@ export interface Database {
           author_profile_id?: string | null
           title: string
           body?: string | null
-          type?: string | null
+          post_type?: string | null
+          demographic?: string | null
+          recurs_on_days?: number[] | null
+          start_time?: string | null
+          end_time?: string | null
+          date?: string | null
+          send_push?: boolean
           created_at?: string
         }
         Update: {
@@ -203,7 +216,13 @@ export interface Database {
           author_profile_id?: string | null
           title?: string
           body?: string | null
-          type?: string | null
+          post_type?: string | null
+          demographic?: string | null
+          recurs_on_days?: number[] | null
+          start_time?: string | null
+          end_time?: string | null
+          date?: string | null
+          send_push?: boolean
           created_at?: string
         }
         Relationships: [

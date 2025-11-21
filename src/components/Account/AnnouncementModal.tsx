@@ -1,7 +1,12 @@
-import React from 'react'
-import { Modal, View, Text, TouchableOpacity, TextInput } from 'react-native'
+import React, { useState } from 'react'
+import { Modal, View, Text, TouchableOpacity, ScrollView } from 'react-native'
 import { Feather } from '@expo/vector-icons'
-
+import TitleInput from './CreateAnnouncements/TitleInput'
+import TypeSelector from './CreateAnnouncements/TypeSelector'
+import ScheduleSection from './CreateAnnouncements/ScheduleSection'
+import TimeInputSection from './CreateAnnouncements/TimeInputSection'
+import AudienceSelector from './CreateAnnouncements/AudienceSelector'
+import DescriptionInput from './CreateAnnouncements/DescriptionInput'
 export default function AnnouncementModal({
   visible,
   onClose,
@@ -9,6 +14,18 @@ export default function AnnouncementModal({
   setAnnouncementTitle,
   announcementBody,
   setAnnouncementBody,
+  startTime,
+  setStartTime,
+  endTime,
+  setEndTime,
+  recurringDays,
+  setRecurringDays,
+  date,
+  setDate,
+  postType,
+  setPostType,
+  demographic,
+  setDemographic,
   posting,
   handlePostAnnouncement,
 }: {
@@ -18,9 +35,24 @@ export default function AnnouncementModal({
   setAnnouncementTitle: (v: string) => void
   announcementBody: string
   setAnnouncementBody: (v: string) => void
+  startTime: string | null
+  setStartTime: (v: string | null) => void
+  endTime: string | null
+  setEndTime: (v: string | null) => void
+  recurringDays: number[]
+  setRecurringDays: (days: number[]) => void
+  date?: string | null
+  setDate?: (d: string | null) => void
+  postType: string | null
+  setPostType: (v: string | null) => void
+  demographic: string | null
+  setDemographic: (v: string | null) => void
   posting: boolean
   handlePostAnnouncement: () => Promise<void> | void
 }) {
+  const [showStartPicker, setShowStartPicker] = useState(false)
+  const [showEndPicker, setShowEndPicker] = useState(false)
+
   return (
     <Modal
       visible={visible}
@@ -41,16 +73,20 @@ export default function AnnouncementModal({
           style={{
             backgroundColor: '#FFFFFF',
             borderRadius: 12,
-            padding: 20,
+            paddingTop: 16,
             width: '100%',
             maxWidth: 400,
+            maxHeight: 600,
+            overflow: 'hidden',
           }}
         >
+          {/* Header */}
           <View
             style={{
               flexDirection: 'row',
               alignItems: 'center',
-              marginBottom: 20,
+              paddingHorizontal: 20,
+              marginBottom: 12,
             }}
           >
             <Feather
@@ -74,69 +110,59 @@ export default function AnnouncementModal({
             </TouchableOpacity>
           </View>
 
-          <View style={{ marginBottom: 16 }}>
-            <Text
-              style={{
-                fontSize: 14,
-                fontWeight: '600',
-                color: '#1D4732',
-                marginBottom: 8,
-              }}
-            >
-              Title
-            </Text>
-            <TextInput
-              value={announcementTitle}
-              onChangeText={setAnnouncementTitle}
-              placeholder="E.g. Ramadan night program"
-              placeholderTextColor="#ADB5BD"
-              style={{
-                backgroundColor: '#F8F9FA',
-                borderRadius: 8,
-                borderWidth: 1,
-                borderColor: '#DEE2E6',
-                paddingHorizontal: 12,
-                paddingVertical: 10,
-                fontSize: 15,
-                color: '#1D4732',
-              }}
-            />
-          </View>
+          <ScrollView
+            style={{ flexGrow: 0 }}
+            contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 12 }}
+            showsVerticalScrollIndicator
+          >
+            {/* Components in the specified order: title, type, schedule, start/end time, audience, description */}
 
-          <View style={{ marginBottom: 20 }}>
-            <Text
-              style={{
-                fontSize: 14,
-                fontWeight: '600',
-                color: '#1D4732',
-                marginBottom: 8,
-              }}
-            >
-              Details
-            </Text>
-            <TextInput
-              value={announcementBody}
-              onChangeText={setAnnouncementBody}
-              placeholder="Add timing, location, or supporting notes"
-              placeholderTextColor="#ADB5BD"
-              style={{
-                backgroundColor: '#F8F9FA',
-                borderRadius: 8,
-                borderWidth: 1,
-                borderColor: '#DEE2E6',
-                paddingHorizontal: 12,
-                paddingVertical: 10,
-                fontSize: 15,
-                color: '#1D4732',
-                minHeight: 100,
-                textAlignVertical: 'top',
-              }}
-              multiline
-              numberOfLines={4}
+            <TitleInput
+              title={announcementTitle}
+              setTitle={setAnnouncementTitle}
             />
-          </View>
 
-          <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+            <TypeSelector postType={postType} setPostType={setPostType} />
+
+            <ScheduleSection
+              postType={postType}
+              recurringDays={recurringDays}
+              setRecurringDays={setRecurringDays}
+              date={date}
+              setDate={setDate}
+            />
+
+            <TimeInputSection
+              startTime={startTime}
+              setStartTime={setStartTime}
+              endTime={endTime}
+              setEndTime={setEndTime}
+              showStartPicker={showStartPicker}
+              setShowStartPicker={setShowStartPicker}
+              showEndPicker={showEndPicker}
+              setShowEndPicker={setShowEndPicker}
+            />
+
+            <AudienceSelector
+              demographic={demographic}
+              setDemographic={setDemographic}
+            />
+
+            <DescriptionInput
+              description={announcementBody}
+              setDescription={setAnnouncementBody}
+            />
+          </ScrollView>
+
+          {/* Footer Actions */}
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'flex-end',
+              paddingHorizontal: 20,
+              paddingBottom: 16,
+            }}
+          >
             <TouchableOpacity
               style={{
                 paddingVertical: 10,
@@ -152,7 +178,6 @@ export default function AnnouncementModal({
                 Cancel
               </Text>
             </TouchableOpacity>
-
             <TouchableOpacity
               style={{
                 backgroundColor: '#2F855A',

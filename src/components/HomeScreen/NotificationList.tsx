@@ -1,38 +1,34 @@
 import React, { useEffect, useState } from 'react'
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
-import NotificationItem, { type Notification } from './NotificationItem'
-import { timeAgo, isNewAnnouncement } from '@/Utils/datetime'
+import AnnouncementCard from '@/components/Shared/AnnouncementCard'
+import { isNewAnnouncement } from '@/Utils/datetime'
 import {
   fetchMyAnnouncements,
   type Announcement,
 } from '@/Supabase/fetchMyAnnouncements'
 
-const NotificationList: React.FC = () => {
+const NotificationList: React.FC<{ refreshKey?: boolean }> = ({
+  refreshKey,
+}) => {
   const [isExpanded, setIsExpanded] = useState(false)
-  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let mounted = true
+    console.log('[NotificationList] refreshKey changed:', refreshKey)
     ;(async () => {
       try {
         setLoading(true)
         const data = await fetchMyAnnouncements()
-        const mapped: Notification[] = (data ?? []).map(
-          (item: Announcement, idx: number) => ({
-            id: item.id ?? idx,
-            title: item.title ?? 'Announcement',
-            description: item.body ?? '',
-            location: item.organizations?.name ?? '',
-            time: item.created_at ? timeAgo(item.created_at) : '',
-            isNew: isNewAnnouncement(item.created_at),
-            icon: 'bell',
-          }),
+        console.log(
+          '[NotificationList] fetched announcements count:',
+          (data ?? []).length,
         )
-        if (mounted) setNotifications(mapped)
+        if (mounted) setAnnouncements(data ?? [])
       } catch {
-        if (mounted) setNotifications([])
+        if (mounted) setAnnouncements([])
       } finally {
         if (mounted) setLoading(false)
       }
@@ -40,13 +36,15 @@ const NotificationList: React.FC = () => {
     return () => {
       mounted = false
     }
-  }, [])
+  }, [refreshKey])
 
-  const visibleNotifications = isExpanded
-    ? notifications
-    : notifications.slice(0, 2)
-  const hiddenCount = Math.max(0, notifications.length - 2)
-  const newNotificationCount = notifications.filter((n) => n.isNew).length
+  const visibleAnnouncements = isExpanded
+    ? announcements
+    : announcements.slice(0, 2)
+  const hiddenCount = Math.max(0, announcements.length - 2)
+  const newAnnouncementCount = announcements.filter((a) =>
+    isNewAnnouncement(a.created_at),
+  ).length
 
   return (
     <View style={styles.container}>
@@ -55,9 +53,9 @@ const NotificationList: React.FC = () => {
           <Feather name="bell" size={16} color="#4A5568" />
           <Text style={styles.headerTitle}>Notifications</Text>
         </View>
-        {newNotificationCount > 0 && (
+        {newAnnouncementCount > 0 && (
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>{newNotificationCount}</Text>
+            <Text style={styles.badgeText}>{newAnnouncementCount}</Text>
           </View>
         )}
       </View>
@@ -67,10 +65,12 @@ const NotificationList: React.FC = () => {
           <Text>Loading...</Text>
         ) : (
           <>
-            {visibleNotifications.map((notification) => (
-              <NotificationItem
-                key={notification.id}
-                notification={notification}
+            {visibleAnnouncements.map((announcement) => (
+              <AnnouncementCard
+                key={announcement.id}
+                announcement={announcement}
+                showEditButton={false}
+                showPublishedDate={false}
               />
             ))}
             {!isExpanded && hiddenCount > 0 && (

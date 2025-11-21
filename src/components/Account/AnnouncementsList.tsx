@@ -3,7 +3,7 @@ import { View, Text, ActivityIndicator, StyleSheet } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
 import type { Profile, OrgPost } from '@/types'
 import { fetchMyOrgPosts } from '@/Supabase/fetchMyOrgPosts'
-import AnnouncementCard from '@/components/shared/AnnouncementCard'
+import AnnouncementCard from '@/components/Shared/AnnouncementCard'
 
 export default function AnnouncementsList({
   profile,

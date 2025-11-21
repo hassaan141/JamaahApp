@@ -1,5 +1,5 @@
 import React from 'react'
-import AnnouncementCard from '@/components/shared/AnnouncementCard'
+import AnnouncementCard from '@/components/Shared/AnnouncementCard'
 import type { OrgPost } from '@/types'
 
 export type Notification = {
@@ -41,7 +41,7 @@ export default function NotificationItem({
     <AnnouncementCard
       announcement={announcement}
       showEditButton={false}
-      showPublishedDate={false}
+      showPublishedDate={true}
     />
   )
 }

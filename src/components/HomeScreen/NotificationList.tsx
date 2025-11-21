@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
-import AnnouncementCard from '@/components/shared/AnnouncementCard'
+import AnnouncementCard from '@/components/Shared/AnnouncementCard'
 import { isNewAnnouncement } from '@/Utils/datetime'
 import {
   fetchMyAnnouncements,

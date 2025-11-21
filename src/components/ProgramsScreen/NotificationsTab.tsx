@@ -7,7 +7,7 @@ import {
   View,
   Text,
 } from 'react-native'
-import AnnouncementCard from '@/components/shared/AnnouncementCard'
+import AnnouncementCard from '@/components/Shared/AnnouncementCard'
 import type { OrgPost } from '@/types'
 import { fetchAnnouncements } from '@/Supabase/fetchAllAnnouncements'
 

@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
 
 export default function MapHeader({
-  title = 'Nearby Masjids',
+  title = 'Find a community',
   onExpand,
 }: {
   title?: string

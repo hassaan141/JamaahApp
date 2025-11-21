@@ -21,7 +21,6 @@ const convertNotificationToOrgPost = (notification: Notification): OrgPost => ({
   author_profile_id: '',
   created_at: new Date().toISOString(),
   send_push: true,
-  type: null,
   post_type: 'Event',
   demographic: null,
   recurs_on_days: null,

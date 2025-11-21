@@ -37,7 +37,6 @@ const convertProgramsNotificationToOrgPost = (
   author_profile_id: '',
   created_at: new Date().toISOString(),
   send_push: true,
-  type: null,
   post_type: getPostType(notification.type),
   demographic: null,
   recurs_on_days: null,

@@ -97,12 +97,7 @@ export default function MyNotificationsTab() {
       {announcements.map((announcement) => (
         <AnnouncementCard
           key={announcement.id}
-          announcement={{
-            ...announcement,
-            type: null,
-            date: null,
-            send_push: true,
-          }}
+          announcement={announcement}
           showEditButton={false}
           showPublishedDate={true}
         />

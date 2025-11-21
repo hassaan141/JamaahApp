@@ -186,7 +186,6 @@ export interface Database {
           author_profile_id: string | null
           title: string
           body: string | null
-          type: string | null
           post_type: string | null
           demographic: string | null
           recurs_on_days: number[] | null
@@ -202,7 +201,6 @@ export interface Database {
           author_profile_id?: string | null
           title: string
           body?: string | null
-          type?: string | null
           post_type?: string | null
           demographic?: string | null
           recurs_on_days?: number[] | null
@@ -218,7 +216,6 @@ export interface Database {
           author_profile_id?: string | null
           title?: string
           body?: string | null
-          type?: string | null
           post_type?: string | null
           demographic?: string | null
           recurs_on_days?: number[] | null

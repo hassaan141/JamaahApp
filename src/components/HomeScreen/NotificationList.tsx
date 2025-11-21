@@ -61,12 +61,7 @@ const NotificationList: React.FC = () => {
             {visibleAnnouncements.map((announcement) => (
               <AnnouncementCard
                 key={announcement.id}
-                announcement={{
-                  ...announcement,
-                  type: null,
-                  date: null,
-                  send_push: true,
-                }}
+                announcement={announcement}
                 showEditButton={false}
                 showPublishedDate={false}
               />

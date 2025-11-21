@@ -13,7 +13,7 @@ import OrganizationDetail from '@/Screens/Navigation/OrganizationDetail'
 type TabParamList = {
   Home: undefined
   Map: undefined
-  Programs: undefined
+  Organization: undefined
   Account: undefined
 }
 const Tab = createBottomTabNavigator<TabParamList>()
@@ -27,7 +27,7 @@ function TabNavigator() {
           let iconName: React.ComponentProps<typeof Feather>['name'] = 'home'
           if (route.name === 'Home') iconName = 'home'
           else if (route.name === 'Map') iconName = 'map'
-          else if (route.name === 'Programs') iconName = 'calendar'
+          else if (route.name === 'Organization') iconName = 'calendar'
           else if (route.name === 'Account') iconName = 'user'
           return <Feather name={iconName} size={size} color={color} />
         },
@@ -38,7 +38,7 @@ function TabNavigator() {
     >
       <Tab.Screen name="Home" component={Home} />
       <Tab.Screen name="Map" component={Map} />
-      <Tab.Screen name="Programs" component={Programs} />
+      <Tab.Screen name="Organization" component={Programs} />
       <Tab.Screen name="Account" component={Account} />
     </Tab.Navigator>
   )

@@ -63,5 +63,6 @@ export async function fetchMyAnnouncements(
     console.error('[fetchMyAnnouncements] Supabase error:', error)
     throw error
   }
+  console.log('[fetchMyAnnouncements] returned rows:', (data ?? []).length)
   return (data as unknown as Announcement[]) ?? []
 }

@@ -7,8 +7,10 @@ import AnnouncementCard from '@/components/Shared/AnnouncementCard'
 
 export default function AnnouncementsList({
   profile,
+  refreshKey,
 }: {
   profile: Partial<Profile> | null
+  refreshKey?: boolean
 }) {
   const [announcements, setAnnouncements] = useState<OrgPost[]>([])
   const [loading, setLoading] = useState(false)
@@ -28,7 +30,7 @@ export default function AnnouncementsList({
     }
 
     loadAnnouncements()
-  }, [profile?.org_id])
+  }, [profile?.org_id, refreshKey])
 
   const styles = StyleSheet.create({
     sectionCard: {

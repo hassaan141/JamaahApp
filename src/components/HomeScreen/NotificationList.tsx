@@ -8,17 +8,24 @@ import {
   type Announcement,
 } from '@/Supabase/fetchMyAnnouncements'
 
-const NotificationList: React.FC = () => {
+const NotificationList: React.FC<{ refreshKey?: boolean }> = ({
+  refreshKey,
+}) => {
   const [isExpanded, setIsExpanded] = useState(false)
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let mounted = true
+    console.log('[NotificationList] refreshKey changed:', refreshKey)
     ;(async () => {
       try {
         setLoading(true)
         const data = await fetchMyAnnouncements()
+        console.log(
+          '[NotificationList] fetched announcements count:',
+          (data ?? []).length,
+        )
         if (mounted) setAnnouncements(data ?? [])
       } catch {
         if (mounted) setAnnouncements([])
@@ -29,7 +36,7 @@ const NotificationList: React.FC = () => {
     return () => {
       mounted = false
     }
-  }, [])
+  }, [refreshKey])
 
   const visibleAnnouncements = isExpanded
     ? announcements

@@ -91,7 +91,7 @@ export default function Account() {
         {isOrganization ? (
           <>
             <CreateAnnouncementSection profile={profile} />
-            <AnnouncementsList profile={profile} />
+            <AnnouncementsList profile={profile} refreshKey={refreshing} />
           </>
         ) : (
           <EventsList profile={profile} />

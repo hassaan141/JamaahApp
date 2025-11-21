@@ -28,7 +28,6 @@ export async function ensureProfileExists(userId: string): Promise<void> {
       if (insertError) {
         console.warn('[ensureProfileExists] insert error', insertError)
       } else {
-        // Keep logs minimal; this helps during initial rollout/debugging
         console.debug('[ensureProfileExists] inserted profile for', userId)
       }
     }

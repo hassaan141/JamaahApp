@@ -14,24 +14,14 @@ import ToastHost from './src/components/Toast/ToastHost'
 
 const Stack = createStackNavigator()
 
-const TESTING_MODE = String(ENV.TESTING.enabled) === 'true'
-const TEST_EMAIL = ENV.TESTING.email
-const TEST_PASSWORD = ENV.TESTING.password
+const TESTING_MODE = true
+const TEST_EMAIL = 'm2farooq@uwaterloo.ca'
+const TEST_PASSWORD = String(ENV.TESTING.password)
 
 function AppNavigator() {
   const { session, setSession } = useAuth()
 
   useEffect(() => {
-    console.log(
-      'TESTING_MODE:',
-      TESTING_MODE,
-      'EMAIL:',
-      TEST_EMAIL,
-      'PASS:',
-      TEST_PASSWORD,
-      '__DEV__:',
-      __DEV__,
-    )
     async function autoLogin() {
       if (__DEV__ && TESTING_MODE && !session && TEST_EMAIL && TEST_PASSWORD) {
         const { data } = await supabase.auth.signInWithPassword({

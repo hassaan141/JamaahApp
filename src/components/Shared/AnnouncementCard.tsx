@@ -74,7 +74,7 @@ const getEventTypeColor = (postType: string | null) => {
 }
 
 interface AnnouncementCardProps {
-  announcement: OrgPost
+  announcement: OrgPost & { organization_name?: string | null }
   showEditButton?: boolean
   onEdit?: () => void
   showPublishedDate?: boolean
@@ -93,15 +93,6 @@ export default function AnnouncementCard({
   const recurringDays = formatDaysOfWeek(announcement.recurs_on_days)
   const eventDate = formatDate(announcement.date)
 
-  // Debug logging
-  console.log('[AnnouncementCard]', {
-    title: announcement.title,
-    date: announcement.date,
-    eventDate,
-    recurringDays,
-    showDate: eventDate && !recurringDays,
-  })
-
   return (
     <View style={styles.announcementCard}>
       <View style={styles.announcementHeader}>
@@ -114,82 +105,65 @@ export default function AnnouncementCard({
           <Feather name={eventIcon} size={16} color={eventColor} />
         </View>
         <View style={styles.announcementHeading}>
-          <Text style={styles.announcementTitle}>{announcement.title}</Text>
-          {showPublishedDate && announcement.created_at && (
-            <Text style={styles.announcementPublished}>
-              Published {formatDate(announcement.created_at)}
-            </Text>
-          )}
-
-          {/* Event Type and Audience Badges */}
-          <View style={styles.eventDetailsRow}>
-            {announcement.post_type && (
-              <View
-                style={[
-                  styles.eventBadge,
-                  { backgroundColor: `${eventColor}15` },
-                ]}
-              >
-                <Text style={[styles.eventBadgeText, { color: eventColor }]}>
-                  {announcement.post_type === 'Repeating_classes'
-                    ? 'Repeating'
-                    : announcement.post_type === 'Volunteerng'
-                      ? 'Volunteering'
-                      : announcement.post_type}
+          <View style={styles.titleRow}>
+            <View style={styles.leftContent}>
+              <Text style={styles.announcementTitle}>{announcement.title}</Text>
+              {announcement.organization_name && (
+                <Text style={styles.organizationName}>
+                  {announcement.organization_name}
                 </Text>
+              )}
+              <View style={styles.eventDetailsRow}>
+                {announcement.post_type && (
+                  <View
+                    style={[
+                      styles.eventBadge,
+                      { backgroundColor: `${eventColor}15` },
+                    ]}
+                  >
+                    <Text
+                      style={[styles.eventBadgeText, { color: eventColor }]}
+                    >
+                      {announcement.post_type === 'Repeating_classes'
+                        ? 'Repeating'
+                        : announcement.post_type === 'Volunteerng'
+                          ? 'Volunteering'
+                          : announcement.post_type}
+                    </Text>
+                  </View>
+                )}
+                {announcement.demographic && (
+                  <View
+                    style={[styles.eventBadge, { backgroundColor: '#F7FAFC' }]}
+                  >
+                    <Text style={[styles.eventBadgeText, { color: '#4A5568' }]}>
+                      {announcement.demographic}
+                    </Text>
+                  </View>
+                )}
               </View>
-            )}
-            {announcement.demographic && (
-              <View style={[styles.eventBadge, { backgroundColor: '#F7FAFC' }]}>
-                <Text style={[styles.eventBadgeText, { color: '#4A5568' }]}>
-                  {announcement.demographic}
+            </View>
+            <View style={styles.rightContent}>
+              {eventDate && !recurringDays && (
+                <Text style={styles.dateText}>{eventDate}</Text>
+              )}
+              {(startTime || endTime) && (
+                <Text style={styles.timeText}>
+                  {startTime && endTime
+                    ? `${startTime} - ${endTime}`
+                    : startTime || endTime}
                 </Text>
-              </View>
-            )}
+              )}
+              {recurringDays && (
+                <Text style={styles.recurringText}>{recurringDays}</Text>
+              )}
+              {showPublishedDate && announcement.created_at && (
+                <Text style={styles.announcementPublished}>
+                  {formatDate(announcement.created_at)}
+                </Text>
+              )}
+            </View>
           </View>
-
-          {/* Event Date (for non-recurring events) */}
-          {eventDate && !recurringDays && (
-            <View style={styles.timeInfo}>
-              <Feather
-                name="calendar"
-                size={12}
-                color="#6B7280"
-                style={styles.timeIcon}
-              />
-              <Text style={styles.timeText}>{eventDate}</Text>
-            </View>
-          )}
-
-          {/* Time Information */}
-          {(startTime || endTime) && (
-            <View style={styles.timeInfo}>
-              <Feather
-                name="clock"
-                size={12}
-                color="#6B7280"
-                style={styles.timeIcon}
-              />
-              <Text style={styles.timeText}>
-                {startTime && endTime
-                  ? `${startTime} - ${endTime}`
-                  : startTime || endTime}
-              </Text>
-            </View>
-          )}
-
-          {/* Recurring Days */}
-          {recurringDays && (
-            <View style={styles.recurringDays}>
-              <Feather
-                name="repeat"
-                size={12}
-                color="#6B7280"
-                style={styles.recurringIcon}
-              />
-              <Text style={styles.recurringText}>{recurringDays}</Text>
-            </View>
-          )}
         </View>
         {showEditButton && (
           <TouchableOpacity style={styles.smallIconButton} onPress={onEdit}>
@@ -237,23 +211,36 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingRight: 10,
   },
+  titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  leftContent: {
+    flex: 1,
+    paddingRight: 12,
+  },
+  rightContent: {
+    alignItems: 'flex-end',
+    minWidth: 80,
+  },
   announcementTitle: {
     fontSize: 15,
     fontWeight: '600',
     color: '#1D4732',
-    marginBottom: 3,
+    marginBottom: 2,
     lineHeight: 20,
   },
-  announcementPublished: {
-    fontSize: 11,
+  organizationName: {
+    fontSize: 12,
     color: '#6B7280',
     fontWeight: '500',
-    marginBottom: 6,
+    marginBottom: 4,
   },
   eventDetailsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 6,
+    marginTop: 2,
   },
   eventBadge: {
     paddingHorizontal: 6,
@@ -266,31 +253,32 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '600',
   },
-  timeInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  timeIcon: {
-    marginRight: 4,
+  dateText: {
+    fontSize: 12,
+    color: '#1D4732',
+    fontWeight: '600',
+    textAlign: 'right',
+    marginBottom: 2,
   },
   timeText: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#4A5568',
     fontWeight: '500',
-  },
-  recurringDays: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  recurringIcon: {
-    marginRight: 4,
+    textAlign: 'right',
+    marginBottom: 2,
   },
   recurringText: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#4A5568',
     fontWeight: '500',
+    textAlign: 'right',
+    marginBottom: 2,
+  },
+  announcementPublished: {
+    fontSize: 10,
+    color: '#6B7280',
+    fontWeight: '400',
+    textAlign: 'right',
   },
   announcementBody: {
     fontSize: 13,

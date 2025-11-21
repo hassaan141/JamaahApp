@@ -51,31 +51,7 @@ export async function fetchMyAnnouncements(
 
   let q = supabase
     .from('org_posts')
-    .select(
-      `
-      id,
-      organization_id,
-      author_profile_id,
-      title,
-      body,
-      created_at,
-      post_type,
-      demographic,
-      recurs_on_days,
-      start_time,
-      end_time,
-      date,
-      send_push,
-      organizations!inner(
-        id,
-        name,
-        type,
-        city,
-        province_state,
-        country
-      )
-    `,
-    )
+    .select('*, organizations (name)') // Only join organization name
     .in('organization_id', orgIds)
     .order('created_at', { ascending: false })
     .limit(limit)

@@ -74,7 +74,7 @@ const getEventTypeColor = (postType: string | null) => {
 }
 
 interface AnnouncementCardProps {
-  announcement: OrgPost & { organization_name?: string | null }
+  announcement: OrgPost & { organizations?: { name?: string } }
   showEditButton?: boolean
   onEdit?: () => void
   showPublishedDate?: boolean
@@ -108,9 +108,9 @@ export default function AnnouncementCard({
           <View style={styles.titleRow}>
             <View style={styles.leftContent}>
               <Text style={styles.announcementTitle}>{announcement.title}</Text>
-              {announcement.organization_name && (
+              {announcement.organizations?.name && (
                 <Text style={styles.organizationName}>
-                  {announcement.organization_name}
+                  {announcement.organizations.name}
                 </Text>
               )}
               <View style={styles.eventDetailsRow}>

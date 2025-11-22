@@ -197,7 +197,7 @@ export interface Database {
           location: string | null
           lat: number | null
           long: number | null
-          organizations: { name: string } | null
+          organizations?: { name: string } | null
         }
         Insert: {
           id?: string
@@ -216,7 +216,7 @@ export interface Database {
           location: string | null
           lat: number | null
           long: number | null
-          organizations: { name: string } | null
+          organizations?: { name: string } | null
         }
         Update: {
           id?: string
@@ -235,7 +235,7 @@ export interface Database {
           location: string | null
           lat: number | null
           long: number | null
-          organizations: { name: string } | null
+          organizations?: { name: string } | null
         }
         Relationships: [
           {

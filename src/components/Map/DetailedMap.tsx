@@ -246,6 +246,9 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
                   <View style={styles.calloutContainer}>
                     <Text style={styles.calloutTitle}>{event.title}</Text>
                     <Text style={styles.calloutSubtitle}>
+                      {event.organizations?.name || ''}
+                    </Text>
+                    <Text style={styles.calloutSubtitle}>
                       {event.date || ''}
                     </Text>
                   </View>
@@ -308,7 +311,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
     textAlign: 'center',
   },
-  calloutSubtitle: { fontSize: 13, color: '#52796F', textAlign: 'center' },
+  calloutSubtitle: { fontSize: 10, color: '#52796F', textAlign: 'center' },
 })
 
 export default DetailedMap

@@ -26,6 +26,9 @@ export async function createOrgAnnouncement(input: {
       start_time: input.start_time ?? null,
       end_time: input.end_time ?? null,
       date: input.date ?? null,
+      location: null,
+      lat: null,
+      long: null,
     }
     const { data, error } = await supabase
       .from('org_posts')

@@ -32,6 +32,9 @@ export type Announcement = {
   end_time: string | null
   date: string | null
   send_push: boolean
+  location: string | null
+  lat: number | null
+  long: number | null
   organizations: {
     id: string
     name: string

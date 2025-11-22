@@ -64,6 +64,30 @@ export default function EventCard({
   const iconName = getEventTypeIcon(event.post_type)
   const iconColor = getEventTypeColor(event.post_type)
 
+  const isRepeating = event.post_type === 'Repeating_classes'
+  const recurringDisplay = (() => {
+    if (!isRepeating) return ''
+    const days = event.recurs_on_days
+    if (!days || days.length === 0) return ''
+    const dayNames = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ]
+    const names = (days as (string | number)[])
+      .map((d) => {
+        const n = typeof d === 'string' ? parseInt(d, 10) : Number(d)
+        if (!Number.isFinite(n) || n < 1 || n > 7) return null
+        return dayNames[n - 1]
+      })
+      .filter(Boolean) as string[]
+    return names.join(', ')
+  })()
+
   return (
     <TouchableOpacity style={styles.card} onPress={onPress}>
       <View style={styles.header}>
@@ -91,13 +115,14 @@ export default function EventCard({
         <Text style={styles.organizationText}>{event.organizations?.name}</Text>
       </View>
 
-      {event.date && (
+      {(event.date || recurringDisplay) && (
         <View style={styles.dateRow}>
           <Feather name="calendar" size={12} color="#718096" />
-          <Text style={styles.dateText}>{event.date}</Text>
+          <Text style={styles.dateText}>{recurringDisplay || event.date}</Text>
           {event.start_time && (
             <Text style={styles.timeText}>
-              • {formatTime(event.start_time)} - {formatTime(event.end_time)}
+              • {formatTime(event.start_time)}
+              {event.end_time ? ` - ${formatTime(event.end_time)}` : ''}
             </Text>
           )}
         </View>

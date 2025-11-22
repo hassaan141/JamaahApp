@@ -2,10 +2,14 @@ import React from 'react'
 import { View, StyleSheet } from 'react-native'
 import DetailedMap from './DetailedMap'
 
-export default function CompactMapView() {
+export default function CompactMapView({
+  mode = 'masjids',
+}: {
+  mode?: 'masjids' | 'events'
+}) {
   return (
     <View style={styles.compactMap}>
-      <DetailedMap />
+      <DetailedMap mode={mode} />
     </View>
   )
 }

@@ -51,7 +51,7 @@ export async function fetchMyAnnouncements(
 
   let q = supabase
     .from('org_posts')
-    .select('*, organizations (name)') // Only join organization name
+    .select('*, organizations (name, address, city)') // Only join organization name
     .in('organization_id', orgIds)
     .order('created_at', { ascending: false })
     .limit(limit)

@@ -194,6 +194,9 @@ export interface Database {
           date: string | null
           send_push: boolean
           created_at: string
+          location: string | null
+          lat: number | null
+          long: number | null
         }
         Insert: {
           id?: string
@@ -209,6 +212,9 @@ export interface Database {
           date?: string | null
           send_push?: boolean
           created_at?: string
+          location: string | null
+          lat: number | null
+          long: number | null
         }
         Update: {
           id?: string
@@ -224,6 +230,9 @@ export interface Database {
           date?: string | null
           send_push?: boolean
           created_at?: string
+          location: string | null
+          lat: number | null
+          long: number | null
         }
         Relationships: [
           {

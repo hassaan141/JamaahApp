@@ -12,6 +12,7 @@ import Feather from '@expo/vector-icons/Feather'
 import DetailedMap from '@/components/Map/DetailedMap'
 import MasjidSearchBar from '@/components/MasjidScreen/MasjidSearchBar'
 import MapHeader from '@/components/Map/MapHeader'
+import MapTabs from '@/components/Map/MapTabs'
 import CompactMapView from '@/components/Map/CompactMapView'
 import MasjidList from '@/components/Map/MasjidList'
 import NoResults from '@/components/Map/NoResults'
@@ -22,6 +23,7 @@ import { useMasjidList, type MasjidItem } from '@/Hooks/useMasjidList'
 
 export default function MapScreen() {
   const [isExpanded, setIsExpanded] = useState(false)
+  const [mapMode, setMapMode] = useState<'masjids' | 'events'>('masjids')
   const fadeAnim = useRef(new Animated.Value(1)).current
   const slideAnim = useRef(new Animated.Value(0)).current
   const { location } = useLocation()
@@ -117,8 +119,11 @@ export default function MapScreen() {
           <Text style={styles.expandedTitle}>Map</Text>
           <View style={styles.placeholder} />
         </View>
+        <View style={{ backgroundColor: '#fff' }}>
+          <MapTabs selectedTab={mapMode} onTabChange={setMapMode} />
+        </View>
         <View style={styles.expandedMapContainer}>
-          <DetailedMap />
+          <DetailedMap mode={mapMode} />
         </View>
       </Animated.View>
     )
@@ -142,8 +147,12 @@ export default function MapScreen() {
         </View>
 
         <View style={styles.compactMapContainer}>
-          <MapHeader onExpand={expandMap} />
-          <CompactMapView />
+          <MapHeader
+            onExpand={expandMap}
+            selectedTab={mapMode}
+            onTabChange={setMapMode}
+          />
+          <CompactMapView mode={mapMode} />
         </View>
 
         {loading && (

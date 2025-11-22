@@ -3,42 +3,53 @@ import MapView, { Marker, Circle, Callout } from 'react-native-maps'
 import { StyleSheet, View, Image, Text, TouchableOpacity } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { fetchNearbyMasjids } from '@/Supabase/fetchMasjidList'
+import { fetchAnnouncements } from '@/Supabase/fetchAllAnnouncements'
 import { useLocation } from '@/Utils/useLocation'
 import LoadingAnimation from '@/components/Loading/Loading'
 import mosqueIcon from '../../../assets/mosque.png'
 import type { MasjidItem } from '@/Hooks/useMasjidList'
+import type { OrgPost } from '@/types'
 
-const DetailedMap: React.FC = () => {
+const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
+  mode = 'masjids',
+}) => {
   const navigation = useNavigation() as unknown as {
     navigate?: (route: string, params?: Record<string, unknown>) => void
   }
   const { location } = useLocation()
   const [nearbyMasjids, setNearbyMasjids] = useState<MasjidItem[]>([])
+  const [events, setEvents] = useState<OrgPost[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const loadMasid = async () => {
+    const loadData = async () => {
       if (!location) {
         setLoading(false)
         return
       }
+      setLoading(true)
       try {
         setError(null)
-        const ten_masjid_list = await fetchNearbyMasjids(
-          location.latitude,
-          location.longitude,
-        )
-        setNearbyMasjids(ten_masjid_list as MasjidItem[])
+        if (mode === 'masjids') {
+          const ten_masjid_list = await fetchNearbyMasjids(
+            location.latitude,
+            location.longitude,
+          )
+          setNearbyMasjids(ten_masjid_list as MasjidItem[])
+        } else {
+          const posts = await fetchAnnouncements()
+          setEvents(posts)
+        }
         setLoading(false)
       } catch (err: unknown) {
-        console.error('Error loading masjids:', err)
-        setError((err as Error)?.message ?? 'Failed to load masjids')
+        console.error('Error loading map data:', err)
+        setError((err as Error)?.message ?? 'Failed to load data')
         setLoading(false)
       }
     }
-    loadMasid()
-  }, [location])
+    loadData()
+  }, [location, mode])
 
   if (loading || !location) {
     return <LoadingAnimation />
@@ -72,56 +83,81 @@ const DetailedMap: React.FC = () => {
             longitude: location.longitude,
           }}
           title="Your Location"
-          description="You are here"
           pinColor="blue"
         />
 
-        {nearbyMasjids.map((marker, index) => (
-          <React.Fragment key={marker.id ?? index}>
-            <Marker
-              coordinate={{
-                latitude: marker.latitude ?? 0,
-                longitude: marker.longitude ?? 0,
-              }}
-            >
-              <Image source={mosqueIcon} style={styles.markerIcon} />
-              <Callout>
-                <TouchableOpacity
-                  onPress={() => {
-                    // navigation typed as any to avoid TS navigation type complexity here
-                    // navigate to OrganizationDetail with org data
-                    if (
-                      navigation &&
-                      typeof navigation.navigate === 'function'
-                    ) {
-                      navigation.navigate('OrganizationDetail', { org: marker })
-                    } else {
-                      console.warn(
-                        'Navigation prop not available. Cannot navigate to OrganizationDetail.',
-                      )
-                    }
-                  }}
-                  style={styles.calloutContainer}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.calloutTitle}>{marker.name}</Text>
-                  <Text style={styles.calloutSubtitle}>Tap for details</Text>
-                </TouchableOpacity>
-              </Callout>
-            </Marker>
+        {mode === 'masjids' &&
+          nearbyMasjids.map((marker, index) => (
+            <React.Fragment key={marker.id ?? index}>
+              <Marker
+                coordinate={{
+                  latitude: marker.latitude ?? 0,
+                  longitude: marker.longitude ?? 0,
+                }}
+              >
+                <Image source={mosqueIcon} style={styles.markerIcon} />
+                <Callout>
+                  <TouchableOpacity
+                    onPress={() => {
+                      // navigation typed as any to avoid TS navigation type complexity here
+                      // navigate to OrganizationDetail with org data
+                      if (
+                        navigation &&
+                        typeof navigation.navigate === 'function'
+                      ) {
+                        navigation.navigate('OrganizationDetail', {
+                          org: marker,
+                        })
+                      } else {
+                        console.warn(
+                          'Navigation prop not available. Cannot navigate to OrganizationDetail.',
+                        )
+                      }
+                    }}
+                    style={styles.calloutContainer}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.calloutTitle}>{marker.name}</Text>
+                  </TouchableOpacity>
+                </Callout>
+              </Marker>
 
-            <Circle
-              center={{
-                latitude: marker.latitude ?? 0,
-                longitude: marker.longitude ?? 0,
-              }}
-              radius={1000}
-              strokeColor="rgba(255, 0, 0, 0.3)"
-              fillColor="rgba(255, 0, 0, 0.1)"
-              strokeWidth={1}
-            />
-          </React.Fragment>
-        ))}
+              <Circle
+                center={{
+                  latitude: marker.latitude ?? 0,
+                  longitude: marker.longitude ?? 0,
+                }}
+                radius={1000}
+                strokeColor="rgba(255, 0, 0, 0.3)"
+                fillColor="rgba(255, 0, 0, 0.1)"
+                strokeWidth={1}
+              />
+            </React.Fragment>
+          ))}
+
+        {mode === 'events' &&
+          events.map((event, index) => {
+            if (!event.lat || !event.long) return null
+            return (
+              <Marker
+                key={event.id ?? index}
+                coordinate={{
+                  latitude: event.lat,
+                  longitude: event.long,
+                }}
+                pinColor="orange"
+              >
+                <Callout>
+                  <View style={styles.calloutContainer}>
+                    <Text style={styles.calloutTitle}>{event.title}</Text>
+                    <Text style={styles.calloutSubtitle}>
+                      {event.date || 'No date'}
+                    </Text>
+                  </View>
+                </Callout>
+              </Marker>
+            )
+          })}
       </MapView>
     </View>
   )

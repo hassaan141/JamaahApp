@@ -12,7 +12,6 @@ export async function fetchAnnouncements(
       .order('created_at', { ascending: false })
       .limit(limit)
     if (error) throw error
-    console.log('[fetchAnnouncements] fetched posts:', data)
     return (data ?? []) as OrgPost[]
   } catch (e) {
     console.error('[fetchAnnouncements] Supabase error:', e)

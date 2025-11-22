@@ -19,6 +19,5 @@ export async function fetchMyOrgPosts(): Promise<OrgPost[]> {
     .eq('organization_id', orgId)
     .order('created_at', { ascending: false })
   if (error) throw error
-  console.log('Fetched org posts:', data)
   return (data ?? []) as OrgPost[]
 }

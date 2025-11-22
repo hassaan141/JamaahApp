@@ -46,6 +46,7 @@ const convertProgramsNotificationToOrgPost = (
   location: notification.location || null,
   lat: null,
   long: null,
+  organizations: null,
 })
 
 export default function NotificationItem({

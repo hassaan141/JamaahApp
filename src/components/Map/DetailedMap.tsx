@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import MapView, { Marker, Circle, Callout } from 'react-native-maps'
 import { StyleSheet, View, Image, Text, TouchableOpacity } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
@@ -56,6 +56,7 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
   const [events, setEvents] = useState<OrgPost[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const mapRef = useRef<MapView>(null)
 
   useEffect(() => {
     const loadData = async () => {
@@ -86,6 +87,35 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
     loadData()
   }, [location, mode])
 
+  useEffect(() => {
+    if (!mapRef.current || !location) return
+
+    const targets: { latitude: number; longitude: number }[] = [
+      { latitude: location.latitude, longitude: location.longitude },
+    ]
+
+    if (mode === 'masjids') {
+      nearbyMasjids.forEach((m) => {
+        if (m.latitude && m.longitude) {
+          targets.push({ latitude: m.latitude, longitude: m.longitude })
+        }
+      })
+    } else {
+      events.forEach((e) => {
+        if (e.lat && e.long) {
+          targets.push({ latitude: e.lat, longitude: e.long })
+        }
+      })
+    }
+
+    if (targets.length > 1) {
+      mapRef.current.fitToCoordinates(targets, {
+        edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
+        animated: true,
+      })
+    }
+  }, [nearbyMasjids, events, mode, location])
+
   if (loading || !location) {
     return <LoadingAnimation />
   }
@@ -101,6 +131,7 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
   return (
     <View style={styles.container}>
       <MapView
+        ref={mapRef}
         style={styles.map}
         initialRegion={{
           latitude: location.latitude,

@@ -1,7 +1,7 @@
 import React from 'react'
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
-import type { MapTab } from './MapTabs';
+import type { MapTab } from './MapTabs'
 import MapTabs from './MapTabs'
 
 export type { MapTab }

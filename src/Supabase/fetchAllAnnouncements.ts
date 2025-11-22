@@ -8,10 +8,11 @@ export async function fetchAnnouncements(
     const { limit = 50 } = opts
     const { data, error } = await supabase
       .from('org_posts')
-      .select('*')
+      .select('*, organizations(name)')
       .order('created_at', { ascending: false })
       .limit(limit)
     if (error) throw error
+    console.log('[fetchAnnouncements] fetched posts:', data)
     return (data ?? []) as OrgPost[]
   } catch (e) {
     console.error('[fetchAnnouncements] Supabase error:', e)

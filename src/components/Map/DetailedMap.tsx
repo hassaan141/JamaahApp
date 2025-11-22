@@ -90,23 +90,42 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
   useEffect(() => {
     if (!mapRef.current || !location) return
 
-    const targets: { latitude: number; longitude: number }[] = [
-      { latitude: location.latitude, longitude: location.longitude },
-    ]
-
-    if (mode === 'masjids') {
-      nearbyMasjids.forEach((m) => {
-        if (m.latitude && m.longitude) {
-          targets.push({ latitude: m.latitude, longitude: m.longitude })
-        }
-      })
-    } else {
-      events.forEach((e) => {
-        if (e.lat && e.long) {
-          targets.push({ latitude: e.lat, longitude: e.long })
-        }
-      })
+    const userCoord = {
+      latitude: location.latitude,
+      longitude: location.longitude,
     }
+
+    const distanceSq = (
+      a: { latitude: number; longitude: number },
+      b: { latitude: number; longitude: number },
+    ) => {
+      const dLat = a.latitude - b.latitude
+      const dLon = a.longitude - b.longitude
+      return dLat * dLat + dLon * dLon
+    }
+
+    // collect marker coordinates, sort by proximity to user, take up to 3 nearest
+    const markerCoords: { latitude: number; longitude: number }[] =
+      mode === 'masjids'
+        ? nearbyMasjids
+            .filter((m) => m.latitude != null && m.longitude != null)
+            .map((m) => ({
+              latitude: m.latitude as number,
+              longitude: m.longitude as number,
+            }))
+        : events
+            .filter((e) => e.lat != null && e.long != null)
+            .map((e) => ({
+              latitude: e.lat as number,
+              longitude: e.long as number,
+            }))
+
+    const nearest = markerCoords
+      .slice()
+      .sort((a, b) => distanceSq(a, userCoord) - distanceSq(b, userCoord))
+      .slice(0, 3)
+
+    const targets = [userCoord, ...nearest]
 
     if (targets.length > 1) {
       mapRef.current.fitToCoordinates(targets, {
@@ -227,7 +246,7 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
                   <View style={styles.calloutContainer}>
                     <Text style={styles.calloutTitle}>{event.title}</Text>
                     <Text style={styles.calloutSubtitle}>
-                      {event.date || 'No date'}
+                      {event.organizations.name || 'No date'}
                     </Text>
                   </View>
                 </Callout>

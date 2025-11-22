@@ -246,7 +246,7 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
                   <View style={styles.calloutContainer}>
                     <Text style={styles.calloutTitle}>{event.title}</Text>
                     <Text style={styles.calloutSubtitle}>
-                      {event.organizations.name || 'No date'}
+                      {event.date || ''}
                     </Text>
                   </View>
                 </Callout>

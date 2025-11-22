@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import MapView, { Marker, Circle, Callout } from 'react-native-maps'
 import { StyleSheet, View, Image, Text, TouchableOpacity } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
+import Feather from '@expo/vector-icons/Feather'
 import { fetchNearbyMasjids } from '@/Supabase/fetchMasjidList'
 import { fetchAnnouncements } from '@/Supabase/fetchAllAnnouncements'
 import { useLocation } from '@/Utils/useLocation'
@@ -9,6 +10,40 @@ import LoadingAnimation from '@/components/Loading/Loading'
 import mosqueIcon from '../../../assets/mosque.png'
 import type { MasjidItem } from '@/Hooks/useMasjidList'
 import type { OrgPost } from '@/types'
+
+const getEventTypeIcon = (
+  postType: string | null,
+): React.ComponentProps<typeof Feather>['name'] => {
+  switch (postType) {
+    case 'Event':
+      return 'calendar'
+    case 'Repeating_classes':
+      return 'book-open'
+    case 'Janazah':
+      return 'heart'
+    case 'Volunteerng':
+    case 'Volunteering':
+      return 'users'
+    default:
+      return 'calendar'
+  }
+}
+
+const getEventTypeColor = (postType: string | null) => {
+  switch (postType) {
+    case 'Event':
+      return '#2F855A'
+    case 'Repeating_classes':
+      return '#3182CE'
+    case 'Janazah':
+      return '#E53E3E'
+    case 'Volunteerng':
+    case 'Volunteering':
+      return '#805AD5'
+    default:
+      return '#2F855A'
+  }
+}
 
 const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
   mode = 'masjids',
@@ -138,6 +173,9 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
         {mode === 'events' &&
           events.map((event, index) => {
             if (!event.lat || !event.long) return null
+            const iconName = getEventTypeIcon(event.post_type)
+            const iconColor = getEventTypeColor(event.post_type)
+
             return (
               <Marker
                 key={event.id ?? index}
@@ -145,8 +183,15 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
                   latitude: event.lat,
                   longitude: event.long,
                 }}
-                pinColor="orange"
               >
+                <View
+                  style={[
+                    styles.eventMarkerContainer,
+                    { backgroundColor: iconColor },
+                  ]}
+                >
+                  <Feather name={iconName} size={16} color="white" />
+                </View>
                 <Callout>
                   <View style={styles.calloutContainer}>
                     <Text style={styles.calloutTitle}>{event.title}</Text>
@@ -167,6 +212,20 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   map: { flex: 1 },
   markerIcon: { width: 30, height: 30 },
+  eventMarkerContainer: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',

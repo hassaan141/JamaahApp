@@ -46,7 +46,7 @@ const getEventTypeIcon = (
     case 'Event':
       return 'calendar'
     case 'Repeating_classes':
-      return 'repeat'
+      return 'book-open'
     case 'Janazah':
       return 'heart'
     case 'Volunteerng':
@@ -125,7 +125,7 @@ export default function AnnouncementCard({
                       style={[styles.eventBadgeText, { color: eventColor }]}
                     >
                       {announcement.post_type === 'Repeating_classes'
-                        ? 'Repeating'
+                        ? 'Classes'
                         : announcement.post_type === 'Volunteerng'
                           ? 'Volunteering'
                           : announcement.post_type}

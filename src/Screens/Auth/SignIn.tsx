@@ -10,6 +10,7 @@ import {
   ScrollView,
 } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
+import { useAuth } from '@/Auth/AuthProvider'
 import { supabase } from '../../Supabase/supabaseClient'
 import AuthHeader from '../../components/Auth/AuthHeader'
 import { toast } from '@/components/Toast/toast'
@@ -21,6 +22,7 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
   const [password, setPassword] = useState('')
   const [passwordVisible, setPasswordVisible] = useState(false)
   const [loading, setLoading] = useState(false)
+  const { enterGuest } = useAuth()
 
   const handleSignIn = async () => {
     if (!email || !password) {
@@ -191,6 +193,14 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
               <Text style={styles.switchTextBold}> Sign Up</Text>
             </Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.guestButton}
+            onPress={() => enterGuest()}
+            disabled={loading}
+          >
+            <Text style={styles.guestText}>Continue as Guest</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -249,4 +259,15 @@ const styles = StyleSheet.create({
   switchContainer: { marginTop: 30, alignItems: 'center' },
   switchText: { color: '#718096', fontSize: 16 },
   switchTextBold: { color: '#48BB78', fontWeight: '600' },
+  guestButton: {
+    marginTop: 16,
+    height: 50,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#48BB78',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  guestText: { color: '#48BB78', fontSize: 16, fontWeight: '600' },
 })

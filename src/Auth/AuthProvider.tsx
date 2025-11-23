@@ -13,6 +13,8 @@ type AuthContextValue = {
   setSession: (s: NonNullable<Session>) => void
   logout: () => Promise<void>
   loading: boolean
+  isGuest: boolean
+  enterGuest: () => void
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
@@ -20,6 +22,7 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSessionState] = useState<Session>(null)
   const [loading, setLoading] = useState(true)
+  const [isGuest, setIsGuest] = useState(false)
 
   useEffect(() => {
     let mounted = true
@@ -54,6 +57,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const setSession = (s: NonNullable<Session>) => setSessionState(s)
 
+  const enterGuest = () => {
+    setIsGuest(true)
+  }
+
   const logout = async () => {
     const { error } = await supabase.auth.signOut()
     if (error) throw error
@@ -61,7 +68,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ session, setSession, logout, loading }}>
+    <AuthContext.Provider
+      value={{ session, setSession, logout, loading, isGuest, enterGuest }}
+    >
       {children}
     </AuthContext.Provider>
   )

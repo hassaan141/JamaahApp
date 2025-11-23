@@ -14,12 +14,12 @@ import ToastHost from './src/components/Toast/ToastHost'
 
 const Stack = createStackNavigator()
 
-const TESTING_MODE = true
+const TESTING_MODE = false
 const TEST_EMAIL = 'm2farooq@uwaterloo.ca'
 const TEST_PASSWORD = String(ENV.TESTING.password)
 
 function AppNavigator() {
-  const { session, setSession } = useAuth()
+  const { session, setSession, isGuest } = useAuth()
 
   useEffect(() => {
     async function autoLogin() {
@@ -37,7 +37,7 @@ function AppNavigator() {
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {session ? (
+        {session || isGuest ? (
           <Stack.Screen name="Root" component={RootNavigator} />
         ) : (
           <>

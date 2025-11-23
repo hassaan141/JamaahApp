@@ -13,10 +13,10 @@ import { Feather, MaterialCommunityIcons } from '@expo/vector-icons'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import type { RouteProp, NavigationProp } from '@react-navigation/native'
 import * as OrgFollow from '@/Supabase/organizationFollow'
-import {
-  fetchOrgAnnouncements,
-  type OrgAnnouncement,
-} from '@/Supabase/fetchOrgAnnouncements'
+import { fetchOrgAnnouncements } from '@/Supabase/fetchOrgAnnouncements'
+import type { OrgPost } from '@/types'
+import { fetchOrgFollowerCount } from '@/Supabase/fetchOrgFollowerCount'
+import AnnouncementCard from '@/components/Shared/AnnouncementCard'
 
 type OrgParam = {
   id?: string | number
@@ -27,23 +27,21 @@ type OrgParam = {
   address?: string | null
   phone?: string | null
   contact_phone?: string | null
+  contact_email?: string | null
   website?: string | null
   is_following?: boolean
   member_count?: number
-}
-
-const formatTimeAgo = (dateString: string) => {
-  const now = new Date()
-  const date = new Date(dateString)
-  const diffInSeconds = Math.floor((Number(now) - Number(date)) / 1000)
-  if (diffInSeconds < 60) return `${diffInSeconds}s ago`
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
-  })
+  instagram?: string | null
+  facebook?: string | null
+  twitter?: string | null
+  donate_link?: string | null
+  amenities?: {
+    street_parking?: boolean
+    women_washroom?: boolean
+    on_site_parking?: boolean
+    women_prayer_space?: boolean
+    wheelchair_accessible?: boolean
+  } | null
 }
 
 const OrganizationHeader = ({
@@ -51,30 +49,94 @@ const OrganizationHeader = ({
   following,
   followLoading,
   onFollowToggle,
+  followerCount,
 }: {
   org: OrgParam
   following: boolean
   followLoading: boolean
   onFollowToggle: () => void
+  followerCount?: number | null
 }) => {
   const organizationName = org.name || 'Organization'
-  const description =
-    org.description || 'A vibrant Islamic center serving the community.'
+  const description = org.description || ''
   const memberCount = org.member_count || 0
+  const type = org.type ?? ''
+
+  const getOrgTypeIcon = (
+    t?: string,
+  ): React.ComponentProps<typeof Feather>['name'] => {
+    switch (t?.toLowerCase()) {
+      case 'masjid':
+        return 'home'
+      case 'islamic-school':
+        return 'book-open'
+      case 'sisters-group':
+        return 'users'
+      case 'youth-group':
+        return 'user-plus'
+      case 'book-club':
+        return 'book'
+      case 'book-store':
+        return 'shopping-bag'
+      case 'run-club':
+        return 'activity'
+      default:
+        return 'map-pin'
+    }
+  }
+
+  const getOrgTypeColor = (t?: string) => {
+    switch (t?.toLowerCase()) {
+      case 'masjid':
+        return { bg: '#BBF7D0', text: '#166534' }
+      case 'islamic-school':
+        return { bg: '#FEF08A', text: '#CA8A04' }
+      case 'sisters-group':
+        return { bg: '#FBCFE8', text: '#BE185D' }
+      case 'youth-group':
+        return { bg: '#BFDBFE', text: '#1D4ED8' }
+      case 'book-club':
+        return { bg: '#DDD6FE', text: '#7C3AED' }
+      case 'book-store':
+        return { bg: '#FDE68A', text: '#D97706' }
+      case 'run-club':
+        return { bg: '#A7F3D0', text: '#059669' }
+      default:
+        return { bg: '#E2E8F0', text: '#64748B' }
+    }
+  }
 
   return (
     <View style={styles.headerCard}>
       <View style={styles.headerContent}>
-        <View style={styles.iconContainer}>
-          <MaterialCommunityIcons name="mosque" size={40} color="#2D6A4F" />
+        <View
+          style={[
+            styles.iconContainer,
+            { backgroundColor: getOrgTypeColor(type).bg },
+          ]}
+        >
+          <Feather
+            name={getOrgTypeIcon(type)}
+            size={32}
+            color={getOrgTypeColor(type).text}
+          />
         </View>
         <View style={styles.headerTextContainer}>
           <Text style={styles.organizationName} numberOfLines={2}>
             {organizationName}
           </Text>
-          <Text style={styles.organizationDescription} numberOfLines={3}>
-            {description}
-          </Text>
+          {description ? (
+            <Text style={styles.organizationDescription} numberOfLines={3}>
+              {description}
+            </Text>
+          ) : null}
+          {type ? (
+            <Text
+              style={[styles.typeLabel, { color: getOrgTypeColor(type).text }]}
+            >
+              {type.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+            </Text>
+          ) : null}
         </View>
       </View>
 
@@ -82,7 +144,9 @@ const OrganizationHeader = ({
         <View style={styles.memberInfo}>
           <Feather name="users" size={16} color="#52796F" />
           <Text style={styles.memberCount}>
-            {memberCount.toLocaleString()} members
+            {typeof followerCount === 'number'
+              ? `${followerCount.toLocaleString()} followers`
+              : `${String(org.member_count ?? memberCount)} followers`}
           </Text>
         </View>
         <TouchableOpacity
@@ -113,92 +177,149 @@ const OrganizationHeader = ({
   )
 }
 
-const InfoRow = ({
-  icon,
-  label,
-  value,
-  isLink,
-  onPress,
-}: {
-  icon: React.ComponentProps<typeof Feather>['name']
-  label: string
-  value: string
-  isLink?: boolean
-  onPress?: () => void
-}) => (
-  <View style={styles.infoRow}>
-    <View style={styles.infoIconContainer}>
-      <Feather name={icon} size={18} color="#2D6A4F" />
-    </View>
-    <View style={styles.infoContent}>
-      <Text style={styles.infoLabel}>{label}</Text>
-      <Text
-        style={[styles.infoValue, isLink && styles.infoLink]}
-        onPress={isLink ? onPress : undefined}
-        numberOfLines={2}
-      >
-        {value}
-      </Text>
-    </View>
-  </View>
-)
-
 const ContactInfoCard = ({ org }: { org: OrgParam }) => {
-  const address = org.address || 'Address not available'
-  const phone = org.phone || org.contact_phone || 'Phone not available'
-  const website = org.website || null
+  const items: {
+    key: string
+    label: string
+    value: string
+    icon: React.ComponentProps<typeof MaterialCommunityIcons>['name']
+    onPress?: () => void
+  }[] = []
 
-  const handleWebsitePress = () => {
-    if (website) {
-      const url = website.startsWith('http') ? website : `https://${website}`
-      Linking.openURL(url)
-    }
+  const addLink = (
+    key: string,
+    label: string,
+    icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'],
+    value?: string | null,
+    onPress?: () => void,
+  ) => {
+    if (!value) return
+    items.push({ key, label, value: value as string, icon, onPress })
   }
+
+  const openUrl = (raw?: string | null) => {
+    if (!raw) return
+    const val = raw.trim()
+    const url = val.startsWith('http') ? val : `https://${val}`
+    Linking.openURL(url).catch((e) => console.error('open url', e))
+  }
+
+  const openSocial = (
+    platform: 'twitter' | 'instagram' | 'facebook',
+    raw?: string | null,
+  ) => {
+    if (!raw) return
+    const handle = raw.trim().replace(/^@/, '')
+    let url = ''
+    if (platform === 'twitter') url = `https://twitter.com/${handle}`
+    if (platform === 'instagram') url = `https://instagram.com/${handle}`
+    if (platform === 'facebook')
+      url = raw.startsWith('http') ? raw : `https://facebook.com/${handle}`
+    Linking.openURL(url).catch((e) => console.error('open social', e))
+  }
+
+  addLink('website', 'Website', 'web', org.website || undefined, () =>
+    openUrl(org.website),
+  )
+  addLink('twitter', 'Twitter', 'twitter', org.twitter || undefined, () =>
+    openSocial('twitter', org.twitter),
+  )
+  addLink(
+    'instagram',
+    'Instagram',
+    'instagram',
+    org.instagram || undefined,
+    () => openSocial('instagram', org.instagram),
+  )
+  addLink('facebook', 'Facebook', 'facebook', org.facebook || undefined, () =>
+    openSocial('facebook', org.facebook),
+  )
+  addLink('email', 'Email', 'email', org.contact_email || undefined, () =>
+    Linking.openURL(`mailto:${org.contact_email}`),
+  )
+
+  if (!items.length) return null
 
   return (
     <View style={styles.card}>
-      <Text style={styles.cardTitle}>Contact Information</Text>
-      <InfoRow icon="map-pin" label="Address" value={address} />
-      <InfoRow icon="phone" label="Phone" value={phone} />
-      <InfoRow
-        icon="globe"
-        label="Website"
-        value={website || 'Not available'}
-        isLink={!!website}
-        onPress={handleWebsitePress}
-      />
+      <Text style={styles.cardTitle}>Contact & Links</Text>
+      <View style={styles.linksRow}>
+        {items.map((it) => (
+          <TouchableOpacity
+            key={it.key}
+            style={styles.linkPill}
+            onPress={it.onPress}
+            activeOpacity={0.7}
+          >
+            <MaterialCommunityIcons name={it.icon} size={14} color="#2D6A4F" />
+            <Text style={styles.linkPillLabel}>{it.value}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
     </View>
   )
 }
 
-const AnnouncementCard = ({
-  announcement,
-}: {
-  announcement: OrgAnnouncement
-}) => {
-  const type = announcement.type || 'General'
-  const title = announcement.title || 'Untitled'
-  const body = announcement.body || ''
-  const timeAgo = announcement.created_at
-    ? formatTimeAgo(announcement.created_at)
-    : 'Recently'
+// Using shared AnnouncementCard component imported above
+
+const AmenitiesCard = ({ org }: { org: OrgParam }) => {
+  const amenities = org.amenities || {}
+  const items: {
+    key: string
+    label: string
+    icon: React.ComponentProps<typeof MaterialCommunityIcons>['name']
+  }[] = [
+    { key: 'street_parking', label: 'Street parking', icon: 'parking' },
+    { key: 'on_site_parking', label: 'Site parking', icon: 'car' },
+    {
+      key: 'women_prayer_space',
+      label: "Women's prayer",
+      icon: 'gender-female',
+    },
+    { key: 'women_washroom', label: "Women's wash", icon: 'toilet' },
+    {
+      key: 'wheelchair_accessible',
+      label: 'Wheelchair',
+      icon: 'wheelchair-accessibility',
+    },
+  ]
+
   return (
-    <View style={styles.announcementCard}>
-      <View style={styles.announcementHeader}>
-        <View style={styles.announcementTypeContainer}>
-          <Feather name="bell" size={16} color="#2D6A4F" />
-          <Text style={styles.announcementType}>{type}</Text>
-        </View>
-        <Text style={styles.announcementTime}>{timeAgo}</Text>
+    <View style={styles.amenitiesCard}>
+      <Text style={styles.cardTitle}>Amenities</Text>
+      <View style={styles.amenitiesRow}>
+        {items.map((it) => {
+          const present = Boolean(
+            (amenities as Record<string, boolean | undefined>)[it.key],
+          )
+          return (
+            <View
+              key={it.key}
+              style={[styles.amenityPill, present && styles.amenityPillActive]}
+            >
+              <MaterialCommunityIcons
+                name={it.icon}
+                size={14}
+                color={present ? '#FFFFFF' : '#475569'}
+              />
+              <Text
+                style={[
+                  styles.amenityPillLabel,
+                  present ? styles.amenityPillLabelActive : undefined,
+                ]}
+              >
+                {it.label}
+              </Text>
+              <MaterialCommunityIcons
+                name={present ? 'check-circle' : 'close-circle'}
+                size={14}
+                color={present ? (present ? '#FFFFFF' : '#10B981') : '#94A3B8'}
+                style={styles.amenityStatusIcon}
+              />
+            </View>
+          )
+        })}
       </View>
-      <Text style={styles.announcementTitle} numberOfLines={2}>
-        {title}
-      </Text>
-      {body ? (
-        <Text style={styles.announcementBody} numberOfLines={4}>
-          {body}
-        </Text>
-      ) : null}
     </View>
   )
 }
@@ -229,13 +350,14 @@ export default function OrganizationDetail() {
   const rawId = org?.id ?? org?.org_id
   const orgId = rawId != null ? String(rawId) : undefined
 
-  const [announcements, setAnnouncements] = useState<OrgAnnouncement[]>([])
+  const [announcements, setAnnouncements] = useState<OrgPost[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [following, setFollowing] = useState<boolean>(
     typeof org?.is_following === 'boolean' ? org.is_following : false,
   )
   const [followLoading, setFollowLoading] = useState(false)
+  const [followerCount, setFollowerCount] = useState<number | null>(null)
 
   const handleGoBack = () => {
     navigation.goBack()
@@ -262,6 +384,23 @@ export default function OrganizationDetail() {
       isMounted = false
     }
   }, [orgId, org?.is_following])
+
+  // Fetch follower count (uses helper that returns current org's follower count)
+  useEffect(() => {
+    let mounted = true
+    const loadCount = async () => {
+      try {
+        const c = await fetchOrgFollowerCount()
+        if (mounted) setFollowerCount(c)
+      } catch (err) {
+        console.error('Error fetching follower count', err)
+      }
+    }
+    loadCount()
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   // Fetch announcements
   useEffect(() => {
@@ -307,7 +446,7 @@ export default function OrganizationDetail() {
     }
   }
 
-  const renderAnnouncementItem = ({ item }: { item: OrgAnnouncement }) => (
+  const renderAnnouncementItem = ({ item }: { item: OrgPost }) => (
     <AnnouncementCard announcement={item} />
   )
 
@@ -365,14 +504,17 @@ export default function OrganizationDetail() {
         following={following}
         followLoading={followLoading}
         onFollowToggle={handleFollowToggle}
+        followerCount={followerCount}
       />
 
-      <ContactInfoCard org={org} />
+      <AmenitiesCard org={org} />
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Recent Announcements</Text>
         {renderAnnouncementsSection()}
       </View>
+
+      <ContactInfoCard org={org} />
     </ScrollView>
   )
 }
@@ -390,11 +532,17 @@ const styles = StyleSheet.create({
   backButton: { padding: 4, marginRight: 12 },
   headerCard: {
     backgroundColor: '#FFFFFF',
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 24,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E8F5E9',
+    marginHorizontal: 16,
+    marginTop: 8,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
   },
   headerContent: { flexDirection: 'row', marginBottom: 16 },
   iconContainer: {
@@ -415,6 +563,7 @@ const styles = StyleSheet.create({
     lineHeight: 28,
   },
   organizationDescription: { fontSize: 14, color: '#52796F', lineHeight: 20 },
+  typeLabel: { marginTop: 6, fontSize: 12, fontWeight: '700' },
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -473,6 +622,12 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   infoContent: { flex: 1 },
+  infoActionButton: {
+    padding: 8,
+    marginLeft: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   infoLabel: {
     fontSize: 12,
     fontWeight: '600',
@@ -551,4 +706,52 @@ const styles = StyleSheet.create({
     color: '#52796F',
     textAlign: 'center',
   },
+  amenitiesCard: {
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 16,
+    marginTop: 12,
+    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: '#E8F5E9',
+  },
+  amenitiesList: { marginTop: 8, flexDirection: 'row', flexWrap: 'wrap' },
+  amenitiesRow: {
+    marginTop: 8,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+  },
+  amenityPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 20,
+    backgroundColor: '#F1F5F9',
+    marginRight: 8,
+    marginBottom: 8,
+  },
+  amenityPillActive: { backgroundColor: '#2D6A4F' },
+  amenityPillLabel: {
+    marginLeft: 8,
+    fontSize: 12,
+    color: '#475569',
+    fontWeight: '600',
+  },
+  amenityPillLabelActive: { color: '#FFFFFF' },
+  amenityStatusIcon: { marginLeft: 8 },
+  linksRow: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 8 },
+  linkPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 16,
+    backgroundColor: '#F8FAFC',
+    marginRight: 8,
+    marginBottom: 8,
+  },
+  linkPillLabel: { marginLeft: 8, fontSize: 13, color: '#1B4332' },
 })

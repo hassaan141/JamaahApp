@@ -1,22 +1,12 @@
 //Depreciated, remove soon
 
 import { supabase } from './supabaseClient'
-
-export type OrgAnnouncement = {
-  id: string | number
-  organization_id: string | number
-  author_profile_id?: string | null
-  title: string
-  body?: string | null
-  type?: string | null
-  created_at: string
-  organization_name?: string | null
-}
+import type { OrgPost } from '@/types'
 
 export async function fetchOrgAnnouncements(
   orgId: string,
   opts: { limit?: number } = {},
-): Promise<OrgAnnouncement[]> {
+): Promise<OrgPost[]> {
   try {
     const { limit = 30 } = opts
     const { data, error } = await supabase
@@ -27,7 +17,7 @@ export async function fetchOrgAnnouncements(
       .limit(limit)
 
     if (error) throw error
-    return (data ?? []) as OrgAnnouncement[]
+    return (data ?? []) as OrgPost[]
   } catch (e) {
     console.error('[fetchOrgAnnouncements] Supabase error:', e)
     return []

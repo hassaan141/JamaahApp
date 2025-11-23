@@ -10,6 +10,14 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+export type Amenities = {
+  street_parking?: boolean
+  women_washroom?: boolean
+  on_site_parking?: boolean
+  women_prayer_space?: boolean
+  wheelchair_accessible?: boolean
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -85,6 +93,7 @@ export interface Database {
           approved_at: string | null
           geom: string | null
           description?: string | null
+          amenities?: Amenities | null
         }
         Insert: Partial<
           Database['public']['Tables']['organizations']['Row']

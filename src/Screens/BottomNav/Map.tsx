@@ -12,16 +12,23 @@ import Feather from '@expo/vector-icons/Feather'
 import DetailedMap from '@/components/Map/DetailedMap'
 import MasjidSearchBar from '@/components/MasjidScreen/MasjidSearchBar'
 import MapHeader from '@/components/Map/MapHeader'
+import MapTabs from '@/components/Map/MapTabs'
 import CompactMapView from '@/components/Map/CompactMapView'
 import MasjidList from '@/components/Map/MasjidList'
+import EventList from '@/components/Map/EventList'
 import NoResults from '@/components/Map/NoResults'
 import { useLocation } from '@/Utils/useLocation'
 import LoadingAnimation from '@/components/Loading/Loading'
 import { openDirections, openCall } from '@/Utils/links'
 import { useMasjidList, type MasjidItem } from '@/Hooks/useMasjidList'
+import { fetchAnnouncements } from '@/Supabase/fetchAllAnnouncements'
+import type { OrgPost } from '@/types'
 
 export default function MapScreen() {
   const [isExpanded, setIsExpanded] = useState(false)
+  const [mapMode, setMapMode] = useState<'masjids' | 'events'>('masjids')
+  const [events, setEvents] = useState<OrgPost[]>([])
+  const [eventsLoading, setEventsLoading] = useState(false)
   const fadeAnim = useRef(new Animated.Value(1)).current
   const slideAnim = useRef(new Animated.Value(0)).current
   const { location } = useLocation()
@@ -62,6 +69,34 @@ export default function MapScreen() {
   const handleCall = (masjid: MasjidItem) => {
     openCall(masjid?.contact_phone || masjid?.phone)
   }
+
+  const handleEventPress = (event: OrgPost) => {
+    console.log('Event selected:', event?.title)
+  }
+
+  const handleEventDirections = (event: OrgPost) => {
+    if (event.lat && event.long) {
+      openDirections({
+        userLat: location?.latitude ?? null,
+        userLon: location?.longitude ?? null,
+        destLat: event.lat,
+        destLon: event.long,
+        destAddress: event.location || null,
+        placeLabel: event.title ?? '',
+      })
+    }
+  }
+
+  // Load events when tab changes to events
+  React.useEffect(() => {
+    if (mapMode === 'events') {
+      setEventsLoading(true)
+      fetchAnnouncements()
+        .then((data) => setEvents(Array.isArray(data) ? data : []))
+        .catch((err) => console.error('Error loading events:', err))
+        .finally(() => setEventsLoading(false))
+    }
+  }, [mapMode])
 
   const expandMap = () => {
     Animated.parallel([
@@ -117,8 +152,11 @@ export default function MapScreen() {
           <Text style={styles.expandedTitle}>Map</Text>
           <View style={styles.placeholder} />
         </View>
+        <View style={{ backgroundColor: '#fff' }}>
+          <MapTabs selectedTab={mapMode} onTabChange={setMapMode} />
+        </View>
         <View style={styles.expandedMapContainer}>
-          <DetailedMap />
+          <DetailedMap mode={mapMode} />
         </View>
       </Animated.View>
     )
@@ -142,14 +180,22 @@ export default function MapScreen() {
         </View>
 
         <View style={styles.compactMapContainer}>
-          <MapHeader onExpand={expandMap} />
-          <CompactMapView />
+          <MapHeader
+            onExpand={expandMap}
+            selectedTab={mapMode}
+            onTabChange={setMapMode}
+          />
+          <CompactMapView mode={mapMode} />
         </View>
 
-        {loading && (
+        {(loading || eventsLoading) && (
           <View style={styles.loadingContainer}>
             <LoadingAnimation />
-            <Text style={styles.loadingText}>Loading masjids...</Text>
+            <Text style={styles.loadingText}>
+              {mapMode === 'masjids'
+                ? 'Loading masjids...'
+                : 'Loading events...'}
+            </Text>
           </View>
         )}
 
@@ -159,29 +205,41 @@ export default function MapScreen() {
           </View>
         )}
 
-        {!loading && !error && (
+        {!loading && !error && !eventsLoading && (
           <View style={styles.masjidListContainer}>
             <Text style={styles.masjidListTitle}>
-              {searchQuery
-                ? `Search Results (${filteredMasjids.length})`
-                : 'Nearest Masjids'}
+              {mapMode === 'masjids'
+                ? searchQuery
+                  ? `Search Results (${filteredMasjids.length})`
+                  : 'Nearest Masjids'
+                : 'Upcoming Events & Classes'}
             </Text>
-            {filteredMasjids.length === 0 ? (
-              <NoResults
-                message={
-                  searchQuery.trim() === ''
-                    ? 'No masjids found in your area'
-                    : `No masjids found for "${searchQuery}"`
-                }
-              />
+            {mapMode === 'masjids' ? (
+              filteredMasjids.length === 0 ? (
+                <NoResults
+                  message={
+                    searchQuery.trim() === ''
+                      ? 'No masjids found in your area'
+                      : `No masjids found for "${searchQuery}"`
+                  }
+                />
+              ) : (
+                <MasjidList
+                  items={
+                    searchQuery ? filteredMasjids : filteredMasjids.slice(0, 3)
+                  }
+                  onPress={handleMasjidPress}
+                  onDirections={handleDirections}
+                  onCall={handleCall}
+                />
+              )
+            ) : events.length === 0 ? (
+              <NoResults message="No events found" />
             ) : (
-              <MasjidList
-                items={
-                  searchQuery ? filteredMasjids : filteredMasjids.slice(0, 3)
-                }
-                onPress={handleMasjidPress}
-                onDirections={handleDirections}
-                onCall={handleCall}
+              <EventList
+                items={events.slice(0, 3)}
+                onPress={handleEventPress}
+                onDirections={handleEventDirections}
               />
             )}
           </View>

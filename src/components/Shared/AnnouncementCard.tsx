@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
 import type { OrgPost } from '@/types'
@@ -46,7 +46,7 @@ const getEventTypeIcon = (
     case 'Event':
       return 'calendar'
     case 'Repeating_classes':
-      return 'repeat'
+      return 'book-open'
     case 'Janazah':
       return 'heart'
     case 'Volunteerng':
@@ -86,6 +86,7 @@ export default function AnnouncementCard({
   onEdit,
   showPublishedDate = true,
 }: AnnouncementCardProps) {
+  const [expanded, setExpanded] = useState(false)
   const eventColor = getEventTypeColor(announcement.post_type)
   const eventIcon = getEventTypeIcon(announcement.post_type)
   const startTime = formatTime(announcement.start_time)
@@ -125,7 +126,7 @@ export default function AnnouncementCard({
                       style={[styles.eventBadgeText, { color: eventColor }]}
                     >
                       {announcement.post_type === 'Repeating_classes'
-                        ? 'Repeating'
+                        ? 'Classes'
                         : announcement.post_type === 'Volunteerng'
                           ? 'Volunteering'
                           : announcement.post_type}
@@ -174,7 +175,24 @@ export default function AnnouncementCard({
 
       {/* Description */}
       {!!announcement.body && (
-        <Text style={styles.announcementBody}>{announcement.body}</Text>
+        <>
+          <Text
+            style={styles.announcementBody}
+            numberOfLines={expanded ? undefined : 2}
+          >
+            {announcement.body}
+          </Text>
+          {announcement.body.length > 200 && (
+            <TouchableOpacity
+              onPress={() => setExpanded((s) => !s)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.readMore}>
+                {expanded ? 'Show less' : 'Read more'}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </>
       )}
     </View>
   )
@@ -239,7 +257,7 @@ const styles = StyleSheet.create({
   },
   eventDetailsRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    // flexWrap: 'wrap',
     marginTop: 2,
   },
   eventBadge: {
@@ -285,6 +303,12 @@ const styles = StyleSheet.create({
     color: '#4A5568',
     lineHeight: 18,
     marginTop: 2,
+  },
+  readMore: {
+    marginTop: 6,
+    fontSize: 13,
+    color: '#3182CE',
+    fontWeight: '600',
   },
   smallIconButton: {
     width: 32,

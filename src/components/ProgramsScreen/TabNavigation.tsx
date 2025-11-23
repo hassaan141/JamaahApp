@@ -8,6 +8,9 @@ type Props = {
 }
 
 export default function TabNavigation({ tabs, activeTab, onTabChange }: Props) {
+  // Hide the tabs UI when there's only one (or zero) tab — no need to render a selector
+  if (!tabs || tabs.length <= 1) return null
+
   return (
     <View style={styles.tabContainer}>
       {tabs.map((tab, index) => (
@@ -26,6 +29,21 @@ export default function TabNavigation({ tabs, activeTab, onTabChange }: Props) {
           </Text>
         </TouchableOpacity>
       ))}
+
+      {/*
+        Previously we rendered a single hardcoded 'Community' tab here.
+        Leaving that implementation commented out for reference:
+
+      <TouchableOpacity
+        style={[styles.tab, activeTab === 0 && styles.activeTab]}
+        onPress={() => onTabChange(0)}
+      >
+        <Text style={[styles.tabText, activeTab === 0 && styles.activeTabText]}>
+          Community
+        </Text>
+      </TouchableOpacity>
+
+      */}
     </View>
   )
 }

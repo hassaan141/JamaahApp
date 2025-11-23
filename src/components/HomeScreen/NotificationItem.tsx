@@ -27,6 +27,9 @@ const convertNotificationToOrgPost = (notification: Notification): OrgPost => ({
   start_time: notification.time || null,
   end_time: null,
   date: null,
+  location: notification.location || null,
+  lat: null,
+  long: null,
 })
 
 export default function NotificationItem({

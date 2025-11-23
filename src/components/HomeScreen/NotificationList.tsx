@@ -63,6 +63,18 @@ const NotificationList: React.FC<{ refreshKey?: boolean }> = ({
       <View style={styles.notificationList}>
         {loading ? (
           <Text>Loading...</Text>
+        ) : announcements.length === 0 ? (
+          <View style={styles.emptyStateContainer}>
+            <Feather
+              name="plus-circle"
+              size={40}
+              color="#48BB78"
+              style={styles.emptyIcon}
+            />
+            <Text style={styles.emptyText}>
+              Please start following an organization to get events and classes
+            </Text>
+          </View>
         ) : (
           <>
             {visibleAnnouncements.map((announcement) => (
@@ -171,6 +183,22 @@ const styles = StyleSheet.create({
     color: '#718096',
     fontWeight: '500',
     marginRight: 4,
+  },
+  emptyStateContainer: {
+    alignItems: 'center',
+    paddingVertical: 20,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF00',
+  },
+  emptyIcon: {
+    marginBottom: 8,
+  },
+  emptyText: {
+    textAlign: 'center',
+    fontSize: 14,
+    color: '#4A5568',
+    maxWidth: 260,
   },
 })
 

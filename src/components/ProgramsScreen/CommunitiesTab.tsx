@@ -3,7 +3,6 @@ import {
   View,
   Text,
   ActivityIndicator,
-  TextInput,
   ScrollView,
   StyleSheet,
   RefreshControl,
@@ -11,6 +10,7 @@ import {
 import { searchOrganizations } from '@/Supabase/fetchOrganizations'
 import type { Organization } from '@/types'
 import CommunityItem from './CommunityItem'
+import MasjidSearchBar from '@/components/MasjidScreen/MasjidSearchBar'
 
 export default function CommunitiesTab() {
   const [loading, setLoading] = useState(false)
@@ -55,12 +55,11 @@ export default function CommunitiesTab() {
 
   return (
     <View style={styles.container}>
-      <TextInput
-        placeholder="Search communities"
+      <MasjidSearchBar
         value={searchQuery}
         onChangeText={setSearchQuery}
-        style={styles.searchInput}
-        returnKeyType="search"
+        onClear={() => setSearchQuery('')}
+        placeholder="Search communities"
         onSubmitEditing={() => loadCommunities(searchQuery)}
       />
 
@@ -92,7 +91,7 @@ export default function CommunitiesTab() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 8,
+    paddingTop: 20,
     paddingHorizontal: 20,
     backgroundColor: '#F4FBF6',
   },

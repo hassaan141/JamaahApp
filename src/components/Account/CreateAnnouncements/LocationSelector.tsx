@@ -21,6 +21,7 @@ interface LocationSelectorProps {
   orgLat?: number
   orgLng?: number
   onLocationChange: (location: LocationData) => void
+  initialLocationData?: LocationData | null
 }
 
 export default function LocationSelector({
@@ -28,9 +29,26 @@ export default function LocationSelector({
   orgLat,
   orgLng,
   onLocationChange,
+  initialLocationData,
 }: LocationSelectorProps) {
-  const [useCurrentAddress, setUseCurrentAddress] = useState(true)
-  const [customAddress, setCustomAddress] = useState('')
+  // Determine initial state based on initial data
+  const initialUseCurrentAddress = initialLocationData?.isCurrentAddress ?? true
+  const initialCustomAddress =
+    initialLocationData?.isCurrentAddress === false
+      ? initialLocationData.address
+      : ''
+
+  console.log('[LocationSelector] Debug initial data:', {
+    initialLocationData,
+    initialUseCurrentAddress,
+    initialCustomAddress,
+    orgAddress,
+  })
+
+  const [useCurrentAddress, setUseCurrentAddress] = useState(
+    initialUseCurrentAddress,
+  )
+  const [customAddress, setCustomAddress] = useState(initialCustomAddress)
 
   const handleLocationTypeChange = (useCurrent: boolean) => {
     setUseCurrentAddress(useCurrent)
@@ -67,17 +85,27 @@ export default function LocationSelector({
     })
   }
 
-  // Initialize with current address if available
+  // Initialize with current address if available (only when no initial data is provided)
   React.useEffect(() => {
-    if (useCurrentAddress && orgAddress) {
+    if (!initialLocationData && useCurrentAddress && orgAddress) {
       onLocationChange({
         address: orgAddress,
         lat: orgLat,
         lng: orgLng,
         isCurrentAddress: true,
       })
+    } else if (initialLocationData) {
+      // If we have initial data, use it
+      onLocationChange(initialLocationData)
     }
-  }, [useCurrentAddress, orgAddress, orgLat, orgLng, onLocationChange])
+  }, [
+    useCurrentAddress,
+    orgAddress,
+    orgLat,
+    orgLng,
+    onLocationChange,
+    initialLocationData,
+  ])
 
   return (
     <View style={styles.container}>

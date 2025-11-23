@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useMemo, useState, useEffect, useRef } from 'react'
 import {
   View,
   Text,
@@ -10,6 +10,10 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { useAuth, useAuthStatus } from '@/Auth/AuthProvider'
 import { useProfile } from '@/Auth/fetchProfile'
 import LoadingAnimation from '@/components/Loading/Loading'
+import { supabase } from '@/Supabase/supabaseClient'
+import type { Database } from '@/types'
+
+type Organization = Database['public']['Tables']['organizations']['Row']
 
 import UserProfileSection from '@/components/Account/UserProfileSection'
 import CreateAnnouncementSection from '@/components/Account/CreateAnnouncementSection'
@@ -23,11 +27,34 @@ export default function Account() {
   const { isLoggedIn, isVerified } = useAuthStatus()
   const { profile, loading, error, refetch } = useProfile()
   const [refreshing, setRefreshing] = useState(false)
+  const [organization, setOrganization] = useState<Organization | null>(null)
+  const lastFetchedOrgId = useRef<string | null>(null)
 
   const isOrganization = useMemo(
     () => profile?.is_org === true && !!profile?.org_id,
     [profile?.is_org, profile?.org_id],
   )
+
+  useEffect(() => {
+    const fetchOrganization = async () => {
+      if (!profile?.org_id || profile.org_id === lastFetchedOrgId.current)
+        return
+
+      lastFetchedOrgId.current = profile.org_id
+
+      const { data, error } = await supabase
+        .from('organizations')
+        .select('*')
+        .eq('id', profile.org_id)
+        .single()
+
+      if (data && !error) {
+        setOrganization(data)
+      }
+    }
+
+    fetchOrganization()
+  }, [profile?.org_id])
 
   const onRefresh = useCallback(async () => {
     if (!isLoggedIn || !profile?.id) {
@@ -91,7 +118,11 @@ export default function Account() {
         {isOrganization ? (
           <>
             <CreateAnnouncementSection profile={profile} />
-            <AnnouncementsList profile={profile} refreshKey={refreshing} />
+            <AnnouncementsList
+              profile={profile}
+              refreshKey={refreshing}
+              organization={organization}
+            />
           </>
         ) : (
           <EventsList profile={profile} />

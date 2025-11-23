@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  Linking,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import * as OrgFollow from '@/Supabase/organizationFollow'
@@ -18,6 +17,7 @@ export default function CommunityItem({ community }: Props) {
   const navigation = useNavigation()
   const [following, setFollowing] = useState(!!community.is_following)
   const [loading, setLoading] = useState(false)
+  const [expanded, setExpanded] = useState(false)
 
   const followFn = OrgFollow.followOrganization
   const unfollowFn = OrgFollow.unfollowOrganization
@@ -42,25 +42,6 @@ export default function CommunityItem({ community }: Props) {
     }
   }
 
-  const address = [
-    community.address,
-    community.city,
-    community.province_state,
-    community.country,
-  ]
-    .filter(Boolean)
-    .join(', ')
-
-  const openWebsite = async (url?: string) => {
-    try {
-      if (!url) return
-      const cleaned = url.startsWith('http') ? url : `https://${url}`
-      const supported = await Linking.canOpenURL(cleaned)
-      if (supported) await Linking.openURL(cleaned)
-    } catch (err) {
-      console.error('openWebsite error', err)
-    }
-  }
   const handlePress = () => {
     // @ts-expect-error navigation param typing
     navigation.navigate('OrganizationDetail', { org: community })
@@ -69,21 +50,105 @@ export default function CommunityItem({ community }: Props) {
   const name = community.name
   const type = community.type ?? 'Organization'
   const description =
-    (community as unknown as { description?: string }).description ??
-    'No description provided'
-  const contact_phone = community.contact_phone
-  const website = community.website ?? undefined
+    (community as unknown as { description?: string }).description ?? ''
+  const hasLongDescription = (description || '').length > 140
+  const displayDescription = description || 'No description provided'
+
+  const getOrgTypeIcon = (
+    type: string,
+  ): React.ComponentProps<typeof Feather>['name'] => {
+    switch (type?.toLowerCase()) {
+      case 'masjid':
+        return 'home'
+      case 'islamic-school':
+        return 'book-open'
+      case 'sisters-group':
+        return 'users'
+      case 'youth-group':
+        return 'user-plus'
+      case 'book-club':
+        return 'book'
+      case 'book-store':
+        return 'shopping-bag'
+      case 'run-club':
+        return 'activity'
+      default:
+        return 'map-pin'
+    }
+  }
+
+  const getOrgTypeLabel = (type: string): string => {
+    switch (type?.toLowerCase()) {
+      case 'masjid':
+        return 'Masjid'
+      case 'islamic-school':
+        return 'Islamic School'
+      case 'sisters-group':
+        return 'Sisters Group'
+      case 'youth-group':
+        return 'Youth Group'
+      case 'book-club':
+        return 'Book Club'
+      case 'book-store':
+        return 'Book Store'
+      case 'run-club':
+        return 'Run Club'
+      default:
+        return 'Organization'
+    }
+  }
+
+  const getOrgTypeColor = (type: string) => {
+    switch (type?.toLowerCase()) {
+      case 'masjid':
+        return { bg: '#BBF7D0', text: '#166534' }
+      case 'islamic-school':
+        return { bg: '#FEF08A', text: '#CA8A04' }
+      case 'sisters-group':
+        return { bg: '#FBCFE8', text: '#BE185D' }
+      case 'youth-group':
+        return { bg: '#BFDBFE', text: '#1D4ED8' }
+      case 'book-club':
+        return { bg: '#DDD6FE', text: '#7C3AED' }
+      case 'book-store':
+        return { bg: '#FDE68A', text: '#D97706' }
+      case 'run-club':
+        return { bg: '#A7F3D0', text: '#059669' }
+      default:
+        return { bg: '#E2E8F0', text: '#64748B' }
+    }
+  }
 
   return (
     <TouchableOpacity
-      style={styles.card}
+      style={[styles.card]}
       activeOpacity={0.85}
       onPress={handlePress}
     >
       <View style={styles.headerRow}>
         <View style={styles.titleBlock}>
           <Text style={styles.cardTitle}>{name}</Text>
-          <Text style={styles.cardType}>{type}</Text>
+          <View
+            style={[
+              styles.typeBadge,
+              { backgroundColor: getOrgTypeColor(type).bg },
+            ]}
+          >
+            <Feather
+              name={getOrgTypeIcon(type)}
+              size={12}
+              color={getOrgTypeColor(type).text}
+              style={styles.typeBadgeIcon}
+            />
+            <Text
+              style={[
+                styles.typeBadgeText,
+                { color: getOrgTypeColor(type).text },
+              ]}
+            >
+              {getOrgTypeLabel(type)}
+            </Text>
+          </View>
         </View>
         <TouchableOpacity
           style={[
@@ -109,48 +174,23 @@ export default function CommunityItem({ community }: Props) {
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.cardDescription}>{description}</Text>
-
-      <View style={styles.infoRow}>
-        <Feather
-          name="map-pin"
-          size={15}
-          color="#38A169"
-          style={styles.infoIcon}
-        />
-        <Text style={styles.infoText} numberOfLines={2}>
-          {address || 'No address provided'}
-        </Text>
-      </View>
-
-      {community.contact_phone ? (
-        <View style={styles.infoRow}>
-          <Feather
-            name="phone"
-            size={15}
-            color="#38A169"
-            style={styles.infoIcon}
-          />
-          <Text style={styles.infoText}>{contact_phone}</Text>
-        </View>
-      ) : null}
-
-      {website ? (
+      <Text
+        style={styles.cardDescription}
+        numberOfLines={expanded ? undefined : 2}
+        ellipsizeMode="tail"
+      >
+        {displayDescription}
+      </Text>
+      {hasLongDescription && (
         <TouchableOpacity
-          style={styles.infoRow}
-          onPress={() => openWebsite(website)}
+          onPress={() => setExpanded((s) => !s)}
+          activeOpacity={0.7}
         >
-          <Feather
-            name="globe"
-            size={15}
-            color="#38A169"
-            style={styles.infoIcon}
-          />
-          <Text style={[styles.infoText, styles.linkText]} numberOfLines={1}>
-            {website.replace(/^https?:\/\//, '')}
+          <Text style={styles.readMore}>
+            {expanded ? 'Show less' : 'Read more'}
           </Text>
         </TouchableOpacity>
-      ) : null}
+      )}
     </TouchableOpacity>
   )
 }
@@ -159,39 +199,45 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    padding: 18,
-    marginBottom: 14,
-    shadowColor: '#1B4332',
+    padding: 14,
+    marginBottom: 12,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.08,
     shadowRadius: 8,
-    elevation: 2,
+    elevation: 3,
     borderWidth: 1,
-    borderColor: '#E3F5E9',
+    borderColor: '#E2E8F0',
   },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 6,
+    marginBottom: 8,
   },
-  titleBlock: { flex: 1 },
+  titleBlock: { flex: 1, marginRight: 10 },
   cardTitle: {
     fontWeight: 'bold',
-    fontSize: 17,
-    color: '#1D4732',
-    marginBottom: 2,
+    fontSize: 16,
+    color: '#1A202C',
+    marginBottom: 3,
+    lineHeight: 20,
   },
   cardType: { fontSize: 13, color: '#38A169', marginBottom: 2 },
-  cardDescription: { fontSize: 14, color: '#4A5568', marginBottom: 2 },
+  cardDescription: {
+    fontSize: 14,
+    color: '#4A5568',
+    marginBottom: 8,
+    lineHeight: 20,
+  },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 2,
-    marginBottom: 2,
+    marginTop: 6,
+    marginBottom: 3,
   },
-  infoIcon: { marginRight: 7 },
-  infoText: { fontSize: 13, color: '#1D4732', flex: 1 },
+  infoIcon: { marginRight: 10 },
+  infoText: { fontSize: 14, color: '#2D3748', flex: 1 },
   linkText: { color: '#4299E1', textDecorationLine: 'underline' },
   followButton: {
     backgroundColor: '#38A169',
@@ -209,4 +255,22 @@ const styles = StyleSheet.create({
   },
   followButtonText: { color: '#FFF', fontWeight: '600', fontSize: 14 },
   followingButtonText: { color: '#38A169' },
+  typeBadge: {
+    marginTop: 1,
+    alignSelf: 'flex-start',
+    backgroundColor: '#F0FFF4',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  typeBadgeIcon: { marginRight: 4 },
+  typeBadgeText: { fontSize: 12, color: '#2F855A', fontWeight: '600' },
+  readMore: {
+    marginTop: 8,
+    color: '#3182CE',
+    fontWeight: '600',
+    fontSize: 13,
+  },
 })

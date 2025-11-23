@@ -9,6 +9,7 @@ import AudienceSelector from './CreateAnnouncements/AudienceSelector'
 import DescriptionInput from './CreateAnnouncements/DescriptionInput'
 import LocationSelector from './CreateAnnouncements/LocationSelector'
 import type { Organization } from '@/types'
+
 export default function AnnouncementModal({
   visible,
   onClose,
@@ -54,16 +55,16 @@ export default function AnnouncementModal({
   organization?: Organization | null
   locationData?: {
     address: string
-    lat: number
-    lng: number
-    isCurrentAddress: boolean
+    lat?: number | null
+    lng?: number | null
+    isCurrentAddress?: boolean
   } | null
   setLocationData?: (
     d: {
       address: string
-      lat: number
-      lng: number
-      isCurrentAddress: boolean
+      lat?: number | null
+      lng?: number | null
+      isCurrentAddress?: boolean
     } | null,
   ) => void
   posting: boolean
@@ -71,12 +72,13 @@ export default function AnnouncementModal({
 }) {
   const [showStartPicker, setShowStartPicker] = useState(false)
   const [showEndPicker, setShowEndPicker] = useState(false)
+
   const handleLocationChange = React.useCallback(
     (loc: {
       address: string
-      lat: number
-      lng: number
-      isCurrentAddress: boolean
+      lat?: number | null
+      lng?: number | null
+      isCurrentAddress?: boolean
     }) => {
       setLocationData?.(loc)
     },
@@ -145,8 +147,6 @@ export default function AnnouncementModal({
             contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 12 }}
             showsVerticalScrollIndicator
           >
-            {/* Components in the specified order: title, type, schedule, start/end time, audience, description */}
-
             <TitleInput
               title={announcementTitle}
               setTitle={setAnnouncementTitle}

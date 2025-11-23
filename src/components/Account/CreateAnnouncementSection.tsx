@@ -9,9 +9,9 @@ import { supabase } from '@/Supabase/supabaseClient'
 type Organization = Database['public']['Tables']['organizations']['Row']
 type LocationData = {
   address: string
-  lat: number
-  lng: number
-  isCurrentAddress: boolean
+  lat?: number | null
+  lng?: number | null
+  isCurrentAddress?: boolean
 }
 
 export default function CreateAnnouncementSection({
@@ -61,6 +61,49 @@ export default function CreateAnnouncementSection({
     }
     setPosting(true)
     try {
+      // Initialize lat/lng with whatever is in the state (null if custom address was typed)
+      let lat: number | null = locationData?.lat ?? null
+      let lng: number | null = locationData?.lng ?? null
+
+      // If we have an address but NULL coordinates, trigger the Geocoding API
+      if ((lat === null || lng === null) && locationData?.address) {
+        try {
+          // Note: In Expo, use Constants.expoConfig.extra or ensure .env is loaded
+          const apiKey = process.env.EXPO_PUBLIC_OPENROUTE_API
+
+          if (apiKey) {
+            const url = `https://api.openrouteservice.org/geocode/search?api_key=${apiKey}&text=${encodeURIComponent(
+              locationData.address,
+            )}`
+            const resp = await fetch(url)
+            if (resp.ok) {
+              const json = await resp.json()
+              if (
+                json &&
+                json.features &&
+                json.features.length > 0 &&
+                json.features[0].geometry &&
+                json.features[0].geometry.coordinates
+              ) {
+                // Update the local variables to be used in the createOrgAnnouncement call below
+                const [foundLng, foundLat] =
+                  json.features[0].geometry.coordinates
+                lat = foundLat
+                lng = foundLng
+              }
+            } else {
+              console.warn('Geocoding API responded but not OK:', resp.status)
+            }
+          } else {
+            console.warn(
+              'OPENROUTE_API key is missing in environment variables.',
+            )
+          }
+        } catch (e) {
+          console.warn('[geocode] failed to resolve address', e)
+        }
+      }
+
       const { ok, error, data } = await createOrgAnnouncement({
         organization_id: profile.org_id,
         author_profile_id: profile.id,
@@ -73,8 +116,9 @@ export default function CreateAnnouncementSection({
         end_time: endTime ?? null,
         date: date ?? null,
         location: locationData?.address ?? null,
-        lat: locationData?.lat ?? null,
-        long: locationData?.lng ?? null,
+        // Use the local variables 'lat' and 'lng' which might have been updated by the API above
+        lat: lat ?? null,
+        long: lng ?? null,
       })
       if (!ok || !data) {
         toast.error(error || 'Unknown error', 'Error posting announcement')

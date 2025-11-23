@@ -61,14 +61,11 @@ export default function CreateAnnouncementSection({
     }
     setPosting(true)
     try {
-      // Initialize lat/lng with whatever is in the state (null if custom address was typed)
       let lat: number | null = locationData?.lat ?? null
       let lng: number | null = locationData?.lng ?? null
 
-      // If we have an address but NULL coordinates, trigger the Geocoding API
       if ((lat === null || lng === null) && locationData?.address) {
         try {
-          // Note: In Expo, use Constants.expoConfig.extra or ensure .env is loaded
           const apiKey = process.env.EXPO_PUBLIC_OPENROUTE_API
 
           if (apiKey) {

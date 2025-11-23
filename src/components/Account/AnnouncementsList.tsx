@@ -169,7 +169,6 @@ export default function AnnouncementsList({
             key={item.id}
             announcement={item}
             showEditButton
-            showPublishedDate
             onEdit={() => handleEdit(item)}
           />
         ))

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
 import type { OrgPost } from '@/types'
@@ -22,7 +22,16 @@ const formatTime = (time: string | null) => {
 const formatDaysOfWeek = (days: number[] | null) => {
   if (!days || days.length === 0) return null
   const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-  return days.map((day) => dayNames[day - 1]).join(', ')
+  return days.map((day) => dayNames[day - 1])
+}
+
+const chunkIntoPairs = (items: string[] | null) => {
+  if (!items) return null
+  const chunks: string[] = []
+  for (let i = 0; i < items.length; i += 2) {
+    chunks.push(items.slice(i, i + 2).join(', '))
+  }
+  return chunks
 }
 
 const formatDate = (dateString: string | null) => {
@@ -87,12 +96,22 @@ export default function AnnouncementCard({
   showPublishedDate = true,
 }: AnnouncementCardProps) {
   const [expanded, setExpanded] = useState(false)
+  const [textOverflowing, setTextOverflowing] = useState(false)
   const eventColor = getEventTypeColor(announcement.post_type)
   const eventIcon = getEventTypeIcon(announcement.post_type)
   const startTime = formatTime(announcement.start_time)
   const endTime = formatTime(announcement.end_time)
   const recurringDays = formatDaysOfWeek(announcement.recurs_on_days)
+  const recurringDayRows = chunkIntoPairs(recurringDays)
   const eventDate = formatDate(announcement.date)
+
+  useEffect(() => {
+    // reset when announcement changes; initialize overflow based on length
+    setExpanded(false)
+    setTextOverflowing(
+      Boolean(announcement.body && announcement.body.length > 200),
+    )
+  }, [announcement.body])
 
   return (
     <View style={styles.announcementCard}>
@@ -155,9 +174,16 @@ export default function AnnouncementCard({
                     : startTime || endTime}
                 </Text>
               )}
-              {recurringDays && (
-                <Text style={styles.recurringText}>{recurringDays}</Text>
-              )}
+              {recurringDayRows &&
+                recurringDayRows.map((row, idx) => (
+                  <Text
+                    key={idx}
+                    style={styles.recurringText}
+                    numberOfLines={2}
+                  >
+                    {row}
+                  </Text>
+                ))}
               {showPublishedDate && announcement.created_at && (
                 <Text style={styles.announcementPublished}>
                   {formatDate(announcement.created_at)}
@@ -179,10 +205,16 @@ export default function AnnouncementCard({
           <Text
             style={styles.announcementBody}
             numberOfLines={expanded ? undefined : 2}
+            onTextLayout={(e) => {
+              // only consider overflow when collapsed
+              if (!expanded) {
+                setTextOverflowing(e.nativeEvent.lines.length > 2)
+              }
+            }}
           >
             {announcement.body}
           </Text>
-          {announcement.body.length > 200 && (
+          {textOverflowing && (
             <TouchableOpacity
               onPress={() => setExpanded((s) => !s)}
               activeOpacity={0.7}
@@ -277,6 +309,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'right',
     marginBottom: 2,
+    display: 'flex',
   },
   timeText: {
     fontSize: 11,

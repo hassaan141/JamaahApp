@@ -1,9 +1,18 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { TouchableOpacity, Text, StyleSheet } from 'react-native'
-import type { Profile } from '@/types'
+import type { Profile, Database } from '@/types'
 import AnnouncementModal from '@/components/Account/AnnouncementModal'
 import { createOrgAnnouncement } from '@/Supabase/createOrgAnnouncement'
 import { toast } from '@/components/Toast/toast'
+import { supabase } from '@/Supabase/supabaseClient'
+
+type Organization = Database['public']['Tables']['organizations']['Row']
+type LocationData = {
+  address: string
+  lat: number
+  lng: number
+  isCurrentAddress: boolean
+}
 
 export default function CreateAnnouncementSection({
   profile,
@@ -20,6 +29,30 @@ export default function CreateAnnouncementSection({
   const [recurringDays, setRecurringDays] = useState<number[]>([])
   const [date, setDate] = useState<string | null>(null)
   const [posting, setPosting] = useState(false)
+  const [organization, setOrganization] = useState<Organization | null>(null)
+  const [locationData, setLocationData] = useState<LocationData | null>(null)
+  const lastFetchedOrgId = useRef<string | null>(null)
+
+  useEffect(() => {
+    const fetchOrganization = async () => {
+      if (!profile?.org_id || profile.org_id === lastFetchedOrgId.current)
+        return
+
+      lastFetchedOrgId.current = profile.org_id
+
+      const { data, error } = await supabase
+        .from('organizations')
+        .select('*')
+        .eq('id', profile.org_id)
+        .single()
+
+      if (data && !error) {
+        setOrganization(data)
+      }
+    }
+
+    fetchOrganization()
+  }, [profile?.org_id])
 
   const handlePostAnnouncement = async () => {
     if (!announcementBody.trim() || !profile?.org_id || !profile?.id) {
@@ -39,6 +72,9 @@ export default function CreateAnnouncementSection({
         start_time: startTime ?? null,
         end_time: endTime ?? null,
         date: date ?? null,
+        location: locationData?.address ?? null,
+        lat: locationData?.lat ?? null,
+        long: locationData?.lng ?? null,
       })
       if (!ok || !data) {
         toast.error(error || 'Unknown error', 'Error posting announcement')
@@ -56,6 +92,7 @@ export default function CreateAnnouncementSection({
       setDemographic(null)
       setRecurringDays([])
       setDate(null)
+      setLocationData(null)
       setShowAnnouncementModal(false)
     } finally {
       setPosting(false)
@@ -100,6 +137,9 @@ export default function CreateAnnouncementSection({
         setDate={setDate}
         posting={posting}
         handlePostAnnouncement={handlePostAnnouncement}
+        organization={organization}
+        locationData={locationData}
+        setLocationData={setLocationData}
       />
 
       <TouchableOpacity

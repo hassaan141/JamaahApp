@@ -1,5 +1,12 @@
 import React from 'react'
-import { View, TextInput, TouchableOpacity, StyleSheet } from 'react-native'
+import type {
+  TextInputProps} from 'react-native';
+import {
+  View,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet
+} from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
 
 export default function MasjidSearchBar({
@@ -7,11 +14,13 @@ export default function MasjidSearchBar({
   onChangeText,
   onClear,
   placeholder = 'Search masjids by name or location...',
+  onSubmitEditing,
 }: {
   value: string
   onChangeText: (text: string) => void
   onClear: () => void
   placeholder?: string
+  onSubmitEditing?: TextInputProps['onSubmitEditing']
 }) {
   return (
     <View style={styles.container}>
@@ -29,6 +38,7 @@ export default function MasjidSearchBar({
             placeholderTextColor="#94a3b8"
             value={value}
             onChangeText={onChangeText}
+            onSubmitEditing={onSubmitEditing}
           />
           {!!value && (
             <TouchableOpacity
@@ -55,6 +65,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 3,
+    marginBottom: 16,
   },
   inputRow: {
     flexDirection: 'row',

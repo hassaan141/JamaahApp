@@ -1,23 +1,15 @@
 import React, { useState } from 'react'
 import { View, StyleSheet } from 'react-native'
 import TabNavigation from '@/components/ProgramsScreen/TabNavigation'
-import NotificationsTab from '@/components/ProgramsScreen/NotificationsTab'
 import CommunitiesTab from '@/components/ProgramsScreen/CommunitiesTab'
 
 export default function Programs() {
   const [activeTab, setActiveTab] = useState(0)
 
-  const tabs = ['Notifications', 'Communities']
+  const tabs = ['Communities']
 
   const renderTabContent = () => {
-    switch (activeTab) {
-      case 0:
-        return <NotificationsTab />
-      case 1:
-        return <CommunitiesTab />
-      default:
-        return <NotificationsTab />
-    }
+    return <CommunitiesTab />
   }
 
   return (
@@ -34,6 +26,7 @@ export default function Programs() {
 
 const styles = StyleSheet.create({
   container: {
+    paddingTop: 40,
     flex: 1,
     backgroundColor: '#F7FAFC',
   },

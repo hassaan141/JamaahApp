@@ -2,6 +2,7 @@ export default () => ({
   expo: {
     name: 'JamaahApp',
     slug: 'jamaahapp',
+    plugins: ['expo-font'],
     projectId: '18f59a83-4081-4b80-b61b-67fc127f5577',
     version: '1.0.0',
     orientation: 'portrait',

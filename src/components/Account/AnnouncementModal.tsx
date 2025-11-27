@@ -7,6 +7,9 @@ import ScheduleSection from './CreateAnnouncements/ScheduleSection'
 import TimeInputSection from './CreateAnnouncements/TimeInputSection'
 import AudienceSelector from './CreateAnnouncements/AudienceSelector'
 import DescriptionInput from './CreateAnnouncements/DescriptionInput'
+import LocationSelector from './CreateAnnouncements/LocationSelector'
+import type { Organization } from '@/types'
+
 export default function AnnouncementModal({
   visible,
   onClose,
@@ -26,6 +29,8 @@ export default function AnnouncementModal({
   setPostType,
   demographic,
   setDemographic,
+  organization,
+  setLocationData,
   posting,
   handlePostAnnouncement,
 }: {
@@ -47,11 +52,38 @@ export default function AnnouncementModal({
   setPostType: (v: string | null) => void
   demographic: string | null
   setDemographic: (v: string | null) => void
+  organization?: Organization | null
+  locationData?: {
+    address: string
+    lat?: number | null
+    lng?: number | null
+    isCurrentAddress?: boolean
+  } | null
+  setLocationData?: (
+    d: {
+      address: string
+      lat?: number | null
+      lng?: number | null
+      isCurrentAddress?: boolean
+    } | null,
+  ) => void
   posting: boolean
   handlePostAnnouncement: () => Promise<void> | void
 }) {
   const [showStartPicker, setShowStartPicker] = useState(false)
   const [showEndPicker, setShowEndPicker] = useState(false)
+
+  const handleLocationChange = React.useCallback(
+    (loc: {
+      address: string
+      lat?: number | null
+      lng?: number | null
+      isCurrentAddress?: boolean
+    }) => {
+      setLocationData?.(loc)
+    },
+    [setLocationData],
+  )
 
   return (
     <Modal
@@ -115,8 +147,6 @@ export default function AnnouncementModal({
             contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 12 }}
             showsVerticalScrollIndicator
           >
-            {/* Components in the specified order: title, type, schedule, start/end time, audience, description */}
-
             <TitleInput
               title={announcementTitle}
               setTitle={setAnnouncementTitle}
@@ -146,6 +176,13 @@ export default function AnnouncementModal({
             <AudienceSelector
               demographic={demographic}
               setDemographic={setDemographic}
+            />
+
+            <LocationSelector
+              orgAddress={organization?.address ?? undefined}
+              orgLat={organization?.latitude ?? undefined}
+              orgLng={organization?.longitude ?? undefined}
+              onLocationChange={handleLocationChange}
             />
 
             <DescriptionInput

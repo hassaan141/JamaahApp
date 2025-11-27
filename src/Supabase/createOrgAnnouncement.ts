@@ -12,6 +12,9 @@ export async function createOrgAnnouncement(input: {
   start_time?: string | null // HH:MM format
   end_time?: string | null // HH:MM format
   date?: string | null // YYYY-MM-DD format
+  location?: string | null
+  lat?: number | null
+  long?: number | null
 }): Promise<{ ok: boolean; data?: OrgPost; error?: string }> {
   try {
     const payload = {
@@ -26,9 +29,9 @@ export async function createOrgAnnouncement(input: {
       start_time: input.start_time ?? null,
       end_time: input.end_time ?? null,
       date: input.date ?? null,
-      location: null,
-      lat: null,
-      long: null,
+      location: input.location ?? null,
+      lat: input.lat ?? null,
+      long: input.long ?? null,
     }
     const { data, error } = await supabase
       .from('org_posts')

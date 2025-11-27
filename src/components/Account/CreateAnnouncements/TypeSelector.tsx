@@ -12,7 +12,7 @@ export default function TypeSelector({
 }: TypeSelectorProps) {
   const types = [
     { label: 'Event', value: 'Event' },
-    { label: 'Repeating', value: 'Repeating_classes' },
+    { label: 'Class', value: 'Repeating_classes' },
     { label: 'Janazah', value: 'Janazah' },
     { label: 'Volunteering', value: 'Volunteerng' },
   ]

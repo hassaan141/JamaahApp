@@ -1,9 +1,18 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { TouchableOpacity, Text, StyleSheet } from 'react-native'
-import type { Profile } from '@/types'
+import type { Profile, Database } from '@/types'
 import AnnouncementModal from '@/components/Account/AnnouncementModal'
 import { createOrgAnnouncement } from '@/Supabase/createOrgAnnouncement'
 import { toast } from '@/components/Toast/toast'
+import { supabase } from '@/Supabase/supabaseClient'
+
+type Organization = Database['public']['Tables']['organizations']['Row']
+type LocationData = {
+  address: string
+  lat?: number | null
+  lng?: number | null
+  isCurrentAddress?: boolean
+}
 
 export default function CreateAnnouncementSection({
   profile,
@@ -20,6 +29,30 @@ export default function CreateAnnouncementSection({
   const [recurringDays, setRecurringDays] = useState<number[]>([])
   const [date, setDate] = useState<string | null>(null)
   const [posting, setPosting] = useState(false)
+  const [organization, setOrganization] = useState<Organization | null>(null)
+  const [locationData, setLocationData] = useState<LocationData | null>(null)
+  const lastFetchedOrgId = useRef<string | null>(null)
+
+  useEffect(() => {
+    const fetchOrganization = async () => {
+      if (!profile?.org_id || profile.org_id === lastFetchedOrgId.current)
+        return
+
+      lastFetchedOrgId.current = profile.org_id
+
+      const { data, error } = await supabase
+        .from('organizations')
+        .select('*')
+        .eq('id', profile.org_id)
+        .single()
+
+      if (data && !error) {
+        setOrganization(data)
+      }
+    }
+
+    fetchOrganization()
+  }, [profile?.org_id])
 
   const handlePostAnnouncement = async () => {
     if (!announcementBody.trim() || !profile?.org_id || !profile?.id) {
@@ -28,6 +61,46 @@ export default function CreateAnnouncementSection({
     }
     setPosting(true)
     try {
+      let lat: number | null = locationData?.lat ?? null
+      let lng: number | null = locationData?.lng ?? null
+
+      if ((lat === null || lng === null) && locationData?.address) {
+        try {
+          const apiKey = process.env.EXPO_PUBLIC_OPENROUTE_API
+
+          if (apiKey) {
+            const url = `https://api.openrouteservice.org/geocode/search?api_key=${apiKey}&text=${encodeURIComponent(
+              locationData.address,
+            )}`
+            const resp = await fetch(url)
+            if (resp.ok) {
+              const json = await resp.json()
+              if (
+                json &&
+                json.features &&
+                json.features.length > 0 &&
+                json.features[0].geometry &&
+                json.features[0].geometry.coordinates
+              ) {
+                // Update the local variables to be used in the createOrgAnnouncement call below
+                const [foundLng, foundLat] =
+                  json.features[0].geometry.coordinates
+                lat = foundLat
+                lng = foundLng
+              }
+            } else {
+              console.warn('Geocoding API responded but not OK:', resp.status)
+            }
+          } else {
+            console.warn(
+              'OPENROUTE_API key is missing in environment variables.',
+            )
+          }
+        } catch (e) {
+          console.warn('[geocode] failed to resolve address', e)
+        }
+      }
+
       const { ok, error, data } = await createOrgAnnouncement({
         organization_id: profile.org_id,
         author_profile_id: profile.id,
@@ -39,6 +112,10 @@ export default function CreateAnnouncementSection({
         start_time: startTime ?? null,
         end_time: endTime ?? null,
         date: date ?? null,
+        location: locationData?.address ?? null,
+        // Use the local variables 'lat' and 'lng' which might have been updated by the API above
+        lat: lat ?? null,
+        long: lng ?? null,
       })
       if (!ok || !data) {
         toast.error(error || 'Unknown error', 'Error posting announcement')
@@ -56,6 +133,7 @@ export default function CreateAnnouncementSection({
       setDemographic(null)
       setRecurringDays([])
       setDate(null)
+      setLocationData(null)
       setShowAnnouncementModal(false)
     } finally {
       setPosting(false)
@@ -100,6 +178,9 @@ export default function CreateAnnouncementSection({
         setDate={setDate}
         posting={posting}
         handlePostAnnouncement={handlePostAnnouncement}
+        organization={organization}
+        locationData={locationData}
+        setLocationData={setLocationData}
       />
 
       <TouchableOpacity

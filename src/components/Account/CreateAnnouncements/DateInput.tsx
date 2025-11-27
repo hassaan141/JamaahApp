@@ -29,6 +29,7 @@ export default function DateInput({ date, setDate }: DateInputProps) {
           borderRadius: 8,
           paddingHorizontal: 12,
           paddingVertical: 10,
+          color: '#000000ff',
         }}
       />
     </View>

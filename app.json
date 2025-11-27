@@ -2,6 +2,7 @@
   "expo": {
     "name": "JamaahApp",
     "slug": "JamaahApp",
+    "projectId": "18f59a83-4081-4b80-b61b-67fc127f5577",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -25,6 +26,11 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "18f59a83-4081-4b80-b61b-67fc127f5577"
+      }
     }
   }
 }

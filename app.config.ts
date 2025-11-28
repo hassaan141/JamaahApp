@@ -20,10 +20,12 @@ export default () => ({
       backgroundColor: '#ffffff',
     },
     ios: {
+      bundleIdentifier: 'com.hassaan141.jamaahapp',
       supportsTablet: true,
       infoPlist: {
         NSLocationWhenInUseUsageDescription:
           'This app uses your location to find nearby masjids and show accurate prayer times.',
+        ITSAppUsesNonExemptEncryption: false,
       },
     },
     android: {

@@ -15,7 +15,7 @@ import ToastHost from './src/components/Toast/ToastHost'
 const Stack = createStackNavigator()
 
 const TESTING_MODE = false
-const TEST_EMAIL = 'm2farooq@uwaterloo.ca'
+const TEST_EMAIL = String(ENV.TESTING.email)
 const TEST_PASSWORD = String(ENV.TESTING.password)
 
 function AppNavigator() {

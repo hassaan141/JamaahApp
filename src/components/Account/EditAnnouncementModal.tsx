@@ -9,6 +9,7 @@ import AudienceSelector from './CreateAnnouncements/AudienceSelector'
 import DescriptionInput from './CreateAnnouncements/DescriptionInput'
 import LocationSelector from './CreateAnnouncements/LocationSelector'
 import type { Organization, OrgPost } from '@/types'
+import { ENV } from '@/core/env'
 
 export default function EditAnnouncementModal({
   visible,
@@ -113,31 +114,41 @@ export default function EditAnnouncementModal({
 
       if ((lat == null || lng == null) && locationData?.address) {
         try {
-          const apiKey =
-            process.env.EXPO_PUBLIC_OPENROUTE_API || process.env.OPENROUTE_API
-          if (apiKey) {
-            const url = `https://api.openrouteservice.org/geocode/search?api_key=${apiKey}&text=${encodeURIComponent(
-              locationData.address,
-            )}`
-            const resp = await fetch(url)
-            if (resp.ok) {
-              const json = await resp.json()
-              if (
-                json &&
-                json.features &&
-                json.features.length > 0 &&
-                json.features[0].geometry &&
-                json.features[0].geometry.coordinates
-              ) {
-                const [foundLng, foundLat] =
-                  json.features[0].geometry.coordinates
-                lat = foundLat
-                lng = foundLng
-              }
+          const fnUrl = `${ENV.SUPABASE_URL.replace(/\/$/, '')}/functions/v1/openroute_api`
+          const resp = await fetch(fnUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${ENV.SUPABASE_ANON_KEY}`,
+            },
+            body: JSON.stringify({ address: locationData.address }),
+          })
+          if (resp.ok) {
+            const json = (await resp.json()) as {
+              ok?: boolean
+              lat?: number | string
+              lng?: number | string
+              address?: string
             }
+            if (json && json.ok && json.lat != null && json.lng != null) {
+              const foundLat = Number(json.lat)
+              const foundLng = Number(json.lng)
+              lat = foundLat
+              lng = foundLng
+              // prefer returned address label and update location state
+              setLocationData((prev) => ({
+                address:
+                  json.address ?? prev?.address ?? locationData?.address ?? '',
+                lat: foundLat,
+                lng: foundLng,
+                isCurrentAddress: false,
+              }))
+            }
+          } else {
+            console.warn('[geocode] function responded not OK', resp.status)
           }
         } catch (e) {
-          console.warn('[geocode] failed to resolve address', e)
+          console.warn('[geocode] failed to resolve address via function', e)
         }
       }
 

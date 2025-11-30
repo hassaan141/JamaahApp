@@ -1,19 +1,60 @@
+import dotenv from 'dotenv'
+
+// Load local .env for dev; noop if file missing
+dotenv.config({ path: '.env' })
+
 export default () => ({
   expo: {
     name: 'JamaahApp',
     slug: 'jamaahapp',
+    plugins: ['expo-font'],
+    projectId: '18f59a83-4081-4b80-b61b-67fc127f5577',
+    version: '1.0.0',
+    orientation: 'portrait',
+    icon: './assets/icon.png',
+    userInterfaceStyle: 'light',
+    newArchEnabled: true,
+    splash: {
+      image: './assets/splash-icon.png',
+      resizeMode: 'contain',
+      backgroundColor: '#ffffff',
+    },
     ios: {
+      bundleIdentifier: 'com.hassaan141.jamaahapp',
+      supportsTablet: true,
       infoPlist: {
         NSLocationWhenInUseUsageDescription:
           'This app uses your location to find nearby masjids and show accurate prayer times.',
+        ITSAppUsesNonExemptEncryption: false,
       },
     },
     android: {
       package: 'com.hassaan141.jamaahapp',
       permissions: ['ACCESS_COARSE_LOCATION', 'ACCESS_FINE_LOCATION'],
+      adaptiveIcon: {
+        foregroundImage: './assets/adaptive-icon.png',
+        backgroundColor: '#ffffff',
+      },
+      edgeToEdgeEnabled: true,
+      predictiveBackGestureEnabled: false,
+    },
+    web: {
+      favicon: './assets/favicon.png',
     },
     extra: {
-      EXPO_PUBLIC_API_URL: process.env.EXPO_PUBLIC_API_URL,
+      EXPO_PUBLIC_SUPABASE_URL:
+        process.env.EXPO_PUBLIC_SUPABASE_URL ?? '${EXPO_PUBLIC_SUPABASE_URL}',
+      EXPO_PUBLIC_SUPABASE_ANON_KEY:
+        process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ??
+        '${EXPO_PUBLIC_SUPABASE_ANON_KEY}',
+      EXPO_PUBLIC_TESTING_MODE:
+        process.env.EXPO_PUBLIC_TESTING_MODE ?? '${EXPO_PUBLIC_TESTING_MODE}',
+      EXPO_PUBLIC_TEST_EMAIL:
+        process.env.EXPO_PUBLIC_TEST_EMAIL ?? '${EXPO_PUBLIC_TEST_EMAIL}',
+      EXPO_PUBLIC_TEST_PASSWORD:
+        process.env.EXPO_PUBLIC_TEST_PASSWORD ?? '${EXPO_PUBLIC_TEST_PASSWORD}',
+      EXPO_PUBLIC_API_URL:
+        process.env.EXPO_PUBLIC_API_URL ?? '${EXPO_PUBLIC_API_URL}',
       eas: {
         projectId: '18f59a83-4081-4b80-b61b-67fc127f5577',
       },

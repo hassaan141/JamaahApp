@@ -5,6 +5,7 @@ import AnnouncementModal from '@/components/Account/AnnouncementModal'
 import { createOrgAnnouncement } from '@/Supabase/createOrgAnnouncement'
 import { toast } from '@/components/Toast/toast'
 import { supabase } from '@/Supabase/supabaseClient'
+import { ENV } from '@/core/env'
 
 type Organization = Database['public']['Tables']['organizations']['Row']
 type LocationData = {
@@ -66,38 +67,42 @@ export default function CreateAnnouncementSection({
 
       if ((lat === null || lng === null) && locationData?.address) {
         try {
-          const apiKey = process.env.EXPO_PUBLIC_OPENROUTE_API
+          const fnUrl = `${ENV.SUPABASE_URL.replace(/\/$/, '')}/functions/v1/openroute_api`
+          const resp = await fetch(fnUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${ENV.SUPABASE_ANON_KEY}`,
+            },
+            body: JSON.stringify({ address: locationData.address }),
+          })
 
-          if (apiKey) {
-            const url = `https://api.openrouteservice.org/geocode/search?api_key=${apiKey}&text=${encodeURIComponent(
-              locationData.address,
-            )}`
-            const resp = await fetch(url)
-            if (resp.ok) {
-              const json = await resp.json()
-              if (
-                json &&
-                json.features &&
-                json.features.length > 0 &&
-                json.features[0].geometry &&
-                json.features[0].geometry.coordinates
-              ) {
-                // Update the local variables to be used in the createOrgAnnouncement call below
-                const [foundLng, foundLat] =
-                  json.features[0].geometry.coordinates
-                lat = foundLat
-                lng = foundLng
-              }
-            } else {
-              console.warn('Geocoding API responded but not OK:', resp.status)
+          if (resp.ok) {
+            const json = (await resp.json()) as {
+              ok?: boolean
+              lat?: number | string
+              lng?: number | string
+              address?: string
+            }
+            if (json && json.ok && json.lat != null && json.lng != null) {
+              const foundLat = Number(json.lat)
+              const foundLng = Number(json.lng)
+              lat = foundLat
+              lng = foundLng
+              // update local address and coordinates in state if available
+              setLocationData((prev) => ({
+                address:
+                  json.address ?? prev?.address ?? locationData?.address ?? '',
+                lat: foundLat,
+                lng: foundLng,
+                isCurrentAddress: false,
+              }))
             }
           } else {
-            console.warn(
-              'OPENROUTE_API key is missing in environment variables.',
-            )
+            console.warn('Geocoding function responded not OK:', resp.status)
           }
         } catch (e) {
-          console.warn('[geocode] failed to resolve address', e)
+          console.warn('[geocode] failed to resolve address via function', e)
         }
       }
 

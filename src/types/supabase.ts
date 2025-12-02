@@ -256,6 +256,160 @@ export interface Database {
           },
         ]
       }
+      daily_prayer_times: {
+        Row: {
+          id: string
+          organization_id: string
+          prayer_date: string
+          fajr_azan: string
+          sunrise: string
+          dhuhr_azan: string
+          asr_azan: string
+          maghrib_azan: string
+          isha_azan: string
+          tmrw_fajr_azan: string
+          fajr_iqamah: string
+          dhuhr_iqamah: string
+          asr_iqamah: string
+          maghrib_iqamah: string
+          isha_iqamah: string
+          tmrw_fajr_iqamah: string
+          jumah_time_1: string
+          jumah_time_2: string
+          jumah_time_3: string | null
+          zawal: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          prayer_date: string
+          fajr_azan: string
+          sunrise: string
+          dhuhr_azan: string
+          asr_azan: string
+          maghrib_azan: string
+          isha_azan: string
+          tmrw_fajr_azan: string
+          fajr_iqamah: string
+          dhuhr_iqamah: string
+          asr_iqamah: string
+          maghrib_iqamah: string
+          isha_iqamah: string
+          tmrw_fajr_iqamah: string
+          jumah_time_1: string
+          jumah_time_2: string
+          jumah_time_3?: string | null
+          zawal: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          prayer_date?: string
+          fajr_azan?: string
+          sunrise?: string
+          dhuhr_azan?: string
+          asr_azan?: string
+          maghrib_azan?: string
+          isha_azan?: string
+          tmrw_fajr_azan?: string
+          fajr_iqamah?: string
+          dhuhr_iqamah?: string
+          asr_iqamah?: string
+          maghrib_iqamah?: string
+          isha_iqamah?: string
+          tmrw_fajr_iqamah?: string
+          jumah_time_1?: string
+          jumah_time_2?: string
+          jumah_time_3?: string | null
+          zawal?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'daily_prayer_times_organization_id_fkey'
+            columns: ['organization_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      devices: {
+        Row: {
+          id: string
+          profile_id: string | null
+          platform: string
+          fcm_token: string
+          last_seen_at: string
+        }
+        Insert: {
+          id?: string
+          profile_id?: string | null
+          platform: string
+          fcm_token: string
+          last_seen_at?: string
+        }
+        Update: {
+          id?: string
+          profile_id?: string | null
+          platform?: string
+          fcm_token?: string
+          last_seen_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'devices_profile_id_fkey'
+            columns: ['profile_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      last_location_state: {
+        Row: {
+          user_id: string
+          last_lat: number | null
+          last_lon: number | null
+          last_org_id: string | null
+          last_distance_m: number | null
+          last_resolved_at: string
+        }
+        Insert: {
+          user_id: string
+          last_lat?: number | null
+          last_lon?: number | null
+          last_org_id?: string | null
+          last_distance_m?: number | null
+          last_resolved_at?: string
+        }
+        Update: {
+          user_id?: string
+          last_lat?: number | null
+          last_lon?: number | null
+          last_org_id?: string | null
+          last_distance_m?: number | null
+          last_resolved_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'last_location_state_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'last_location_state_last_org_id_fkey'
+            columns: ['last_org_id']
+            isOneToOne: false
+            referencedRelation: 'organizations'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views: Record<string, never>
     Functions: {

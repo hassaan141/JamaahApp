@@ -10,6 +10,7 @@ import Programs from '../BottomNav/Programs'
 import Masjids from '@/Screens/Navigation/Masjids'
 import OrganizationDetail from '@/Screens/Navigation/OrganizationDetail'
 import Settings from '@/Screens/Navigation/Settings'
+import Notifications from '@/Screens/Navigation/Notifications'
 
 type TabParamList = {
   Home: undefined
@@ -53,6 +54,7 @@ export default function RootNavigator() {
       <Stack.Screen name="Masjids" component={Masjids} />
       <Stack.Screen name="OrganizationDetail" component={OrganizationDetail} />
       <Stack.Screen name="Settings" component={Settings} />
+      <Stack.Screen name="Notifications" component={Notifications} />
     </Stack.Navigator>
   )
 }

@@ -248,12 +248,11 @@ export default function UserProfileSection({
             </View>
           )}
 
-          <Text style={{ fontSize: 13, color: '#495057', lineHeight: 18 }}>
-            {isOrganization
-              ? organizationDescription ||
-                'Serving the Islamic community with announcements and events'
-              : 'Serving the Islamic community with announcements and events'}
-          </Text>
+          {isOrganization && organizationDescription && (
+            <Text style={{ fontSize: 13, color: '#495057', lineHeight: 18 }}>
+              {organizationDescription}
+            </Text>
+          )}
         </View>
       </View>
 

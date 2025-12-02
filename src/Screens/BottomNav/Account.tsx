@@ -18,7 +18,6 @@ type Organization = Database['public']['Tables']['organizations']['Row']
 import UserProfileSection from '@/components/Account/UserProfileSection'
 import CreateAnnouncementSection from '@/components/Account/CreateAnnouncementSection'
 import AnnouncementsList from '@/components/Account/AnnouncementsList'
-import EventsList from '@/components/Account/EventsList'
 import SignOutButton from '@/components/Account/SignOutButton'
 import VersionFooter from '@/components/Account/VersionFooter'
 
@@ -115,7 +114,7 @@ export default function Account() {
           isOrganization={isOrganization}
         />
 
-        {isOrganization ? (
+        {isOrganization && (
           <>
             <CreateAnnouncementSection profile={profile} />
             <AnnouncementsList
@@ -124,8 +123,6 @@ export default function Account() {
               organization={organization}
             />
           </>
-        ) : (
-          <EventsList profile={profile} />
         )}
 
         <SignOutButton onLogout={logout} />

@@ -9,6 +9,7 @@ import Programs from '../BottomNav/Programs'
 // (no direct react-native view/text needed in this file)
 import Masjids from '@/Screens/Navigation/Masjids'
 import OrganizationDetail from '@/Screens/Navigation/OrganizationDetail'
+import Settings from '@/Screens/Navigation/Settings'
 
 type TabParamList = {
   Home: undefined
@@ -51,6 +52,7 @@ export default function RootNavigator() {
       <Stack.Screen name="Tabs" component={TabNavigator} />
       <Stack.Screen name="Masjids" component={Masjids} />
       <Stack.Screen name="OrganizationDetail" component={OrganizationDetail} />
+      <Stack.Screen name="Settings" component={Settings} />
     </Stack.Navigator>
   )
 }

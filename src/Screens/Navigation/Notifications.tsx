@@ -145,7 +145,7 @@ export default function Notifications() {
         </View>
 
         {/* Additional Settings Section */}
-        <View style={styles.section}>
+        {/* <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Feather name="settings" size={20} color="#2F855A" />
             <Text style={styles.sectionTitle}>Advanced Settings</Text>
@@ -175,7 +175,7 @@ export default function Notifications() {
               </Text>
             </View>
           </View>
-        </View>
+        </View> */}
 
         <TouchableOpacity
           style={[styles.saveButton, loading && styles.saveButtonDisabled]}

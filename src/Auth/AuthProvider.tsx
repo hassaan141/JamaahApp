@@ -5,6 +5,7 @@ import type {
   AuthChangeEvent,
 } from '@supabase/supabase-js'
 import { ensureProfileExists } from '../Supabase/ensureProfileExists'
+import { PushNotificationManager } from '../Utils/pushNotifications'
 
 type Session = SupabaseSession | null
 
@@ -50,6 +51,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!id) return
     // Fire and forget; internal function handles its own errors
     ensureProfileExists(id)
+
+    // Initialize push notifications for signed-in users
+    PushNotificationManager.getInstance().initialize(id)
   }, [session?.user?.id])
 
   const setSession = (s: NonNullable<Session>) => setSessionState(s)

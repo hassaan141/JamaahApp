@@ -6,7 +6,6 @@ import type { Profile } from '@/types'
 import { fetchOrgFollowerCount } from '@/Supabase/fetchOrgFollowerCount'
 import { fetchOrgPostCount } from '@/Supabase/fetchOrgPostCount'
 import { fetchOrganizationByProfileId } from '@/Supabase/fetchOrgFromProfileId'
-import { toast } from '@/components/Toast/toast'
 
 type MinimalNav = {
   getState?: () => { routeNames?: string[] }
@@ -81,21 +80,9 @@ export default function UserProfileSection({
   }, [isOrganization, profile?.org_id, loadOrgCounts])
 
   const handleOpenSettings = useCallback(() => {
-    const state = navigation.getState?.()
-    const availableRoutes = state?.routeNames || []
-    const targetRoute = availableRoutes.includes('AccountSettings')
-      ? 'AccountSettings'
-      : availableRoutes.includes('Settings')
-        ? 'Settings'
-        : null
-    if (targetRoute && navigation.navigate) {
-      navigation.navigate(targetRoute)
-      return
+    if (navigation.navigate) {
+      navigation.navigate('Settings' as never)
     }
-    toast.success(
-      "Connect this icon to your settings screen when it's ready.",
-      'Settings',
-    )
   }, [navigation])
 
   const displayName = isOrganization
@@ -248,12 +235,11 @@ export default function UserProfileSection({
             </View>
           )}
 
-          <Text style={{ fontSize: 13, color: '#495057', lineHeight: 18 }}>
-            {isOrganization
-              ? organizationDescription ||
-                'Serving the Islamic community with announcements and events'
-              : 'Serving the Islamic community with announcements and events'}
-          </Text>
+          {isOrganization && organizationDescription && (
+            <Text style={{ fontSize: 13, color: '#495057', lineHeight: 18 }}>
+              {organizationDescription}
+            </Text>
+          )}
         </View>
       </View>
 

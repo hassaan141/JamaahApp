@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:409976139410:android:996fbcacfdbbd3f241404b",
+        "mobilesdk_app_id": "1:409976139410:android:9f82ac06569c9d5741404b",
         "android_client_info": {
-          "package_name": "com.hassaanfarooqi.jamaah"
+          "package_name": "com.hassaan141.jamaahapp"
         }
       },
       "oauth_client": [],

@@ -7,7 +7,19 @@ export default () => ({
   expo: {
     name: 'JamaahApp',
     slug: 'jamaahapp',
-    plugins: ['expo-font'],
+    plugins: [
+      'expo-font',
+      '@react-native-firebase/app',
+      '@react-native-firebase/messaging',
+      [
+        'expo-build-properties',
+        {
+          ios: {
+            useFrameworks: 'static',
+          },
+        },
+      ],
+    ],
     projectId: '18f59a83-4081-4b80-b61b-67fc127f5577',
     version: '1.0.0',
     orientation: 'portrait',
@@ -21,6 +33,7 @@ export default () => ({
     },
     ios: {
       bundleIdentifier: 'com.hassaan141.jamaahapp',
+      googleServicesFile: './GoogleService-Info.plist',
       supportsTablet: true,
       infoPlist: {
         NSLocationWhenInUseUsageDescription:
@@ -30,6 +43,7 @@ export default () => ({
     },
     android: {
       package: 'com.hassaan141.jamaahapp',
+      googleServicesFile: './google-services.json',
       permissions: ['ACCESS_COARSE_LOCATION', 'ACCESS_FINE_LOCATION'],
       adaptiveIcon: {
         foregroundImage: './assets/adaptive-icon.png',

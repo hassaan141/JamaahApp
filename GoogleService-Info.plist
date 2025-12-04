@@ -9,7 +9,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.hassaanfarooqi.jamaah</string>
+	<string>com.hassaan141.jamaahapp</string>
 	<key>PROJECT_ID</key>
 	<string>jamah-5c357</string>
 	<key>STORAGE_BUCKET</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:409976139410:ios:7164ac9846537c3141404b</string>
+	<string>1:409976139410:ios:8d675e78b7770a7941404b</string>
 </dict>
 </plist>

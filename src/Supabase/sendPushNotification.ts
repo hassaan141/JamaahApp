@@ -10,7 +10,6 @@ interface NotificationPayload {
 
 export async function sendPushToFollowers(payload: NotificationPayload) {
   try {
-    // Get all followers with push enabled and their devices
     const { data: subscribers, error } = await supabase
       .from('organization_subscriptions')
       .select(
@@ -51,7 +50,6 @@ export async function sendPushToFollowers(payload: NotificationPayload) {
       return { success: true, message: 'No devices to notify' }
     }
 
-    // Call Supabase Edge Function to send notifications
     const { data, error: functionError } = await supabase.functions.invoke(
       'send-push-notification',
       {
@@ -88,7 +86,6 @@ export async function sendPushToFollowers(payload: NotificationPayload) {
   }
 }
 
-// Simple version for manual testing (call this when creating posts)
 export async function notifyFollowersOfPost(
   postId: string,
   organizationId: string,
@@ -96,7 +93,6 @@ export async function notifyFollowersOfPost(
   body?: string,
 ) {
   try {
-    // Get organization name
     const { data: org } = await supabase
       .from('organizations')
       .select('name')

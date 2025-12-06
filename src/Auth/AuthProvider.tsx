@@ -49,11 +49,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const id = session?.user?.id
     if (!id) return
-    // Fire and forget; internal function handles its own errors
-    ensureProfileExists(id)
 
-    // Initialize push notifications for signed-in users
-    PushNotificationManager.getInstance().initialize(id)
+    const init = async () => {
+      // Wait for profile to be created first
+      await ensureProfileExists(id)
+      // Then initialize push notifications
+      await PushNotificationManager.getInstance().initialize(id)
+    }
+
+    init()
   }, [session?.user?.id])
 
   const setSession = (s: NonNullable<Session>) => setSessionState(s)

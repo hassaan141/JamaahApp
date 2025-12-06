@@ -41,25 +41,33 @@ To get Firebase Service Account:
 2. Download `GoogleService-Info.plist`
 3. Place in `ios/` directory and add to Xcode project
 
-### 4. React Native Configuration
+### 4. React Native Configuration (Expo CNG)
 
-#### Android (`android/app/build.gradle`)
+This project uses Expo Config Plugins to configure native dependencies.
 
-```gradle
-dependencies {
-    // Add at bottom
-    implementation 'com.google.firebase:firebase-messaging'
-}
-```
+#### `app.config.ts`
 
-#### iOS (`ios/Podfile`)
+Ensure your config includes the following plugins:
 
-```ruby
-# Add this line
-pod 'Firebase/Messaging', :modular_headers => true
-
-# Then run
-pod install
+```typescript
+export default () => ({
+  expo: {
+    // ...
+    plugins: [
+      '@react-native-firebase/app',
+      '@react-native-firebase/messaging',
+      [
+        'expo-build-properties',
+        {
+          ios: {
+            useFrameworks: 'static',
+          },
+        },
+      ],
+    ],
+    // ...
+  },
+})
 ```
 
 ## How to Use in Your App
@@ -106,8 +114,12 @@ const hasPermission =
 ```typescript
 import { registerDeviceToken } from '@/Supabase/registerDevice'
 
-const token = await registerDeviceToken('user-id')
-console.log('Token:', token)
+const result = await registerDeviceToken('user-id')
+if (result.success) {
+  console.log('Token:', result.token)
+} else {
+  console.error('Error:', result.error)
+}
 ```
 
 ### 2. Test Following
@@ -136,16 +148,21 @@ console.log('Result:', result)
 
 ### Common Issues
 
-1. **"Firebase service account not configured"**
+1. **"Native module not found"**
+   - This app uses **Dynamic Imports** (`await import(...)`) for Firebase to prevent crashes when running in Expo Go or a dev client without native code.
+   - Ensure you are running a **Development Build** (not Expo Go) for push notifications to work.
+   - Rebuild your dev client: `eas build --profile development --platform ios`
+
+2. **"Firebase service account not configured"**
    - Make sure `FIREBASE_SERVICE_ACCOUNT` is set in Supabase secrets with the full JSON content
    - Verify the JSON is valid and contains `client_email`, `private_key`, and `project_id`
    - Redeploy the edge function after setting the secret
 
-2. **"No tokens provided"**
+3. **"No tokens provided"**
    - Check if devices are properly registered
    - Verify users are following the organization with push enabled
 
-3. **Notifications not received**
+4. **Notifications not received**
    - Check Firebase token is valid
    - Verify app is properly configured with Firebase
    - Test with Firebase Console first

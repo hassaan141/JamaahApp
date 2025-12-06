@@ -1,12 +1,23 @@
 import dotenv from 'dotenv'
 
-// Load local .env for dev; noop if file missing
 dotenv.config({ path: '.env' })
+
+const isDev = process.env.EAS_BUILD_PROFILE === 'development'
+const isPreview = process.env.EAS_BUILD_PROFILE === 'preview'
+
+const getIcon = () => {
+  if (isDev) return './assets/jamahDev.png'
+  if (isPreview) return './assets/jamahTest.png'
+  return './assets/JamahProd.png' // Default / Production
+}
 
 export default () => ({
   expo: {
-    name: 'JamaahApp',
+    name: isDev ? 'Jamaah (Dev)' : isPreview ? 'Jamaah (Test)' : 'JamaahApp',
     slug: 'jamaahapp',
+
+    icon: getIcon(),
+
     plugins: [
       'expo-font',
       '@react-native-firebase/app',
@@ -23,35 +34,43 @@ export default () => ({
     projectId: '18f59a83-4081-4b80-b61b-67fc127f5577',
     version: '1.0.0',
     orientation: 'portrait',
-    icon: './assets/icon.png',
     userInterfaceStyle: 'light',
     newArchEnabled: false,
+
     splash: {
       image: './assets/splash-icon.png',
       resizeMode: 'contain',
       backgroundColor: '#ffffff',
     },
+
     ios: {
       bundleIdentifier: 'com.hassaan141.jamaahapp',
       googleServicesFile: './GoogleService-Info.plist',
       supportsTablet: true,
+      entitlements: {
+        'aps-environment': isDev ? 'development' : 'production',
+      },
       infoPlist: {
         NSLocationWhenInUseUsageDescription:
           'This app uses your location to find nearby masjids and show accurate prayer times.',
         ITSAppUsesNonExemptEncryption: false,
       },
     },
+
     android: {
       package: 'com.hassaan141.jamaahapp',
       googleServicesFile: './google-services.json',
       permissions: ['ACCESS_COARSE_LOCATION', 'ACCESS_FINE_LOCATION'],
+
       adaptiveIcon: {
-        foregroundImage: './assets/adaptive-icon.png',
+        foregroundImage: getIcon(),
         backgroundColor: '#ffffff',
       },
+
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
     },
+
     web: {
       favicon: './assets/favicon.png',
     },

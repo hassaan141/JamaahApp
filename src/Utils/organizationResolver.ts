@@ -5,6 +5,7 @@ import { nearestOrg } from '@/Utils/nearest'
 import { getPrayerTimes } from '@/Utils/prayerTimes'
 import { minutesSince, sameLocalDate } from '@/Utils/datetime'
 import { getProfile } from '@/Utils/profile'
+import { syncPrayerSubscription } from '@/Utils/pushNotifications'
 
 // Simple haversine implementation (meters)
 function haversine(lat1: number, lon1: number, lat2: number, lon2: number) {
@@ -120,6 +121,8 @@ export async function resolveOrgForTimes(userId: string) {
 
   if (!orgId || movedFar || ttlExpired || dayChanged) {
     const [nearest] = await nearestOrg(osLoc.latitude, osLoc.longitude)
+    const mosqueChanged = orgId !== nearest.org_id
+
     orgId = nearest.org_id
     dist = Math.round(nearest.distance_m)
     await upsertLocState({
@@ -130,6 +133,13 @@ export async function resolveOrgForTimes(userId: string) {
       last_distance_m: dist,
       last_resolved_at: new Date().toISOString(),
     })
+
+    // 👇 TRAP 1 FIX: Only sync if mosque changed AND user wants notifications
+    if (mosqueChanged) {
+      if (profile.notification_preference !== 'None') {
+        await syncPrayerSubscription(orgId)
+      }
+    }
   }
 
   const [times, org] = await Promise.all([

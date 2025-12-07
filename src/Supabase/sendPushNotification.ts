@@ -22,6 +22,7 @@ export async function sendPushToFollowers(payload: NotificationPayload) {
       )
       .eq('organization_id', payload.organizationId)
       .eq('push_enabled', true)
+      .eq('profiles.notification_preference', 'Event_Adhan')
 
     if (error) {
       console.error('Error fetching subscribers:', error)

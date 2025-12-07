@@ -18,6 +18,8 @@ export type Amenities = {
   wheelchair_accessible?: boolean
 }
 
+export type NotificationPreference = 'None' | 'Adhan' | 'Event_Adhan'
+
 export interface Database {
   public: {
     Tables: {
@@ -36,6 +38,7 @@ export interface Database {
           is_org: boolean
           org_id: string | null
           pending_org_name: string | null
+          notification_preference: NotificationPreference
         }
         Insert: {
           id: string
@@ -51,6 +54,7 @@ export interface Database {
           is_org?: boolean
           org_id?: string | null
           pending_org_name?: string | null
+          notification_preference?: NotificationPreference
         }
         Update: {
           id?: string
@@ -66,6 +70,7 @@ export interface Database {
           is_org?: boolean
           org_id?: string | null
           pending_org_name?: string | null
+          notification_preference?: NotificationPreference
         }
         Relationships: []
       }
@@ -94,6 +99,7 @@ export interface Database {
           geom: string | null
           description?: string | null
           amenities?: Amenities | null
+          timezone: string | null
         }
         Insert: Partial<
           Database['public']['Tables']['organizations']['Row']

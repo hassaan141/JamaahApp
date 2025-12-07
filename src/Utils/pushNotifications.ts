@@ -1,12 +1,12 @@
+import { Alert } from 'react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import messaging from '@react-native-firebase/messaging'
 import { registerDeviceToken } from '@/Supabase/registerDevice'
-import type { FirebaseMessagingTypes } from '@react-native-firebase/messaging'
-import type * as Messaging from '@react-native-firebase/messaging'
 
 export class PushNotificationManager {
   private static instance: PushNotificationManager
   private initialized = false
   private currentUserId: string | null = null
-  private messagingModule: typeof Messaging | null = null
 
   static getInstance(): PushNotificationManager {
     if (!PushNotificationManager.instance) {
@@ -15,39 +15,10 @@ export class PushNotificationManager {
     return PushNotificationManager.instance
   }
 
-  private async getMessagingModule() {
-    if (!this.messagingModule) {
-      try {
-        this.messagingModule = await import('@react-native-firebase/messaging')
-        return this.messagingModule
-      } catch (error) {
-        console.error('React Native Firebase not available:', error)
-        return null
-      }
-    }
-    return this.messagingModule
-  }
-
   async initialize(userId: string) {
     if (this.initialized && this.currentUserId === userId) return
 
     try {
-      const module = await this.getMessagingModule()
-      if (!module) {
-        console.warn(
-          'Firebase messaging not available, skipping push notification setup',
-        )
-        return
-      }
-
-      const {
-        getMessaging,
-        onTokenRefresh,
-        onMessage,
-        setBackgroundMessageHandler,
-      } = module
-      const messaging = getMessaging()
-
       this.currentUserId = userId
 
       console.log(
@@ -62,27 +33,28 @@ export class PushNotificationManager {
         )
       }
 
-      onTokenRefresh(messaging, async (token: string) => {
+      // 1. Handle Token Refresh
+      messaging().onTokenRefresh(async (token) => {
         console.log('FCM Token refreshed:', token)
         if (this.currentUserId) {
           await registerDeviceToken(this.currentUserId)
         }
       })
 
+      // 2. Setup Listeners (Only once)
       if (!this.initialized) {
-        onMessage(
-          messaging,
-          async (remoteMessage: FirebaseMessagingTypes.RemoteMessage) => {
-            console.log('Foreground message:', remoteMessage)
-          },
-        )
+        // Foreground Handler (Shows Alert when app is open)
+        messaging().onMessage(async (remoteMessage) => {
+          console.log('[Foreground Message]', remoteMessage)
+          const title = remoteMessage.notification?.title || 'Notification'
+          const body = remoteMessage.notification?.body || ''
+          Alert.alert(title, body)
+        })
 
-        setBackgroundMessageHandler(
-          messaging,
-          async (remoteMessage: FirebaseMessagingTypes.RemoteMessage) => {
-            console.log('Background message:', remoteMessage)
-          },
-        )
+        // Background Handler
+        messaging().setBackgroundMessageHandler(async (remoteMessage) => {
+          console.log('[Background Message]', remoteMessage)
+        })
       }
 
       this.initialized = true
@@ -94,16 +66,10 @@ export class PushNotificationManager {
 
   async checkPermission(): Promise<boolean> {
     try {
-      const module = await this.getMessagingModule()
-      if (!module) return false
-
-      const { getMessaging, requestPermission, AuthorizationStatus } = module
-      const messaging = getMessaging()
-
-      const authStatus = await requestPermission(messaging)
+      const authStatus = await messaging().requestPermission()
       return (
-        authStatus === AuthorizationStatus.AUTHORIZED ||
-        authStatus === AuthorizationStatus.PROVISIONAL
+        authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+        authStatus === messaging.AuthorizationStatus.PROVISIONAL
       )
     } catch (error) {
       console.error('Error checking permission:', error)
@@ -113,16 +79,44 @@ export class PushNotificationManager {
 
   async getToken(): Promise<string | null> {
     try {
-      const module = await this.getMessagingModule()
-      if (!module) return null
-
-      const { getMessaging, getToken } = module
-      const messaging = getMessaging()
-
-      return await getToken(messaging)
+      return await messaging().getToken()
     } catch (error) {
       console.error('Error getting FCM token:', error)
       return null
     }
+  }
+}
+
+export async function syncPrayerSubscription(targetOrgId: string | null) {
+  try {
+    const currentSubscribedOrg = await AsyncStorage.getItem('prayer_sub_org_id')
+
+    // OPTIMIZATION: If we are already subscribed to this org, stop here.
+    if (currentSubscribedOrg === targetOrgId) {
+      return
+    }
+
+    console.log(
+      `[PrayerSub] Switching subscription: ${currentSubscribedOrg} -> ${targetOrgId}`,
+    )
+
+    // 1. Unsubscribe from the OLD topic
+    if (currentSubscribedOrg) {
+      const oldTopic = `org_${currentSubscribedOrg}_prayers`
+      await messaging().unsubscribeFromTopic(oldTopic)
+    }
+
+    // 2. Subscribe to the NEW topic
+    if (targetOrgId) {
+      const newTopic = `org_${targetOrgId}_prayers`
+      await messaging().subscribeToTopic(newTopic)
+      // Save state so we remember next time
+      await AsyncStorage.setItem('prayer_sub_org_id', targetOrgId)
+    } else {
+      // User has no mosque selected, just clear storage
+      await AsyncStorage.removeItem('prayer_sub_org_id')
+    }
+  } catch (error) {
+    console.error('[PrayerSub] Failed to sync topic:', error)
   }
 }

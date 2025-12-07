@@ -29,149 +29,100 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
     name: string
     adhan: string
     iqaamah: string
-  }>({ name: '', adhan: '', iqaamah: '' })
+  }>({ name: 'Loading...', adhan: '', iqaamah: '' })
+
   const [timeRemaining, setTimeRemaining] = useState('')
 
-  const formatTime = (time?: string, prayerName = '') => {
+  // 1. Simple 24h -> 12h converter
+  // Input: "13:30:00" -> Output: "1:30 PM"
+  const formatTime = (time?: string) => {
     if (!time) return ''
-    const [timeStr] = time.split('.')
-    const [hoursStr, minutesStr] = timeStr.split(':')
-    const hours = Number.parseInt(hoursStr, 10)
-    const minutes = Number.parseInt(minutesStr, 10)
-    let period = 'AM'
-    if (['Dhuhr', 'Asr', 'Maghrib', 'Isha'].includes(prayerName)) {
-      period = 'PM'
-    } else if (hours >= 12) {
-      period = 'PM'
-    }
-    const formattedHours = hours % 12 || 12
-    const formattedMinutes = minutes.toString().padStart(2, '0')
-    return `${formattedHours}:${formattedMinutes} ${period}`
+    const [h, m] = time.split(':')
+    let hours = parseInt(h, 10)
+    const minutes = m
+    const ampm = hours >= 12 ? 'PM' : 'AM'
+
+    hours = hours % 12
+    hours = hours ? hours : 12 // Handle 0 as 12
+
+    return `${hours}:${minutes} ${ampm}`
   }
 
-  const calculateTimeRemaining = (prayerTime?: string, prayerName?: string) => {
-    if (!prayerTime) return ''
-    const now = new Date()
-    const [timeStr] = prayerTime.split('.')
-    const [hoursStr, minutesStr] = timeStr.split(':')
-    let hours = Number.parseInt(hoursStr, 10)
-    const minutes = Number.parseInt(minutesStr, 10)
-    if (['Dhuhr', 'Asr', 'Maghrib', 'Isha'].includes(prayerName || '')) {
-      if (hours < 12 && hours !== 0) hours += 12
-    }
-    if (prayerName === 'Fajr' && hours === 12) {
-      hours = 0
-    }
-    const prayerDate = new Date()
-    prayerDate.setHours(hours, minutes, 0, 0)
-    if (prayerDate <= now) {
-      prayerDate.setDate(prayerDate.getDate() + 1)
-    }
-    const diffMs = prayerDate.getTime() - now.getTime()
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
-    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
-    if (diffHours > 0) {
-      return `${diffHours}h ${diffMinutes}m`
-    } else {
-      return `${diffMinutes}m`
-    }
-  }
+  // 2. Determine Next Prayer by direct string comparison
+  const determineNextPrayer = (data: PrayerTimes | null) => {
+    if (!data) return { name: 'Loading...', adhan: '', iqaamah: '' }
 
-  const determineNextPrayer = (
-    prayerData: PrayerTimes | null,
-  ): { name: string; adhan: string; iqaamah: string } => {
-    if (!prayerData) return { name: 'Loading...', adhan: '', iqaamah: '' }
     const now = new Date()
-    const currentHours = now.getHours()
-    const currentMinutes = now.getMinutes()
-    const currentTimeInMinutes = currentHours * 60 + currentMinutes
-    const prayers = [
-      {
-        name: 'Fajr',
-        adhan: prayerData.fajr_azan,
-        iqaamah: prayerData.fajr_iqamah,
-      },
-      {
-        name: 'Sunrise',
-        adhan: prayerData.sunrise,
-        iqaamah: prayerData.sunrise,
-      },
-      {
-        name: 'Dhuhr',
-        adhan: prayerData.dhuhr_azan,
-        iqaamah: prayerData.dhuhr_iqamah,
-      },
-      {
-        name: 'Asr',
-        adhan: prayerData.asr_azan,
-        iqaamah: prayerData.asr_iqamah,
-      },
+    // Get current time as "13:45" for easy comparison
+    const currentHHMM = now.toLocaleTimeString('en-GB', {
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+
+    const schedule = [
+      { name: 'Fajr', adhan: data.fajr_azan, iqaamah: data.fajr_iqamah },
+      { name: 'Sunrise', adhan: data.sunrise, iqaamah: data.sunrise },
+      { name: 'Dhuhr', adhan: data.dhuhr_azan, iqaamah: data.dhuhr_iqamah },
+      { name: 'Asr', adhan: data.asr_azan, iqaamah: data.asr_iqamah },
       {
         name: 'Maghrib',
-        adhan: prayerData.maghrib_azan,
-        iqaamah: prayerData.maghrib_iqamah,
+        adhan: data.maghrib_azan,
+        iqaamah: data.maghrib_iqamah,
       },
-      {
-        name: 'Isha',
-        adhan: prayerData.isha_azan,
-        iqaamah: prayerData.isha_iqamah,
-      },
-      {
-        name: 'Tommorow Fajr',
-        adhan: prayerData.tmrw_fajr_azan,
-        iqaamah: prayerData.tmrw_fajr_iqamah,
-      },
+      { name: 'Isha', adhan: data.isha_azan, iqaamah: data.isha_iqamah },
     ]
-    const prayersWithMinutes = prayers.map((prayer) => {
-      const [hoursStr, minutesStr] = prayer.adhan.split(':')
-      let hours = Number.parseInt(hoursStr, 10)
-      const minutes = Number.parseInt(minutesStr, 10)
-      if (!['Fajr', 'Sunrise'].includes(prayer.name) && hours <= 12) {
-        hours += 12
-      }
-      return {
-        ...prayer,
-        adhanMinutes: hours * 60 + minutes,
-      }
-    })
-    const currentSeconds =
-      currentHours * 3600 + currentMinutes * 60 + now.getSeconds()
-    const isha = prayersWithMinutes.find((p) => p.name === 'Isha')
-    const ishaSeconds = isha?.adhanMinutes ? isha.adhanMinutes * 60 : 0
-    let nextPrayer = undefined
-    if (currentSeconds > ishaSeconds && currentSeconds < 14400) {
-      nextPrayer = prayersWithMinutes.find(
-        (p) => p && p.name === 'Tommorow Fajr',
-      )
-    } else {
-      nextPrayer = prayersWithMinutes.find(
-        (p) => p.adhanMinutes > currentTimeInMinutes,
-      )
-    }
-    if (!nextPrayer) return { name: 'Loading...', adhan: '', iqaamah: '' }
+
+    // Find first prayer that is later than right now
+    const next = schedule.find((p) => p.adhan.substring(0, 5) > currentHHMM)
+
+    if (next) return next
+
+    // If no match (late night), next is tomorrow's Fajr
     return {
-      name: nextPrayer.name,
-      adhan: nextPrayer.adhan,
-      iqaamah: nextPrayer.iqaamah,
+      name: 'Fajr',
+      adhan: data.tmrw_fajr_azan,
+      iqaamah: data.tmrw_fajr_iqamah,
     }
   }
 
-  useEffect(() => {
-    if (prayerTimes) {
-      const next = determineNextPrayer(prayerTimes)
-      setNextPrayer(next)
-      setTimeRemaining(calculateTimeRemaining(next.iqaamah, next.name))
-    }
-  }, [prayerTimes])
+  // 3. Calculate countdown
+  const calculateTimeRemaining = (targetTime: string) => {
+    if (!targetTime) return ''
 
+    const now = new Date()
+    const targetDate = new Date()
+    const [h, m] = targetTime.split(':')
+
+    targetDate.setHours(parseInt(h), parseInt(m), 0, 0)
+
+    // If target is earlier than now, it must be tomorrow (e.g. 1AM prayer vs 11PM now)
+    if (targetDate.getTime() < now.getTime()) {
+      targetDate.setDate(targetDate.getDate() + 1)
+    }
+
+    const diffMs = targetDate.getTime() - now.getTime()
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
+
+    if (diffHours > 0) return `${diffHours}h ${diffMinutes}m`
+    return `${diffMinutes}m`
+  }
+
+  // Update loop
   useEffect(() => {
-    const interval = setInterval(() => {
+    const update = () => {
       if (prayerTimes) {
         const next = determineNextPrayer(prayerTimes)
         setNextPrayer(next)
-        setTimeRemaining(calculateTimeRemaining(next.iqaamah, next.name))
+        // Count down to the Iqamah of the next prayer
+        setTimeRemaining(calculateTimeRemaining(next.iqaamah))
       }
-    }, 1000)
+    }
+
+    update() // Run immediately
+    const interval = setInterval(update, 1000) // Run every second
+
     return () => clearInterval(interval)
   }, [prayerTimes])
 
@@ -187,8 +138,8 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
 
       <View style={styles.timesLine}>
         <Text style={styles.timesText}>
-          {formatTime(nextPrayer.adhan, nextPrayer.name)} • Iqamah:{' '}
-          {formatTime(nextPrayer.iqaamah, nextPrayer.name)}
+          {formatTime(nextPrayer.adhan)} • Iqamah:{' '}
+          {formatTime(nextPrayer.iqaamah)}
         </Text>
       </View>
 
@@ -198,10 +149,10 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
           <View style={styles.prayerColumn}>
             <Text style={styles.prayerName}>Fajr</Text>
             <Text style={styles.adhanTime}>
-              {formatTime(prayerTimes.fajr_azan, 'Fajr')}
+              {formatTime(prayerTimes.fajr_azan)}
             </Text>
             <Text style={styles.iqamahTime}>
-              {formatTime(prayerTimes.fajr_iqamah, 'Fajr')}
+              {formatTime(prayerTimes.fajr_iqamah)}
             </Text>
           </View>
 
@@ -209,10 +160,10 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
           <View style={styles.prayerColumn}>
             <Text style={styles.prayerName}>Dhuhr</Text>
             <Text style={styles.adhanTime}>
-              {formatTime(prayerTimes.dhuhr_azan, 'Dhuhr')}
+              {formatTime(prayerTimes.dhuhr_azan)}
             </Text>
             <Text style={styles.iqamahTime}>
-              {formatTime(prayerTimes.dhuhr_iqamah, 'Dhuhr')}
+              {formatTime(prayerTimes.dhuhr_iqamah)}
             </Text>
           </View>
 
@@ -220,10 +171,10 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
           <View style={styles.prayerColumn}>
             <Text style={styles.prayerName}>Asr</Text>
             <Text style={styles.adhanTime}>
-              {formatTime(prayerTimes.asr_azan, 'Asr')}
+              {formatTime(prayerTimes.asr_azan)}
             </Text>
             <Text style={styles.iqamahTime}>
-              {formatTime(prayerTimes.asr_iqamah, 'Asr')}
+              {formatTime(prayerTimes.asr_iqamah)}
             </Text>
           </View>
 
@@ -231,10 +182,10 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
           <View style={styles.prayerColumn}>
             <Text style={styles.prayerName}>Maghrib</Text>
             <Text style={styles.adhanTime}>
-              {formatTime(prayerTimes.maghrib_azan, 'Maghrib')}
+              {formatTime(prayerTimes.maghrib_azan)}
             </Text>
             <Text style={styles.iqamahTime}>
-              {formatTime(prayerTimes.maghrib_iqamah, 'Maghrib')}
+              {formatTime(prayerTimes.maghrib_iqamah)}
             </Text>
           </View>
 
@@ -242,10 +193,10 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
           <View style={styles.prayerColumn}>
             <Text style={styles.prayerName}>Isha</Text>
             <Text style={styles.adhanTime}>
-              {formatTime(prayerTimes.isha_azan, 'Isha')}
+              {formatTime(prayerTimes.isha_azan)}
             </Text>
             <Text style={styles.iqamahTime}>
-              {formatTime(prayerTimes.isha_iqamah, 'Isha')}
+              {formatTime(prayerTimes.isha_iqamah)}
             </Text>
           </View>
         </View>
@@ -287,9 +238,9 @@ const styles = StyleSheet.create({
   },
   timesLine: {
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    marginHorizontal: 16,
+    marginHorizontal: 12,
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderRadius: 12,
     marginBottom: 14,
   },
@@ -302,9 +253,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginHorizontal: 16,
+    marginHorizontal: 12,
     paddingHorizontal: 12,
-    paddingVertical: 12,
+    paddingVertical: 14,
     borderRadius: 12,
     gap: 8,
   },

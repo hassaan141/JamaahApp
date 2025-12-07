@@ -6,6 +6,7 @@ import type {
 } from '@supabase/supabase-js'
 import { ensureProfileExists } from '../Supabase/ensureProfileExists'
 import { PushNotificationManager } from '../Utils/pushNotifications'
+import { syncPrayerSubscription } from '@/Utils/pushNotifications' // ✅ Import added
 
 type Session = SupabaseSession | null
 
@@ -51,10 +52,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!id) return
 
     const init = async () => {
-      // Wait for profile to be created first
-      await ensureProfileExists(id)
-      // Then initialize push notifications
-      await PushNotificationManager.getInstance().initialize(id)
+      try {
+        // 1. Ensure Profile Exists first
+        await ensureProfileExists(id)
+
+        // 2. Initialize Push (Register Token)
+        await PushNotificationManager.getInstance().initialize(id)
+
+        // 3. 👇 NEW: Fetch Profile Data to sync Prayer Subscription
+        // We need to know if they are in 'pinned' or 'auto' mode
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('mode, pinned_org_id')
+          .eq('id', id)
+          .single()
+
+        // 4. Determine which Mosque to listen to
+        let targetOrgId = null
+
+        if (profile?.mode === 'pinned') {
+          // If pinned, use their manual choice
+          targetOrgId = profile.pinned_org_id
+        } else {
+          // If auto, try to get the last known auto-detected mosque
+          // (Assuming you have this table from your schema)
+          const { data: locationState } = await supabase
+            .from('last_location_state')
+            .select('last_org_id')
+            .eq('user_id', id)
+            .single()
+
+          targetOrgId = locationState?.last_org_id || null
+        }
+
+        // 5. Sync the Topic
+        if (targetOrgId) {
+          console.log(
+            '[AuthProvider] Syncing initial prayer topic:',
+            targetOrgId,
+          )
+          await syncPrayerSubscription(targetOrgId)
+        }
+      } catch (err) {
+        console.error('[AuthProvider] Init failed:', err)
+      }
     }
 
     init()

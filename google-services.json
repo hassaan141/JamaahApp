@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "409976139410",
+    "project_id": "jamah-5c357",
+    "storage_bucket": "jamah-5c357.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:409976139410:android:9f82ac06569c9d5741404b",
+        "android_client_info": {
+          "package_name": "com.hassaan141.jamaahapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB9WoJe4c8K3nfwiRDlW3nOxmygXrBsDw0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

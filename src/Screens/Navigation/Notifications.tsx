@@ -12,39 +12,45 @@ import { useNavigation } from '@react-navigation/native'
 import { Feather } from '@expo/vector-icons'
 import { useProfile } from '@/Auth/fetchProfile'
 import { toast } from '@/components/Toast/toast'
-
-type NotificationType = 'none' | 'adhan' | 'events_adhan'
+import { supabase } from '@/Supabase/supabaseClient'
+import messaging from '@react-native-firebase/messaging'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+// Import your type (Adjust path if needed)
+import type { NotificationPreference } from '@/types/supabase'
 
 export default function Notifications() {
   const navigation = useNavigation()
-  const { profile, loading: profileLoading } = useProfile()
+  const { profile, loading: profileLoading, refetch } = useProfile()
   const [loading, setLoading] = useState(false)
   const [notificationType, setNotificationType] =
-    useState<NotificationType>('none')
+    useState<NotificationPreference>('Event_Adhan')
 
+  // 1. Load initial setting from profile
   useEffect(() => {
-    // Load user's current notification preference
-    // For now, defaulting to 'none' - you can add a field to the profile later
-    setNotificationType('none')
+    if (profile?.notification_preference) {
+      setNotificationType(
+        profile.notification_preference as NotificationPreference,
+      )
+    }
   }, [profile])
 
   const notificationOptions = [
     {
-      type: 'none' as NotificationType,
+      type: 'None' as NotificationPreference,
       title: 'No Notifications',
       description: 'Turn off all push notifications',
       icon: 'bell-off' as const,
       color: '#6C757D',
     },
     {
-      type: 'adhan' as NotificationType,
+      type: 'Adhan' as NotificationPreference,
       title: 'Adhan Only',
       description: 'Receive prayer time notifications only',
       icon: 'clock' as const,
       color: '#2F855A',
     },
     {
-      type: 'events_adhan' as NotificationType,
+      type: 'Event_Adhan' as NotificationPreference,
       title: 'Events + Adhan',
       description: 'Get notifications for events and prayer times',
       icon: 'bell' as const,
@@ -53,15 +59,41 @@ export default function Notifications() {
   ]
 
   const handleSaveNotificationSettings = async () => {
+    if (!profile?.id) return
     setLoading(true)
+
     try {
-      // Here you would update the user's notification preferences
-      // For now, just showing success
-      await new Promise((resolve) => setTimeout(resolve, 1000)) // Simulate API call
+      // 2. Update Database
+      const { error } = await supabase
+        .from('profiles')
+        .update({ notification_preference: notificationType })
+        .eq('id', profile.id)
+
+      if (error) throw error
+
+      // 3. Handle Prayer Topic Subscription Instantly
+      // We retrieve the currently active masjid ID from storage so we know WHICH topic to toggle
+      const currentMasjidId = await AsyncStorage.getItem('prayer_sub_org_id')
+
+      if (currentMasjidId) {
+        const topicName = `org_${currentMasjidId}_prayers`
+
+        if (notificationType === 'None') {
+          // If "None", physically unsubscribe from the topic
+          console.log(`[Settings] Unsubscribing from ${topicName}`)
+          await messaging().unsubscribeFromTopic(topicName)
+        } else {
+          // If "Adhan" or "Event_Adhan", ensure we are subscribed
+          console.log(`[Settings] Subscribing to ${topicName}`)
+          await messaging().subscribeToTopic(topicName)
+        }
+      }
 
       toast.success('Notification settings updated!', 'Success')
-    } catch {
-      toast.error('Failed to update notification settings', 'Error')
+      if (refetch) refetch()
+    } catch (err) {
+      console.error(err)
+      toast.error('Failed to update settings', 'Error')
     } finally {
       setLoading(false)
     }
@@ -72,12 +104,12 @@ export default function Notifications() {
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#2F855A" />
-          <Text style={styles.loadingText}>Loading notifications...</Text>
         </View>
       </SafeAreaView>
     )
   }
 
+  // ... (Rest of your JSX is exactly the same as before) ...
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -144,39 +176,6 @@ export default function Notifications() {
           ))}
         </View>
 
-        {/* Additional Settings Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Feather name="settings" size={20} color="#2F855A" />
-            <Text style={styles.sectionTitle}>Advanced Settings</Text>
-          </View>
-
-          <View style={styles.infoCard}>
-            <View style={styles.infoIconContainer}>
-              <Feather name="info" size={16} color="#3182CE" />
-            </View>
-            <View style={styles.infoContent}>
-              <Text style={styles.infoTitle}>Prayer Time Notifications</Text>
-              <Text style={styles.infoText}>
-                Notifications will be sent 5 minutes before each prayer time
-                based on your location
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.infoCard}>
-            <View style={styles.infoIconContainer}>
-              <Feather name="calendar" size={16} color="#805AD5" />
-            </View>
-            <View style={styles.infoContent}>
-              <Text style={styles.infoTitle}>Event Notifications</Text>
-              <Text style={styles.infoText}>
-                Get notified about events from organizations you follow
-              </Text>
-            </View>
-          </View>
-        </View>
-
         <TouchableOpacity
           style={[styles.saveButton, loading && styles.saveButtonDisabled]}
           onPress={handleSaveNotificationSettings}
@@ -191,7 +190,6 @@ export default function Notifications() {
             </>
           )}
         </TouchableOpacity>
-
         <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>

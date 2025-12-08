@@ -5,6 +5,13 @@ import type {
   AuthChangeEvent,
 } from '@supabase/supabase-js'
 import { ensureProfileExists } from '../Supabase/ensureProfileExists'
+import { PushNotificationManager } from '../Utils/pushNotifications'
+import { syncPrayerSubscription } from '@/Utils/pushNotifications'
+import messaging from '@react-native-firebase/messaging'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+
+// Define type locally to match DB enum (or import if you have a types file)
+type NotificationPreference = 'None' | 'Adhan' | 'Event_Adhan'
 
 type Session = SupabaseSession | null
 
@@ -44,17 +51,67 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  // Ensure a profile row exists whenever we have a signed-in user
   useEffect(() => {
     const id = session?.user?.id
     if (!id) return
-    // Fire and forget; internal function handles its own errors
-    ensureProfileExists(id)
+
+    const init = async () => {
+      try {
+        await ensureProfileExists(id)
+
+        await PushNotificationManager.getInstance().initialize(id)
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('mode, pinned_org_id, notification_preference') // 👈 Added preference
+          .eq('id', id)
+          .single()
+
+        let targetOrgId: string | null = null
+
+        const preference =
+          profile?.notification_preference as NotificationPreference
+
+        if (preference !== 'None') {
+          if (profile?.mode === 'pinned') {
+            // If pinned, use their manual choice
+            targetOrgId = profile.pinned_org_id
+          } else {
+            const { data: locationState } = await supabase
+              .from('last_location_state')
+              .select('last_org_id')
+              .eq('user_id', id)
+              .single()
+
+            targetOrgId = locationState?.last_org_id || null
+          }
+        } else {
+          console.log(
+            '[AuthProvider] User has disabled notifications. Skipping subscription logic.',
+          )
+        }
+
+        console.log('[AuthProvider] Syncing prayer topic to:', targetOrgId)
+        await syncPrayerSubscription(targetOrgId)
+      } catch (err) {
+        console.error('[AuthProvider] Init failed:', err)
+      }
+    }
+
+    init()
   }, [session?.user?.id])
 
   const setSession = (s: NonNullable<Session>) => setSessionState(s)
 
   const logout = async () => {
+    // 1. Unsubscribe from current topic
+    const currentTopicId = await AsyncStorage.getItem('prayer_sub_org_id')
+    if (currentTopicId) {
+      await messaging().unsubscribeFromTopic(`org_${currentTopicId}_prayers`)
+      await AsyncStorage.removeItem('prayer_sub_org_id')
+    }
+
+    // 2. Sign out of Supabase
     const { error } = await supabase.auth.signOut()
     if (error) throw error
     setSessionState(null)

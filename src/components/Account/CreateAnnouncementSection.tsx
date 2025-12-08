@@ -6,6 +6,7 @@ import { createOrgAnnouncement } from '@/Supabase/createOrgAnnouncement'
 import { toast } from '@/components/Toast/toast'
 import { supabase } from '@/Supabase/supabaseClient'
 import { ENV } from '@/core/env'
+import { notifyFollowersOfPost } from '@/Supabase/sendPushNotification'
 
 type Organization = Database['public']['Tables']['organizations']['Row']
 type LocationData = {
@@ -89,7 +90,6 @@ export default function CreateAnnouncementSection({
               const foundLng = Number(json.lng)
               lat = foundLat
               lng = foundLng
-              // update local address and coordinates in state if available
               setLocationData((prev) => ({
                 address:
                   json.address ?? prev?.address ?? locationData?.address ?? '',
@@ -118,7 +118,6 @@ export default function CreateAnnouncementSection({
         end_time: endTime ?? null,
         date: date ?? null,
         location: locationData?.address ?? null,
-        // Use the local variables 'lat' and 'lng' which might have been updated by the API above
         lat: lat ?? null,
         long: lng ?? null,
       })
@@ -126,6 +125,22 @@ export default function CreateAnnouncementSection({
         toast.error(error || 'Unknown error', 'Error posting announcement')
         return
       }
+
+      if (data.id && profile.org_id) {
+        notifyFollowersOfPost(
+          data.id,
+          profile.org_id,
+          announcementTitle.trim() || 'Announcement',
+          announcementBody.trim(),
+        ).then((res) => {
+          if (!res.success) {
+            console.error('Failed to send push:', res.error)
+          } else {
+            console.log('Push notification sent:', res.message)
+          }
+        })
+      }
+
       toast.success(
         'Your announcement has been shared.',
         'Announcement posted!',

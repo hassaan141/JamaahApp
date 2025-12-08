@@ -118,7 +118,7 @@ export async function resolveOrgForTimes(userId: string) {
 
   let orgId = state?.last_org_id || null
   let dist = state?.last_distance_m || 0
-
+  //
   if (!orgId || movedFar || ttlExpired || dayChanged) {
     const [nearest] = await nearestOrg(osLoc.latitude, osLoc.longitude)
     const mosqueChanged = orgId !== nearest.org_id

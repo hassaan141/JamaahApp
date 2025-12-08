@@ -4,12 +4,22 @@ import { getUserId } from '@/Utils/getUserID'
 import type { DailyPrayerTimes } from '@/Utils/prayerTimes'
 
 type UIState = {
-  org: { id?: string; name?: string; address?: string } | null
+  org: {
+    id?: string
+    name?: string
+    address?: string
+    timezone?: string | null
+  } | null
   distance_m: number | null
   times: DailyPrayerTimes | null
 }
 
-type OrgMeta = { id?: string; name?: string; address?: string }
+type OrgMeta = {
+  id?: string
+  name?: string
+  address?: string
+  timezone?: string | null
+}
 type Resolved = {
   org: OrgMeta
   distance_m: number | null

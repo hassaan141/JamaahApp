@@ -2,85 +2,15 @@ import React, { useState, useEffect } from 'react'
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
 import type { OrgPost } from '@/types'
-
-// Helper functions
-const formatTime = (time: string | null) => {
-  if (!time) return null
-  try {
-    const [hours, minutes] = time.split(':')
-    if (!hours || !minutes) return time
-    const hour = parseInt(hours, 10)
-    const min = minutes.padStart(2, '0')
-    const ampm = hour >= 12 ? 'PM' : 'AM'
-    const displayHour = hour % 12 || 12
-    return `${displayHour}:${min} ${ampm}`
-  } catch {
-    return time
-  }
-}
-
-const formatDaysOfWeek = (days: number[] | null) => {
-  if (!days || days.length === 0) return null
-  const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-  return days.map((day) => dayNames[day - 1])
-}
-
-const chunkIntoPairs = (items: string[] | null) => {
-  if (!items) return null
-  const chunks: string[] = []
-  for (let i = 0; i < items.length; i += 2) {
-    chunks.push(items.slice(i, i + 2).join(', '))
-  }
-  return chunks
-}
-
-const formatDate = (dateString: string | null) => {
-  if (!dateString) return null
-  try {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    })
-  } catch {
-    return dateString
-  }
-}
-
-const getEventTypeIcon = (
-  postType: string | null,
-): React.ComponentProps<typeof Feather>['name'] => {
-  switch (postType) {
-    case 'Event':
-      return 'calendar'
-    case 'Repeating_classes':
-      return 'book-open'
-    case 'Janazah':
-      return 'heart'
-    case 'Volunteerng':
-    case 'Volunteering':
-      return 'users'
-    default:
-      return 'calendar'
-  }
-}
-
-const getEventTypeColor = (postType: string | null) => {
-  switch (postType) {
-    case 'Event':
-      return '#2F855A'
-    case 'Repeating_classes':
-      return '#3182CE'
-    case 'Janazah':
-      return '#E53E3E'
-    case 'Volunteerng':
-    case 'Volunteering':
-      return '#805AD5'
-    default:
-      return '#2F855A'
-  }
-}
+import AnnouncementModal from './AnnouncementModal'
+import {
+  formatTime,
+  formatDaysOfWeek,
+  chunkIntoPairs,
+  formatDate,
+  getEventTypeIcon,
+  getEventTypeColor,
+} from './announcementUtils'
 
 interface AnnouncementCardProps {
   announcement: OrgPost & { organizations?: { name?: string } | null }
@@ -97,6 +27,7 @@ export default function AnnouncementCard({
 }: AnnouncementCardProps) {
   const [expanded, setExpanded] = useState(false)
   const [textOverflowing, setTextOverflowing] = useState(false)
+  const [modalVisible, setModalVisible] = useState(false)
   const eventColor = getEventTypeColor(announcement.post_type)
   const eventIcon = getEventTypeIcon(announcement.post_type)
   const startTime = formatTime(announcement.start_time)
@@ -114,119 +45,139 @@ export default function AnnouncementCard({
   }, [announcement.body])
 
   return (
-    <View style={styles.announcementCard}>
-      <View style={styles.announcementHeader}>
-        <View
-          style={[
-            styles.eventIconWrapper,
-            { backgroundColor: `${eventColor}15` },
-          ]}
-        >
-          <Feather name={eventIcon} size={16} color={eventColor} />
-        </View>
-        <View style={styles.announcementHeading}>
-          <View style={styles.titleRow}>
-            <View style={styles.leftContent}>
-              <Text style={styles.announcementTitle}>{announcement.title}</Text>
-              {announcement.organizations?.name && (
-                <Text style={styles.organizationName}>
-                  {announcement.organizations.name}
+    <>
+      <TouchableOpacity
+        style={styles.announcementCard}
+        onPress={() => setModalVisible(true)}
+        activeOpacity={0.9}
+      >
+        <View style={styles.announcementHeader}>
+          <View
+            style={[
+              styles.eventIconWrapper,
+              { backgroundColor: `${eventColor}15` },
+            ]}
+          >
+            <Feather name={eventIcon} size={16} color={eventColor} />
+          </View>
+          <View style={styles.announcementHeading}>
+            <View style={styles.titleRow}>
+              <View style={styles.leftContent}>
+                <Text style={styles.announcementTitle}>
+                  {announcement.title}
                 </Text>
-              )}
-              <View style={styles.eventDetailsRow}>
-                {announcement.post_type && (
-                  <View
-                    style={[
-                      styles.eventBadge,
-                      { backgroundColor: `${eventColor}15` },
-                    ]}
-                  >
-                    <Text
-                      style={[styles.eventBadgeText, { color: eventColor }]}
-                    >
-                      {announcement.post_type === 'Repeating_classes'
-                        ? 'Classes'
-                        : announcement.post_type === 'Volunteerng'
-                          ? 'Volunteering'
-                          : announcement.post_type}
-                    </Text>
-                  </View>
+                {announcement.organizations?.name && (
+                  <Text style={styles.organizationName}>
+                    {announcement.organizations.name}
+                  </Text>
                 )}
-                {announcement.demographic && (
-                  <View
-                    style={[styles.eventBadge, { backgroundColor: '#F7FAFC' }]}
-                  >
-                    <Text style={[styles.eventBadgeText, { color: '#4A5568' }]}>
-                      {announcement.demographic}
+                <View style={styles.eventDetailsRow}>
+                  {announcement.post_type && (
+                    <View
+                      style={[
+                        styles.eventBadge,
+                        { backgroundColor: `${eventColor}15` },
+                      ]}
+                    >
+                      <Text
+                        style={[styles.eventBadgeText, { color: eventColor }]}
+                      >
+                        {announcement.post_type === 'Repeating_classes'
+                          ? 'Classes'
+                          : announcement.post_type === 'Volunteerng'
+                            ? 'Volunteering'
+                            : announcement.post_type}
+                      </Text>
+                    </View>
+                  )}
+                  {announcement.demographic && (
+                    <View
+                      style={[
+                        styles.eventBadge,
+                        { backgroundColor: '#F7FAFC' },
+                      ]}
+                    >
+                      <Text
+                        style={[styles.eventBadgeText, { color: '#4A5568' }]}
+                      >
+                        {announcement.demographic}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+              <View style={styles.rightContent}>
+                {eventDate && !recurringDays && (
+                  <Text style={styles.dateText}>{eventDate}</Text>
+                )}
+                {(startTime || endTime) && (
+                  <Text style={styles.timeText}>
+                    {startTime && endTime
+                      ? `${startTime} - ${endTime}`
+                      : startTime || endTime}
+                  </Text>
+                )}
+                {recurringDayRows &&
+                  recurringDayRows.map((row, idx) => (
+                    <Text
+                      key={idx}
+                      style={styles.recurringText}
+                      numberOfLines={2}
+                    >
+                      {row}
                     </Text>
-                  </View>
+                  ))}
+                {showPublishedDate && announcement.created_at && (
+                  <Text style={styles.announcementPublished}>
+                    {formatDate(announcement.created_at)}
+                  </Text>
                 )}
               </View>
             </View>
-            <View style={styles.rightContent}>
-              {eventDate && !recurringDays && (
-                <Text style={styles.dateText}>{eventDate}</Text>
-              )}
-              {(startTime || endTime) && (
-                <Text style={styles.timeText}>
-                  {startTime && endTime
-                    ? `${startTime} - ${endTime}`
-                    : startTime || endTime}
-                </Text>
-              )}
-              {recurringDayRows &&
-                recurringDayRows.map((row, idx) => (
-                  <Text
-                    key={idx}
-                    style={styles.recurringText}
-                    numberOfLines={2}
-                  >
-                    {row}
-                  </Text>
-                ))}
-              {showPublishedDate && announcement.created_at && (
-                <Text style={styles.announcementPublished}>
-                  {formatDate(announcement.created_at)}
-                </Text>
-              )}
-            </View>
           </View>
-        </View>
-        {showEditButton && (
-          <TouchableOpacity style={styles.smallIconButton} onPress={onEdit}>
-            <Feather name="edit-3" size={16} color="#2F855A" />
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {/* Description */}
-      {!!announcement.body && (
-        <>
-          <Text
-            style={styles.announcementBody}
-            numberOfLines={expanded ? undefined : 2}
-            onTextLayout={(e) => {
-              // only consider overflow when collapsed
-              if (!expanded) {
-                setTextOverflowing(e.nativeEvent.lines.length > 2)
-              }
-            }}
-          >
-            {announcement.body}
-          </Text>
-          {textOverflowing && (
-            <TouchableOpacity
-              onPress={() => setExpanded((s) => !s)}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.readMore}>
-                {expanded ? 'Show less' : 'Read more'}
-              </Text>
+          {showEditButton && (
+            <TouchableOpacity style={styles.smallIconButton} onPress={onEdit}>
+              <Feather name="edit-3" size={16} color="#2F855A" />
             </TouchableOpacity>
           )}
-        </>
-      )}
-    </View>
+        </View>
+
+        {/* Description */}
+        {!!announcement.body && (
+          <>
+            <Text
+              style={styles.announcementBody}
+              numberOfLines={expanded ? undefined : 2}
+              onTextLayout={(e) => {
+                // only consider overflow when collapsed
+                if (!expanded) {
+                  setTextOverflowing(e.nativeEvent.lines.length > 2)
+                }
+              }}
+            >
+              {announcement.body}
+            </Text>
+            {textOverflowing && (
+              <TouchableOpacity
+                onPress={() => setExpanded((s) => !s)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.readMore}>
+                  {expanded ? 'Show less' : 'Read more'}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </>
+        )}
+      </TouchableOpacity>
+
+      <AnnouncementModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        announcement={announcement}
+        showPublishedDate={showPublishedDate}
+      />
+    </>
   )
 }
 

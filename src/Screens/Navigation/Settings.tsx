@@ -31,8 +31,6 @@ export default function Settings() {
   // Profile form state
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
-  const [phone, setPhone] = useState('')
-  const [country, setCountry] = useState('')
 
   // Organization form state
   const [orgName, setOrgName] = useState('')
@@ -86,8 +84,6 @@ export default function Settings() {
       const { ok, error } = await updateProfile({
         first_name: firstName.trim() || null,
         last_name: lastName.trim() || null,
-        phone: phone.trim() || null,
-        country: country.trim() || null,
       })
 
       if (ok) {
@@ -212,29 +208,6 @@ export default function Settings() {
               value={lastName}
               onChangeText={setLastName}
               placeholder="Enter your last name"
-              placeholderTextColor="#999"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Phone</Text>
-            <TextInput
-              style={styles.input}
-              value={phone}
-              onChangeText={setPhone}
-              placeholder="Enter your phone number"
-              placeholderTextColor="#999"
-              keyboardType="phone-pad"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Country</Text>
-            <TextInput
-              style={styles.input}
-              value={country}
-              onChangeText={setCountry}
-              placeholder="Enter your country"
               placeholderTextColor="#999"
             />
           </View>

@@ -220,21 +220,6 @@ export default function UserProfileSection({
             </Text>
           )}
 
-          {profile?.country && (
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                marginBottom: 4,
-              }}
-            >
-              <Feather name="map-pin" size={13} color="#6C757D" />
-              <Text style={{ fontSize: 13, color: '#6C757D', marginLeft: 4 }}>
-                {profile.country}
-              </Text>
-            </View>
-          )}
-
           {isOrganization && organizationDescription && (
             <Text style={{ fontSize: 13, color: '#495057', lineHeight: 18 }}>
               {organizationDescription}

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   StyleSheet,
   View,
@@ -8,13 +8,19 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
 } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
-import { Dropdown } from 'react-native-element-dropdown'
-import { Country } from 'country-state-city'
 import { supabase } from '../../Supabase/supabaseClient'
-import { ensureProfileExists } from '@/Supabase/ensureProfileExists'
 import { toast } from '@/components/Toast/toast'
+import {
+  GoogleSignin,
+  statusCodes,
+  isErrorWithCode,
+} from '@react-native-google-signin/google-signin'
+
+// FIX 1: Use ES6 import instead of require()
+import googleLogo from '../../../assets/google-logo.png'
 
 type Nav = { navigate: (route: string) => void; goBack: () => void }
 
@@ -23,23 +29,102 @@ export default function SignUp({ navigation }: { navigation: Nav }) {
   const [password, setPassword] = useState('')
   const [passwordVisible, setPasswordVisible] = useState(false)
   const [loading, setLoading] = useState(false)
+
+  // Minimal profile data
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
-  const [phone, setPhone] = useState('')
-  const [country, setCountry] = useState('')
-  const [countryCode, setCountryCode] = useState('')
 
-  type CountryOption = { label: string; value: string }
-  const countryOptions = useMemo<CountryOption[]>(() => {
-    const list = Country.getAllCountries()
-    return list.map((c) => ({ label: c.name, value: c.isoCode }))
+  useEffect(() => {
+    GoogleSignin.configure({
+      scopes: ['email', 'profile'],
+      webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+      iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+    })
   }, [])
 
-  const handleCountryChange = (item: CountryOption) => {
-    setCountryCode(item.value)
-    setCountry(item.label)
+  // 2. Google Sign-Up Handler
+  // Note: signInWithIdToken acts as a Sign Up if the user doesn't exist.
+  const handleGoogleSignUp = async () => {
+    setLoading(true)
+    console.log('[GoogleSignUp] Starting Google Sign-Up flow...') // LOG 1
+
+    try {
+      // 1. Check Play Services
+      await GoogleSignin.hasPlayServices()
+      console.log('[GoogleSignUp] Play Services available.') // LOG 2
+
+      // 2. Perform Native Sign-In
+      const userInfo = await GoogleSignin.signIn()
+      console.log(
+        '[GoogleSignUp] Google Native Success. UserInfo:',
+        JSON.stringify(userInfo, null, 2),
+      ) // LOG 3
+
+      if (userInfo.data?.idToken) {
+        console.log(
+          '[GoogleSignUp] ID Token found. Authenticating with Supabase...',
+        ) // LOG 4
+
+        // 3. Authenticate with Supabase
+        const { data, error } = await supabase.auth.signInWithIdToken({
+          provider: 'google',
+          token: userInfo.data.idToken,
+        })
+
+        if (error) {
+          console.error(
+            '[GoogleSignUp] Supabase Auth Error:',
+            JSON.stringify(error, null, 2),
+          ) // LOG 5
+          throw error
+        }
+
+        console.log(
+          '[GoogleSignUp] Supabase Success! User ID:',
+          data.session?.user?.id,
+        ) // LOG 6
+      } else {
+        console.error('[GoogleSignUp] Critical: No ID Token in userInfo')
+        throw new Error('No ID token present')
+      }
+    } catch (error: unknown) {
+      // FIX 2: Use unknown instead of any
+      // 4. Detailed Error Logging
+      console.error('[GoogleSignUp] CATCH BLOCK TRIGGERED')
+      console.error('[GoogleSignUp] Raw Error:', error)
+      console.error(
+        '[GoogleSignUp] JSON Error:',
+        JSON.stringify(error, null, 2),
+      )
+
+      if (isErrorWithCode(error)) {
+        switch (error.code) {
+          case statusCodes.SIGN_IN_CANCELLED:
+            console.log('[GoogleSignUp] User cancelled the flow.')
+            break
+          case statusCodes.IN_PROGRESS:
+            console.log('[GoogleSignUp] Operation already in progress.')
+            toast.error('Sign up is already in progress', 'Wait')
+            break
+          case statusCodes.PLAY_SERVICES_NOT_AVAILABLE:
+            console.error('[GoogleSignUp] Play Services missing/outdated.')
+            toast.error('Google Play Services not available', 'Error')
+            break
+          default:
+            // This is where "DEVELOPER_ERROR" usually shows up
+            console.error(`[GoogleSignUp] Unknown Status Code: ${error.code}`)
+            toast.error(`Google Sign-Up failed: ${error.code}`, 'Error')
+        }
+      } else {
+        const msg = error instanceof Error ? error.message : String(error)
+        toast.error(msg || 'An unexpected error occurred', 'Error')
+      }
+    } finally {
+      setLoading(false)
+    }
   }
 
+  // 3. Email Sign-Up Handler
   const handleSignUp = async () => {
     if (!email || !password) {
       toast.error('Please enter both email and password', 'Error')
@@ -57,15 +142,11 @@ export default function SignUp({ navigation }: { navigation: Nav }) {
         email,
         password,
         options: {
-          // If your Supabase project requires an email redirect, set
-          // EXPO_PUBLIC_EMAIL_REDIRECT_TO in your env to the app/site URL.
           emailRedirectTo: process.env.EXPO_PUBLIC_EMAIL_REDIRECT_TO,
           data: {
-            user_type: 'individual',
-            first_name: firstName || null,
-            last_name: lastName || null,
-            phone: phone || null,
-            country: country || null,
+            user_type: 'individual', // Metadata for the SQL trigger
+            first_name: firstName || '',
+            last_name: lastName || '',
             display_name: displayName,
           },
         },
@@ -73,21 +154,22 @@ export default function SignUp({ navigation }: { navigation: Nav }) {
 
       if (error) throw error
 
-      // Best-effort: if a session is immediately available (email verification disabled),
-      // ensure the profile row exists now. Otherwise AuthProvider will create it on first login.
-      if (authData?.user?.id && authData?.session) {
-        await ensureProfileExists(authData.user.id)
+      if (authData?.session) {
+        toast.success('Account created successfully!', 'Success')
+      } else {
+        toast.success(
+          'Please check your email to verify your account',
+          'Success',
+        )
       }
 
-      toast.success('Please check your email to verify your account', 'Success')
       navigation.navigate('SignIn')
 
+      // Reset form
       setEmail('')
       setPassword('')
       setFirstName('')
       setLastName('')
-      setPhone('')
-      setCountry('')
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : String(e)
       toast.error(message, 'Error')
@@ -119,6 +201,7 @@ export default function SignUp({ navigation }: { navigation: Nav }) {
           <Text style={styles.title}>Create Account</Text>
           <Text style={styles.subtitle}>Sign up to get started</Text>
 
+          {/* First Name */}
           <View style={styles.inputContainer}>
             <Feather
               name="user"
@@ -136,6 +219,7 @@ export default function SignUp({ navigation }: { navigation: Nav }) {
             />
           </View>
 
+          {/* Last Name */}
           <View style={styles.inputContainer}>
             <Feather
               name="user"
@@ -153,6 +237,7 @@ export default function SignUp({ navigation }: { navigation: Nav }) {
             />
           </View>
 
+          {/* Email */}
           <View style={styles.inputContainer}>
             <Feather
               name="mail"
@@ -171,51 +256,7 @@ export default function SignUp({ navigation }: { navigation: Nav }) {
             />
           </View>
 
-          <View style={styles.inputContainer}>
-            <Feather
-              name="phone"
-              size={20}
-              color="#48BB78"
-              style={styles.inputIcon}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Phone Number"
-              value={phone}
-              onChangeText={setPhone}
-              keyboardType="phone-pad"
-              placeholderTextColor="#A0AEC0"
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Feather
-              name="globe"
-              size={20}
-              color="#48BB78"
-              style={styles.inputIcon}
-            />
-            <Dropdown
-              style={styles.dropdownInputBox}
-              containerStyle={styles.dropdownMenuContainer}
-              data={countryOptions}
-              search
-              maxHeight={250}
-              labelField="label"
-              valueField="value"
-              placeholder="Select country"
-              searchPlaceholder="Search country"
-              value={countryCode}
-              onChange={handleCountryChange}
-              disable={false}
-              placeholderStyle={styles.dropdownPlaceholder}
-              selectedTextStyle={styles.dropdownSelectedText}
-              itemTextStyle={styles.dropdownItemText}
-              iconStyle={styles.dropdownArrow}
-              inputSearchStyle={styles.dropdownSearchInput}
-            />
-          </View>
-
+          {/* Password */}
           <View style={styles.inputContainer}>
             <Feather
               name="lock"
@@ -244,6 +285,7 @@ export default function SignUp({ navigation }: { navigation: Nav }) {
             </TouchableOpacity>
           </View>
 
+          {/* Sign Up Button */}
           <TouchableOpacity
             style={styles.button}
             onPress={handleSignUp}
@@ -254,6 +296,27 @@ export default function SignUp({ navigation }: { navigation: Nav }) {
             ) : (
               <Text style={styles.buttonText}>Sign Up</Text>
             )}
+          </TouchableOpacity>
+
+          {/* Divider */}
+          <View style={styles.dividerContainer}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>OR</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          {/* Google Button */}
+          <TouchableOpacity
+            style={styles.googleButton}
+            onPress={handleGoogleSignUp}
+            disabled={loading}
+          >
+            <Image
+              source={googleLogo} // FIX 1 Usage
+              style={styles.googleIcon}
+              fadeDuration={0}
+            />
+            <Text style={styles.googleButtonText}>Sign up with Google</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -314,61 +377,6 @@ const styles = StyleSheet.create({
   inputIcon: { marginRight: 10 },
   input: { flex: 1, fontSize: 16, color: '#2D3748' },
   eyeIcon: { padding: 10 },
-  dropdownInputBox: {
-    flex: 1,
-    backgroundColor: 'transparent',
-    borderWidth: 0,
-    borderRadius: 0,
-    paddingHorizontal: 0,
-    paddingVertical: 0,
-    fontSize: 16,
-    color: '#2D3748',
-    minHeight: 40,
-    justifyContent: 'center',
-    height: 40,
-  },
-  dropdownMenuContainer: {
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#E2E8F0',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  dropdownArrow: {
-    tintColor: '#A0AEC0',
-    width: 22,
-    height: 22,
-    marginRight: 4,
-  },
-  dropdownPlaceholder: {
-    color: '#A0AEC0',
-    fontSize: 16,
-  },
-  dropdownSelectedText: {
-    color: '#2D3748',
-    fontWeight: '500',
-    fontSize: 16,
-  },
-  dropdownItemText: {
-    color: '#2D3748',
-    fontSize: 16,
-    paddingVertical: 8,
-  },
-  dropdownSearchInput: {
-    backgroundColor: '#F7FAFC',
-    borderRadius: 16,
-    borderWidth: 0,
-    borderColor: 'transparent',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    fontSize: 16,
-    color: '#2D3748',
-    marginBottom: 8,
-  },
   button: {
     backgroundColor: '#48BB78',
     height: 55,
@@ -383,6 +391,47 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   buttonText: { color: '#FFFFFF', fontSize: 18, fontWeight: '600' },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 25,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#E2E8F0',
+  },
+  dividerText: {
+    marginHorizontal: 10,
+    color: '#A0AEC0',
+    fontSize: 14,
+  },
+  googleButton: {
+    backgroundColor: '#FFFFFF',
+    height: 55,
+    borderRadius: 10,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  googleIcon: {
+    width: 24,
+    height: 24,
+    marginRight: 10,
+    resizeMode: 'contain',
+  },
+  googleButtonText: {
+    color: '#2D3748',
+    fontSize: 16,
+    fontWeight: '600',
+  },
   switchContainer: { marginTop: 30, alignItems: 'center' },
   switchText: { color: '#718096', fontSize: 16 },
   switchTextBold: { color: '#48BB78', fontWeight: '600' },

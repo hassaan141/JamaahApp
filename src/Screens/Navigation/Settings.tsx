@@ -51,8 +51,6 @@ export default function Settings() {
     if (profile) {
       setFirstName(profile.first_name || '')
       setLastName(profile.last_name || '')
-      setPhone(profile.phone || '')
-      setCountry(profile.country || '')
     }
   }, [profile])
 

@@ -72,6 +72,13 @@ export default () => ({
         NSLocationWhenInUseUsageDescription:
           'This app uses your location to find nearby masjids and show accurate prayer times.',
         ITSAppUsesNonExemptEncryption: false,
+        CFBundleURLTypes: [
+          {
+            CFBundleURLSchemes: [
+              'com.googleusercontent.apps.409976139410-dkmiolft5t8r3tp3rt407218rhg64bk2',
+            ],
+          },
+        ],
       },
     },
 

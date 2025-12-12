@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   StyleSheet,
   View,
@@ -8,11 +8,21 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
 } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
 import { supabase } from '../../Supabase/supabaseClient'
 import AuthHeader from '../../components/Auth/AuthHeader'
 import { toast } from '@/components/Toast/toast'
+import {
+  GoogleSignin,
+  statusCodes,
+  isErrorWithCode,
+} from '@react-native-google-signin/google-signin'
+import type { User } from '@supabase/supabase-js'
+
+// FIX 1: Use ES6 import instead of require()
+import googleLogo from '../../../assets/google-logo.png'
 
 type Nav = { navigate: (route: string) => void; goBack: () => void }
 
@@ -21,6 +31,144 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
   const [password, setPassword] = useState('')
   const [passwordVisible, setPasswordVisible] = useState(false)
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    GoogleSignin.configure({
+      scopes: ['email', 'profile'],
+      webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+      iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+    })
+  }, [])
+
+  // Helper to sync metadata
+  const ensureUserMetadata = async (user: User, isGoogle: boolean = false) => {
+    let needsAuthUpdate = false
+    const updateData: Record<string, string | null> = {}
+
+    // 1. Handle Display Name
+    if (!user.user_metadata?.display_name) {
+      needsAuthUpdate = true
+      const fullName = user.user_metadata?.full_name
+      const firstName = user.user_metadata?.first_name
+      const lastName = user.user_metadata?.last_name
+
+      if (fullName) {
+        updateData.display_name = fullName
+      } else if (firstName || lastName) {
+        updateData.display_name = `${firstName || ''} ${lastName || ''}`.trim()
+      } else {
+        updateData.display_name = user.email?.split('@')[0] || 'User'
+      }
+    }
+
+    // 2. Handle Organization Logic
+    if (isGoogle) {
+      if (user.user_metadata?.user_type !== 'individual') {
+        needsAuthUpdate = true
+        updateData.user_type = 'individual'
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_org')
+        .eq('id', user.id)
+        .single()
+
+      if (profile?.is_org === true) {
+        await supabase
+          .from('profiles')
+          .update({ is_org: false })
+          .eq('id', user.id)
+      }
+    } else {
+      if (!user.user_metadata?.user_type) {
+        const emailForQuery = user.email ?? ''
+
+        const { data: orgData, error: orgError } = await supabase
+          .from('organizations')
+          .select('id, name')
+          .eq('contact_email', emailForQuery)
+          .maybeSingle()
+
+        if (!orgError && orgData) {
+          needsAuthUpdate = true
+          updateData.user_type = 'organization'
+          updateData.organization_name = orgData.name
+
+          if (!user.user_metadata?.display_name && !updateData.display_name) {
+            updateData.display_name = orgData.name
+          }
+
+          await supabase
+            .from('profiles')
+            .update({ is_org: true })
+            .eq('id', user.id)
+        } else {
+          needsAuthUpdate = true
+          updateData.user_type = 'individual'
+        }
+      }
+    }
+
+    if (needsAuthUpdate) {
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: {
+          ...user.user_metadata,
+          ...updateData,
+        },
+      })
+      if (updateError) {
+        console.error('Error updating user metadata:', updateError)
+      }
+    }
+  }
+
+  const handleGoogleSignIn = async () => {
+    setLoading(true)
+    try {
+      await GoogleSignin.hasPlayServices()
+      const userInfo = await GoogleSignin.signIn()
+
+      if (userInfo.data?.idToken) {
+        const { data, error } = await supabase.auth.signInWithIdToken({
+          provider: 'google',
+          token: userInfo.data.idToken,
+        })
+
+        if (error) throw error
+
+        if (data.user) {
+          await ensureUserMetadata(data.user, true)
+        }
+      } else {
+        throw new Error('No ID token present')
+      }
+    } catch (error: unknown) {
+      // FIX 2: Use unknown instead of any
+      if (isErrorWithCode(error)) {
+        switch (error.code) {
+          case statusCodes.SIGN_IN_CANCELLED:
+            break
+          case statusCodes.IN_PROGRESS:
+            toast.error('Sign in is already in progress', 'Wait')
+            break
+          case statusCodes.PLAY_SERVICES_NOT_AVAILABLE:
+            toast.error('Google Play Services not available', 'Error')
+            break
+          default:
+            toast.error('Google Sign-In failed', 'Error')
+        }
+      } else {
+        const message =
+          error instanceof Error
+            ? error.message
+            : 'An unexpected error occurred'
+        toast.error(message, 'Error')
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleSignIn = async () => {
     if (!email || !password) {
@@ -37,64 +185,8 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
 
       if (error) throw error
 
-      const user = authData.user
-      let needsUpdate = false
-      const updateData: Record<string, string | null> = {}
-
-      if (!user.user_metadata?.display_name) {
-        needsUpdate = true
-
-        if (user.user_metadata?.user_type === 'organization') {
-          updateData.display_name =
-            user.user_metadata?.organization_name || 'Organization User'
-        } else {
-          const firstName =
-            (user.user_metadata?.first_name as string | undefined) || ''
-          const lastName =
-            (user.user_metadata?.last_name as string | undefined) || ''
-          if (firstName || lastName) {
-            updateData.display_name = `${firstName} ${lastName}`.trim()
-          } else {
-            updateData.display_name = user.email?.split('@')[0] || 'User'
-          }
-        }
-      }
-
-      if (!user.user_metadata?.user_type) {
-        needsUpdate = true
-
-        const emailForQuery = user.email ?? ''
-        const { data: orgData, error: orgError } = await supabase
-          .from('organizations')
-          .select('id, name')
-          .eq('contact_email', emailForQuery)
-          .single()
-
-        if (!orgError && orgData) {
-          updateData.user_type = 'organization'
-          const orgName = orgData?.name
-          if (orgName) {
-            updateData.organization_name = orgName
-            if (!updateData.display_name) {
-              updateData.display_name = orgName
-            }
-          }
-        } else {
-          updateData.user_type = 'individual'
-        }
-      }
-
-      if (needsUpdate) {
-        const { error: updateError } = await supabase.auth.updateUser({
-          data: {
-            ...user.user_metadata,
-            ...updateData,
-          },
-        })
-
-        if (updateError) {
-          console.error('Error updating user metadata:', updateError)
-        }
+      if (authData.user) {
+        await ensureUserMetadata(authData.user, false)
       }
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : String(e)
@@ -182,6 +274,25 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
             )}
           </TouchableOpacity>
 
+          <View style={styles.dividerContainer}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>OR</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <TouchableOpacity
+            style={styles.googleButton}
+            onPress={handleGoogleSignIn}
+            disabled={loading}
+          >
+            <Image
+              source={googleLogo} // FIX 1 Usage
+              style={styles.googleIcon}
+              fadeDuration={0}
+            />
+            <Text style={styles.googleButtonText}>Sign in with Google</Text>
+          </TouchableOpacity>
+
           <TouchableOpacity
             style={styles.switchContainer}
             onPress={() => navigation.navigate('UserTypeSelection')}
@@ -199,10 +310,7 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F7FAFC' },
-  scrollContent: {
-    flexGrow: 1,
-    backgroundColor: '#F7FAFC',
-  },
+  scrollContent: { flexGrow: 1, backgroundColor: '#F7FAFC' },
   formContainer: { flex: 1, paddingHorizontal: 30, paddingTop: 40 },
   title: {
     fontSize: 28,
@@ -246,6 +354,47 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   buttonText: { color: '#FFFFFF', fontSize: 18, fontWeight: '600' },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 25,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#E2E8F0',
+  },
+  dividerText: {
+    marginHorizontal: 10,
+    color: '#A0AEC0',
+    fontSize: 14,
+  },
+  googleButton: {
+    backgroundColor: '#FFFFFF',
+    height: 55,
+    borderRadius: 10,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  googleIcon: {
+    width: 24,
+    height: 24,
+    marginRight: 10,
+    resizeMode: 'contain',
+  },
+  googleButtonText: {
+    color: '#2D3748',
+    fontSize: 16,
+    fontWeight: '600',
+  },
   switchContainer: { marginTop: 30, alignItems: 'center' },
   switchText: { color: '#718096', fontSize: 16 },
   switchTextBold: { color: '#48BB78', fontWeight: '600' },

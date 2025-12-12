@@ -4,8 +4,6 @@ import { getUserId } from '@/Utils/getUserID'
 type ProfileUpdateData = {
   first_name?: string | null
   last_name?: string | null
-  phone?: string | null
-  country?: string | null
 }
 
 export async function updateProfile(data: ProfileUpdateData) {

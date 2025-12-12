@@ -29,8 +29,6 @@ export interface Database {
           email: string | null
           first_name: string | null
           last_name: string | null
-          phone: string | null
-          country: string | null
           created_at: string
           updated_at: string
           mode: string | null
@@ -45,8 +43,6 @@ export interface Database {
           email?: string | null
           first_name?: string | null
           last_name?: string | null
-          phone?: string | null
-          country?: string | null
           created_at?: string
           updated_at?: string
           mode?: string | null
@@ -61,8 +57,6 @@ export interface Database {
           email?: string | null
           first_name?: string | null
           last_name?: string | null
-          phone?: string | null
-          country?: string | null
           created_at?: string
           updated_at?: string
           mode?: string | null

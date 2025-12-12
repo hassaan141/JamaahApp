@@ -5,6 +5,7 @@ import CombinedPrayerCard from '@/components/HomeScreen/CombinedPrayerCard'
 import MasjidButton from '@/components/HomeScreen/MasjidButton'
 import NotificationCard from '@/components/HomeScreen/NotificationButton'
 import NotificationList from '@/components/HomeScreen/NotificationList'
+import JummahCard from '@/components/HomeScreen/JummahCard'
 import { usePrayerTimes } from '@/Hooks/usePrayerTimes'
 
 type HomeRouteParams = { refreshPrayerTimes?: boolean }
@@ -64,6 +65,11 @@ export default function Home({ navigation }: { navigation: NavigationLike }) {
           <NotificationCard navigation={navigation} />
         </View>
       </View>
+
+      <JummahCard
+        prayerTimes={times}
+        org={org ? { name: org.name, timezone: org.timezone } : null}
+      />
 
       <CombinedPrayerCard prayerTimes={times} />
 

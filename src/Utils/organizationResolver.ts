@@ -26,7 +26,9 @@ const TTL_MIN = 360
 async function getOrgMeta(orgId: string) {
   const { data, error } = await supabase
     .from('organizations')
-    .select('id, name, address, province_state, country, latitude, longitude')
+    .select(
+      'id, name, address, province_state, country, latitude, longitude, timezone',
+    )
     .eq('id', orgId)
     .single()
   if (error) throw error
@@ -38,6 +40,7 @@ async function getOrgMeta(orgId: string) {
     country: string | null
     latitude: number | null
     longitude: number | null
+    timezone: string | null
   }
 }
 

@@ -58,12 +58,4 @@ export const ENV = {
     email: TEST_EMAIL,
     password: TEST_PASSWORD,
   },
-  TEST_PROGRAMS_SCREEN:
-    __DEV__ &&
-    (process.env.EXPO_PUBLIC_TEST_PROGRAMS_SCREEN === '1' ||
-      process.env.EXPO_PUBLIC_TEST_PROGRAMS_SCREEN === 'true'),
-  testing_Programs_scren:
-    __DEV__ &&
-    (process.env.EXPO_PUBLIC_TESTING_PROGRAMS_SCREN === '1' ||
-      process.env.EXPO_PUBLIC_TESTING_PROGRAMS_SCREN === 'true'),
 } as const

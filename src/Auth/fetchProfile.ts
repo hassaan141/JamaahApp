@@ -24,18 +24,22 @@ export function useProfile() {
           .from('profiles')
           .select('*')
           .eq('id', userId)
-          .maybeSingle()
+          .maybeSingle() // Safer than single()
 
         if (error) throw error
+
         if (data) {
           setProfile(data as Profile)
-          if (cacheKey)
+          if (cacheKey) {
             await AsyncStorage.setItem(cacheKey, JSON.stringify(data))
+          }
         } else {
+          // If no profile found, we don't crash, just null
           setProfile(null)
           if (cacheKey) await AsyncStorage.removeItem(cacheKey)
         }
       } catch (e) {
+        console.error('Fetch Profile Error:', e)
         setError(e as Error)
       } finally {
         if (updateLoading) setLoading(false)
@@ -48,25 +52,32 @@ export function useProfile() {
     let mounted = true
     setLoading(true)
     setError(null)
-    setProfile(null)
 
     if (!userId) {
+      setProfile(null)
       setLoading(false)
       return
     }
 
-    ;(async () => {
+    const load = async () => {
+      // 1. Try cache first
       if (cacheKey) {
         const cached = await AsyncStorage.getItem(cacheKey)
         if (cached && mounted) {
           setProfile(JSON.parse(cached) as Profile)
           setLoading(false)
+          // Background refresh
           fetchFresh(false)
           return
         }
       }
-      await fetchFresh(true)
-    })()
+      // 2. Fetch network if no cache
+      if (mounted) {
+        await fetchFresh(true)
+      }
+    }
+
+    load()
 
     return () => {
       mounted = false

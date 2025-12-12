@@ -1,22 +1,25 @@
 import React, { useEffect } from 'react'
 import { NavigationContainer } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
+
 import RootNavigator from './src/Screens/Navigation/RootNavigator'
 import SignIn from './src/Screens/Auth/SignIn'
 import SignUp from './src/Screens/Auth/SignUp'
 import OrganizationSignUp from './src/Screens/Auth/OrganizationSignUp'
 import UserTypeSelection from './src/Screens/Auth/UserTypeSelection'
+
 import { AuthProvider, useAuth } from './src/Auth/AuthProvider'
 import { supabase } from './src/Supabase/supabaseClient'
 import { ENV } from './src/core/env'
-import { SafeAreaProvider } from 'react-native-safe-area-context'
 import ToastHost from './src/components/Toast/ToastHost'
 
 const Stack = createStackNavigator()
 
+// Debug helpers
 const TESTING_MODE = false
-const TEST_EMAIL = String(ENV.TESTING.email)
-const TEST_PASSWORD = String(ENV.TESTING.password)
+const TEST_EMAIL = String(ENV.TESTING?.email || '')
+const TEST_PASSWORD = String(ENV.TESTING?.password || '')
 
 function AppNavigator() {
   const { session, setSession } = useAuth()

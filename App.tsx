@@ -6,6 +6,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context'
 import RootNavigator from './src/Screens/Navigation/RootNavigator'
 import SignIn from './src/Screens/Auth/SignIn'
 import SignUp from './src/Screens/Auth/SignUp'
+import ForgotPassword from './src/Screens/Auth/ForgotPassword'
 import OrganizationSignUp from './src/Screens/Auth/OrganizationSignUp'
 import UserTypeSelection from './src/Screens/Auth/UserTypeSelection'
 
@@ -45,6 +46,7 @@ function AppNavigator() {
         ) : (
           <>
             <Stack.Screen name="SignIn" component={SignIn} />
+            <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
             <Stack.Screen
               name="UserTypeSelection"
               component={UserTypeSelection}

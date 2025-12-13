@@ -72,27 +72,17 @@ export async function registerDeviceToken(
 
     console.log('[registerDeviceToken] Got FCM token:', fcmToken)
 
-    const { data, error } = await supabase
-      .from('devices')
-      .upsert(
-        {
-          profile_id: profileId,
-          platform: Platform.OS,
-          fcm_token: fcmToken,
-          last_seen_at: new Date().toISOString(),
-        },
-        {
-          onConflict: 'fcm_token',
-        },
-      )
-      .select()
+    const { error } = await supabase.rpc('register_device_token', {
+      p_fcm_token: fcmToken,
+      p_platform: Platform.OS,
+    })
 
     if (error) {
       console.error('[registerDeviceToken] DB Error:', error)
       return { success: false, error: `DB Error: ${error.message}` }
     }
 
-    console.log('[registerDeviceToken] Success! Device saved:', data)
+    console.log('[registerDeviceToken] Success! Device registered via RPC')
     return { success: true, token: fcmToken }
   } catch (error) {
     const errorMessage =

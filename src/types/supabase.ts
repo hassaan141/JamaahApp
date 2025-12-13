@@ -427,6 +427,13 @@ export interface Database {
           distance_km: number | null
         }>
       }
+      register_device_token: {
+        Args: {
+          p_fcm_token: string
+          p_platform: string
+        }
+        Returns: void
+      }
     }
     Enums: Record<string, never>
     CompositeTypes: Record<string, never>

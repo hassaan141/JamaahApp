@@ -1,6 +1,5 @@
 import dotenv from 'dotenv'
 
-// Load local .env for dev; noop if file missing
 dotenv.config({ path: '.env' })
 
 // 1. DETERMINE THE ENVIRONMENT

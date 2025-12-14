@@ -7,7 +7,7 @@ import {
   StyleSheet,
 } from 'react-native'
 import DateTimePicker, {
-  DateTimePickerEvent,
+  type DateTimePickerEvent,
 } from '@react-native-community/datetimepicker'
 import { Feather } from '@expo/vector-icons'
 

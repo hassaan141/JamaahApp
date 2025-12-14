@@ -61,6 +61,7 @@ export default () => ({
 
     ios: {
       bundleIdentifier: getBundleId(), // Dynamic ID
+      buildNumber: '3',
       googleServicesFile: './GoogleService-Info.plist',
       supportsTablet: true,
       entitlements: {
@@ -83,6 +84,7 @@ export default () => ({
 
     android: {
       package: getBundleId(), // Dynamic ID
+      versionCode: 3,
       googleServicesFile: './google-services.json',
       permissions: ['ACCESS_COARSE_LOCATION', 'ACCESS_FINE_LOCATION'],
 

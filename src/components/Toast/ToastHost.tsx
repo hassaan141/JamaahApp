@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import ToastSuccess from './ToastSuccess'
 import ToastError from './ToastError'
+import ToastInfo from './ToastInfo'
 import { toast, type ToastEvent } from './toast'
 
 export default function ToastHost() {
@@ -15,14 +16,28 @@ export default function ToastHost() {
 
   const hide = () => setEvt(null)
   if (!evt) return null
-  return evt.type === 'success' ? (
-    <ToastSuccess
-      visible
-      title={evt.title}
-      message={evt.message}
-      onHide={hide}
-    />
-  ) : (
+
+  if (evt.type === 'success') {
+    return (
+      <ToastSuccess
+        visible
+        title={evt.title}
+        message={evt.message}
+        onHide={hide}
+      />
+    )
+  }
+  if (evt.type === 'info') {
+    return (
+      <ToastInfo
+        visible
+        title={evt.title}
+        message={evt.message}
+        onHide={hide}
+      />
+    )
+  }
+  return (
     <ToastError visible title={evt.title} message={evt.message} onHide={hide} />
   )
 }

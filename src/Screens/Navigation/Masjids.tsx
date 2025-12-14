@@ -5,9 +5,6 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  Platform,
-  Alert,
-  ToastAndroid,
 } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
 import { getCoarseLocation } from '@/Utils/useLocation'
@@ -17,12 +14,7 @@ import { setPinned } from '@/Utils/switchMasjidMode'
 import MasjidSearchBar from '@/components/MasjidScreen/MasjidSearchBar'
 import MasjidListItem from '@/components/MasjidScreen/MasjidListItem'
 import LoadingAnimation from '@/components/Loading/Loading'
-
-// notify helper
-const notify = (msg: string) => {
-  if (Platform.OS === 'android') ToastAndroid.show(msg, ToastAndroid.SHORT)
-  else Alert.alert(msg)
-}
+import { toast } from '@/components/Toast/toast'
 
 interface NavProps {
   navigation: { goBack: () => void }
@@ -118,11 +110,11 @@ const Masjids: React.FC<NavProps> = ({ navigation, route }) => {
     try {
       const userId = await getUserId()
       await setPinned(userId, orgId)
-      notify('Masjid selected')
+      toast.success('Masjid selected', 'Success')
       if (showBackButton && navigation) navigation.goBack()
     } catch (e) {
       console.error(e)
-      notify('Failed to select masjid')
+      toast.error('Failed to select masjid', 'Error')
     }
   }
 

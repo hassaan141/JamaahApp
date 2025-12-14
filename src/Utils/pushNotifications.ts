@@ -1,7 +1,7 @@
-import { Alert } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import messaging from '@react-native-firebase/messaging'
 import { registerDeviceToken } from '@/Supabase/registerDevice'
+import { toast } from '@/components/Toast/toast'
 
 export class PushNotificationManager {
   private static instance: PushNotificationManager
@@ -43,12 +43,12 @@ export class PushNotificationManager {
 
       // 2. Setup Listeners (Only once)
       if (!this.initialized) {
-        // Foreground Handler (Shows Alert when app is open)
+        // Foreground Handler (Shows Toast when app is open)
         messaging().onMessage(async (remoteMessage) => {
           console.log('[Foreground Message]', remoteMessage)
           const title = remoteMessage.notification?.title || 'Notification'
           const body = remoteMessage.notification?.body || ''
-          Alert.alert(title, body)
+          toast.info(body, title)
         })
 
         // Background Handler

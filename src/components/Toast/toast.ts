@@ -1,4 +1,4 @@
-export type ToastKind = 'success' | 'error'
+export type ToastKind = 'success' | 'error' | 'info'
 type ToastEvent = { type: ToastKind; message: string; title?: string }
 type Listener = (e: ToastEvent) => void
 
@@ -10,6 +10,9 @@ export const toast = {
   },
   error(message: string, title?: string) {
     emit({ type: 'error', message, title })
+  },
+  info(message: string, title?: string) {
+    emit({ type: 'info', message, title })
   },
   subscribe(fn: Listener) {
     listeners.push(fn)

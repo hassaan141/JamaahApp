@@ -5,8 +5,8 @@ import {
   ScrollView,
   TextInput,
   TouchableOpacity,
-  Alert,
   StyleSheet,
+  Alert,
   ActivityIndicator,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -144,6 +144,8 @@ export default function Settings() {
               if (!ok) {
                 toast.error(error || 'Failed to delete account', 'Error')
                 setLoading(false)
+              } else {
+                toast.success('Account deleted successfully', 'Success')
               }
               // If successful, user will be signed out automatically
             } catch {

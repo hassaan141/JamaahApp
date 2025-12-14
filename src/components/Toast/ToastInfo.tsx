@@ -16,12 +16,12 @@ type Props = {
   title?: string
 }
 
-export default function ToastSuccess({
+export default function ToastInfo({
   visible,
   message,
   onHide,
   duration = 3000,
-  title = 'Success',
+  title = 'Info',
 }: Props) {
   const opacity = useRef(new Animated.Value(0)).current
   const translateY = useRef(new Animated.Value(-20)).current
@@ -92,7 +92,7 @@ export default function ToastSuccess({
   )
 }
 
-const GREEN = '#2F855A'
+const BLUE = '#3182CE'
 
 const styles = StyleSheet.create({
   container: {
@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
   leftStripe: {
     width: 4,
     height: '100%',
-    backgroundColor: GREEN,
+    backgroundColor: BLUE,
     borderTopLeftRadius: 10,
     borderBottomLeftRadius: 10,
     marginRight: 10,
@@ -129,13 +129,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    color: GREEN,
+    color: BLUE,
     fontWeight: '700',
     fontSize: 14,
     marginBottom: 2,
   },
   message: {
-    color: '#1D4732',
+    color: '#2C5282',
     fontSize: 13,
   },
   closeBtn: {

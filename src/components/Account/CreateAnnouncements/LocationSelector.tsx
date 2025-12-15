@@ -38,13 +38,6 @@ export default function LocationSelector({
       ? initialLocationData.address
       : ''
 
-  console.log('[LocationSelector] Debug initial data:', {
-    initialLocationData,
-    initialUseCurrentAddress,
-    initialCustomAddress,
-    orgAddress,
-  })
-
   const [useCurrentAddress, setUseCurrentAddress] = useState(
     initialUseCurrentAddress,
   )

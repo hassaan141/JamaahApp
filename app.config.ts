@@ -19,7 +19,7 @@ const getDisplayName = () => {
 
 // 4. GET BUNDLE ID (Crucial for side-by-side install)
 const getBundleId = () => {
-  if (isDev) return 'com.hassaan141.jamaahapp.dev'
+  if (isDev) return 'com.hassaan141.jamaahapp'
   return 'com.hassaan141.jamaahapp'
 }
 

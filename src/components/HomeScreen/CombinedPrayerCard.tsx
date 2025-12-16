@@ -73,8 +73,10 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
       { name: 'Isha', adhan: data.isha_azan, iqaamah: data.isha_iqamah },
     ]
 
-    // Find first prayer that is later than right now
-    const next = schedule.find((p) => p.adhan.substring(0, 5) > currentHHMM)
+    const next = schedule.find((p) => {
+      if (!p.adhan || typeof p.adhan !== 'string') return false
+      return p.adhan.substring(0, 5) > currentHHMM
+    })
 
     if (next) return next
 

@@ -127,18 +127,31 @@ export default function CreateAnnouncementSection({
       }
 
       if (data.id && profile.org_id) {
+        console.log(
+          `[CreateAnnouncement] Sending notifications for post ${data.id} to org ${profile.org_id}`,
+        )
         notifyFollowersOfPost(
           data.id,
           profile.org_id,
           announcementTitle.trim() || 'Announcement',
           announcementBody.trim(),
-        ).then((res) => {
-          if (!res.success) {
-            console.error('Failed to send push:', res.error)
-          } else {
-            console.log('Push notification sent:', res.message)
-          }
-        })
+        )
+          .then((res) => {
+            if (!res.success) {
+              console.error('Failed to send push:', res.error)
+              toast.error('Failed to send notifications', 'Push Error')
+            } else {
+              console.log('Push notification sent:', res.message)
+              toast.success(
+                `Notifications sent: ${res.message}`,
+                'Push Success',
+              )
+            }
+          })
+          .catch((err) => {
+            console.error('Push notification error:', err)
+            toast.error('Push notification failed', 'Error')
+          })
       }
 
       toast.success(

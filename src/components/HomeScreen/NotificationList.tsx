@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from 'react'
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Animated,
+} from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
 import AnnouncementCard from '@/components/Shared/AnnouncementCard'
 import { isNewAnnouncement } from '@/Utils/datetime'
@@ -7,18 +13,26 @@ import {
   fetchMyAnnouncements,
   type Announcement,
 } from '@/Supabase/fetchMyAnnouncements'
+import { useNavigation } from '@react-navigation/native'
 
 const NotificationList: React.FC<{ refreshKey?: boolean }> = ({
   refreshKey,
 }) => {
+  const navigation = useNavigation()
   const [isExpanded, setIsExpanded] = useState(false)
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [loading, setLoading] = useState(true)
+  const fadeAnim = useState(new Animated.Value(0))[0]
+  const scaleAnim = useState(new Animated.Value(0.95))[0]
+  const didFetchRef = React.useRef(false)
 
   useEffect(() => {
+    if (didFetchRef.current) return
+    didFetchRef.current = true
+
     let mounted = true
-    console.log('[NotificationList] refreshKey changed:', refreshKey)
-    ;(async () => {
+
+    const fetchData = async () => {
       try {
         setLoading(true)
         const data = await fetchMyAnnouncements()
@@ -32,11 +46,38 @@ const NotificationList: React.FC<{ refreshKey?: boolean }> = ({
       } finally {
         if (mounted) setLoading(false)
       }
-    })()
+    }
+
+    fetchData()
+
     return () => {
       mounted = false
+      didFetchRef.current = false
     }
   }, [refreshKey])
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: loading ? 0 : 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: loading ? 0.95 : 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start()
+  }, [loading, fadeAnim, scaleAnim])
+
+  const handleExpand = () => {
+    setIsExpanded(true)
+  }
+
+  const handleCollapse = () => {
+    setIsExpanded(false)
+  }
 
   const visibleAnnouncements = isExpanded
     ? announcements
@@ -51,7 +92,7 @@ const NotificationList: React.FC<{ refreshKey?: boolean }> = ({
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Feather name="bell" size={16} color="#4A5568" />
-          <Text style={styles.headerTitle}>Notifications</Text>
+          <Text style={styles.headerTitle}>My Events</Text>
         </View>
         {newAnnouncementCount > 0 && (
           <View style={styles.badge}>
@@ -60,11 +101,23 @@ const NotificationList: React.FC<{ refreshKey?: boolean }> = ({
         )}
       </View>
 
-      <View style={styles.notificationList}>
+      <Animated.View
+        style={[
+          styles.notificationList,
+          {
+            opacity: fadeAnim,
+            transform: [{ scale: scaleAnim }],
+          },
+        ]}
+      >
         {loading ? (
           <Text>Loading...</Text>
         ) : announcements.length === 0 ? (
-          <View style={styles.emptyStateContainer}>
+          <TouchableOpacity
+            style={styles.emptyStateContainer}
+            onPress={() => navigation.navigate('Organization' as never)}
+            activeOpacity={0.7}
+          >
             <Feather
               name="plus-circle"
               size={40}
@@ -74,7 +127,7 @@ const NotificationList: React.FC<{ refreshKey?: boolean }> = ({
             <Text style={styles.emptyText}>
               Please start following an organization to get events and classes
             </Text>
-          </View>
+          </TouchableOpacity>
         ) : (
           <>
             {visibleAnnouncements.map((announcement) => (
@@ -88,7 +141,8 @@ const NotificationList: React.FC<{ refreshKey?: boolean }> = ({
             {!isExpanded && hiddenCount > 0 && (
               <TouchableOpacity
                 style={styles.expandButton}
-                onPress={() => setIsExpanded(true)}
+                onPress={handleExpand}
+                activeOpacity={0.7}
               >
                 <Text style={styles.expandButtonText}>
                   +{hiddenCount} more notifications
@@ -98,7 +152,8 @@ const NotificationList: React.FC<{ refreshKey?: boolean }> = ({
             {isExpanded && (
               <TouchableOpacity
                 style={styles.collapseButton}
-                onPress={() => setIsExpanded(false)}
+                onPress={handleCollapse}
+                activeOpacity={0.7}
               >
                 <Text style={styles.collapseButtonText}>Show less</Text>
                 <Feather name="chevron-up" size={16} color="#718096" />
@@ -106,7 +161,7 @@ const NotificationList: React.FC<{ refreshKey?: boolean }> = ({
             )}
           </>
         )}
-      </View>
+      </Animated.View>
     </View>
   )
 }

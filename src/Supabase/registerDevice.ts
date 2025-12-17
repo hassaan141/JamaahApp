@@ -106,3 +106,21 @@ export async function updateDeviceLastSeen(profileId: string) {
     console.error('Error in updateDeviceLastSeen:', error)
   }
 }
+
+// Self-healing function to clean up invalid FCM tokens
+export async function cleanupInvalidToken(profileId: string, fcmToken: string) {
+  try {
+    const { error } = await supabase.rpc('cleanup_invalid_fcm_token', {
+      p_profile_id: profileId,
+      p_fcm_token: fcmToken,
+    })
+
+    if (error) {
+      console.error('Error cleaning up invalid token:', error)
+    } else {
+      console.log(`🧹 Cleaned up invalid token for user ${profileId}`)
+    }
+  } catch (error) {
+    console.error('Error in cleanupInvalidToken:', error)
+  }
+}

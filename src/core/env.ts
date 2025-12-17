@@ -1,4 +1,3 @@
-// @ts-expect-error: expo-constants may not be available in non-Expo environments
 import Constants from 'expo-constants'
 
 const extras = (Constants.expoConfig?.extra ?? {}) as Record<string, unknown>

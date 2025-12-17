@@ -127,14 +127,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
-      // 1. Unsubscribe from current topic
+      const userId = session?.user?.id
+
+      // 1. Clean up FCM token from database BEFORE signing out
+      if (userId) {
+        console.log('[AuthProvider] Cleaning up FCM token for user:', userId)
+        try {
+          const fcmToken = await messaging().getToken()
+          if (fcmToken) {
+            await supabase
+              .from('devices')
+              .delete()
+              .eq('profile_id', userId)
+              .eq('fcm_token', fcmToken)
+            console.log('[AuthProvider] FCM token cleaned up successfully')
+          }
+        } catch (tokenError) {
+          console.warn(
+            '[AuthProvider] Could not clean up FCM token:',
+            tokenError,
+          )
+        }
+      }
+
+      // 2. Unsubscribe from current topic
       const currentTopicId = await AsyncStorage.getItem('prayer_sub_org_id')
       if (currentTopicId) {
         await messaging().unsubscribeFromTopic(`org_${currentTopicId}_prayers`)
         await AsyncStorage.removeItem('prayer_sub_org_id')
       }
 
-      // 2. Sign out of Supabase
+      // 3. Sign out of Supabase
       const { error } = await supabase.auth.signOut()
       if (error) throw error
     } catch (e) {

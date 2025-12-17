@@ -27,7 +27,9 @@ type Nav = { navigate: (route: string) => void; goBack: () => void }
 export default function SignUp({ navigation }: { navigation: Nav }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [passwordVisible, setPasswordVisible] = useState(false)
+  const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false)
   const [loading, setLoading] = useState(false)
 
   // Minimal profile data
@@ -126,8 +128,18 @@ export default function SignUp({ navigation }: { navigation: Nav }) {
 
   // 3. Email Sign-Up Handler
   const handleSignUp = async () => {
-    if (!email || !password) {
-      toast.error('Please enter both email and password', 'Error')
+    if (!email || !password || !confirmPassword) {
+      toast.error('Please fill in all required fields', 'Error')
+      return
+    }
+
+    if (password !== confirmPassword) {
+      toast.error('Passwords do not match', 'Error')
+      return
+    }
+
+    if (password.length < 6) {
+      toast.error('Password must be at least 6 characters', 'Error')
       return
     }
 
@@ -168,6 +180,7 @@ export default function SignUp({ navigation }: { navigation: Nav }) {
       // Reset form
       setEmail('')
       setPassword('')
+      setConfirmPassword('')
       setFirstName('')
       setLastName('')
     } catch (e: unknown) {
@@ -266,7 +279,7 @@ export default function SignUp({ navigation }: { navigation: Nav }) {
             />
             <TextInput
               style={styles.input}
-              placeholder="Password"
+              placeholder="Password *"
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!passwordVisible}
@@ -284,6 +297,51 @@ export default function SignUp({ navigation }: { navigation: Nav }) {
               />
             </TouchableOpacity>
           </View>
+
+          {/* Confirm Password */}
+          <View
+            style={[
+              styles.inputContainer,
+              confirmPassword &&
+                password !== confirmPassword && { borderColor: '#E53E3E' },
+            ]}
+          >
+            <Feather
+              name="lock"
+              size={20}
+              color="#48BB78"
+              style={styles.inputIcon}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Confirm Password *"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry={!confirmPasswordVisible}
+              autoCapitalize="none"
+              placeholderTextColor="#A0AEC0"
+            />
+            <TouchableOpacity
+              onPress={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
+              style={styles.eyeIcon}
+            >
+              <Feather
+                name={confirmPasswordVisible ? 'eye-off' : 'eye'}
+                size={20}
+                color="#48BB78"
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* Password validation messages */}
+          {confirmPassword && password !== confirmPassword && (
+            <Text style={styles.errorText}>Passwords do not match</Text>
+          )}
+          {password && password.length < 6 && (
+            <Text style={styles.errorText}>
+              Password must be at least 6 characters
+            </Text>
+          )}
 
           {/* Sign Up Button */}
           <TouchableOpacity
@@ -369,7 +427,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E2E8F0',
     borderRadius: 10,
-    marginBottom: 20,
+    marginBottom: 15,
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 15,
     height: 55,
@@ -377,6 +435,13 @@ const styles = StyleSheet.create({
   inputIcon: { marginRight: 10 },
   input: { flex: 1, fontSize: 16, color: '#2D3748' },
   eyeIcon: { padding: 10 },
+  errorText: {
+    fontSize: 13,
+    color: '#E53E3E',
+    marginBottom: 10,
+    marginTop: -10,
+    marginLeft: 5,
+  },
   button: {
     backgroundColor: '#48BB78',
     height: 55,
@@ -388,7 +453,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 5,
-    marginTop: 10,
+    marginTop: 15,
   },
   buttonText: { color: '#FFFFFF', fontSize: 18, fontWeight: '600' },
   dividerContainer: {

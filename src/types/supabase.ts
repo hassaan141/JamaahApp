@@ -434,6 +434,13 @@ export interface Database {
         }
         Returns: void
       }
+      cleanup_invalid_fcm_token: {
+        Args: {
+          p_profile_id: string
+          p_fcm_token: string
+        }
+        Returns: void
+      }
     }
     Enums: Record<string, never>
     CompositeTypes: Record<string, never>

@@ -1,4 +1,6 @@
 import { supabase } from './supabaseClient'
+import { fetchOrgSubscribers } from './fetchOrgSubscribers'
+import { fetchDevicesByProfileIds } from './fetchDevicesByProfileIds'
 
 interface NotificationPayload {
   title: string
@@ -10,46 +12,77 @@ interface NotificationPayload {
 
 export async function sendPushToFollowers(payload: NotificationPayload) {
   try {
-    const { data: subscribers, error } = await supabase
-      .from('organization_subscriptions')
-      .select(
-        `
-        profile_id,
-        profiles!inner(
-          devices(fcm_token, platform)
-        )
-      `,
-      )
-      .eq('organization_id', payload.organizationId)
-      .eq('push_enabled', true)
-      .eq('profiles.notification_preference', 'Event_Adhan')
+    console.log(
+      `[sendPushToFollowers] Starting notification process for org: ${payload.organizationId}`,
+    )
 
-    if (error) {
-      console.error('Error fetching subscribers:', error)
-      return { success: false, error: error.message }
-    }
+    // Step 1: Get ALL subscribers first (no joins)
+    const allSubscribers = await fetchOrgSubscribers(payload.organizationId)
 
-    if (!subscribers || subscribers.length === 0) {
+    if (!allSubscribers || allSubscribers.length === 0) {
+      console.log('[sendPushToFollowers] No subscribers found')
       return { success: true, message: 'No subscribers to notify' }
     }
 
-    // Collect all FCM tokens
-    const fcmTokens: string[] = []
-    subscribers.forEach((subscriber) => {
-      if (subscriber.profiles?.devices) {
-        subscriber.profiles.devices.forEach(
-          (device: { fcm_token?: string }) => {
-            if (device.fcm_token) {
-              fcmTokens.push(device.fcm_token)
-            }
-          },
-        )
+    // Step 2: Get device information for all profiles
+    const profileIds = allSubscribers.map((sub) => sub.profile_id)
+    const devices = await fetchDevicesByProfileIds(profileIds)
+
+    // Step 3: Combine subscribers with their devices
+    const subscribersWithData = allSubscribers.map((sub) => {
+      const userDevices = devices.filter((d) => d.profile_id === sub.profile_id)
+
+      return {
+        ...sub,
+        devices: userDevices,
       }
     })
 
+    // Step 4: Filter for valid subscribers
+    console.log(
+      `[sendPushToFollowers] Filtering subscribers for valid notifications...`,
+    )
+    const validSubscribers = subscribersWithData.filter((sub) => {
+      const hasPushEnabled = sub.push_enabled === true
+      const hasDevices = sub.devices && sub.devices.length > 0
+      const hasValidTokens = sub.devices?.some((d) => d.fcm_token) || false
+
+      const isValid = hasPushEnabled && hasDevices && hasValidTokens
+
+      if (!isValid) {
+        console.log(
+          `  ❌ Filtered out ${sub.profile_id}: Push=${hasPushEnabled}, Devices=${hasDevices}, Tokens=${hasValidTokens}`,
+        )
+      }
+
+      return isValid
+    })
+
+    if (validSubscribers.length === 0) {
+      console.log(
+        '[sendPushToFollowers] No valid subscribers found after filtering',
+      )
+      return { success: true, message: 'No valid subscribers' }
+    }
+
+    // Step 5: Collect FCM tokens
+    const fcmTokens: string[] = []
+    validSubscribers.forEach((sub) => {
+      sub.devices.forEach((device) => {
+        if (device.fcm_token) {
+          fcmTokens.push(device.fcm_token)
+        }
+      })
+    })
+
     if (fcmTokens.length === 0) {
+      console.log('[sendPushToFollowers] No FCM tokens found')
       return { success: true, message: 'No devices to notify' }
     }
+
+    console.log(
+      `[sendPushToFollowers] Sending to ${fcmTokens.length} devices from ${validSubscribers.length} subscribers`,
+    )
 
     const { data, error: functionError } = await supabase.functions.invoke(
       'send-push-notification',

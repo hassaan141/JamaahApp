@@ -7,8 +7,10 @@ export default function SignOutButton({
   onLogout: () => Promise<void>
 }) {
   const handleLogout = async () => {
+    console.log('[SignOutButton] Logout button pressed')
     try {
       await onLogout()
+      console.log('[SignOutButton] Logout completed')
     } catch (e) {
       console.warn('[SignOutButton] logout error', e)
     }

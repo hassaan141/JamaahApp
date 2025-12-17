@@ -182,11 +182,26 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
       },
     ]
 
-    // Convert React Native Image.resolveAssetSource to get the actual URI
-    const mosqueIconUri = Image.resolveAssetSource(mosqueIcon).uri
+    // Create a mosque SVG icon for Android since Image.resolveAssetSource doesn't work in HTML context
+    const mosqueSvgIcon = `
+      <div style="
+        width: 30px; 
+        height: 30px; 
+        background: #2D6A4F; 
+        border-radius: 15px; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        border: 2px solid white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      ">
+        <svg width="16" height="16" fill="white" viewBox="0 0 24 24">
+          <path d="M12 2C8 2 5.5 4.5 5.5 8c0 2.5 1.5 4.5 3 6L12 22l3.5-8c1.5-1.5 3-3.5 3-6C18.5 4.5 16 2 12 2zm0 9.5c-1.4 0-2.5-1.1-2.5-2.5S10.6 6.5 12 6.5s2.5 1.1 2.5 2.5S13.4 11.5 12 11.5z"/>
+        </svg>
+      </div>
+    `
 
     const markers = [
-      // User location marker - use a blue dot similar to iOS
       {
         id: 'user-location',
         position: { lat: location.latitude, lng: location.longitude },
@@ -201,7 +216,7 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
             .map((m, index) => ({
               id: `masjid-${index}`,
               position: { lat: m.latitude!, lng: m.longitude! },
-              icon: `<img src="${mosqueIconUri}" style="width: 30px; height: 30px;" />`,
+              icon: mosqueSvgIcon,
               size: { x: 30, y: 30 },
               iconAnchor: { x: 15, y: 15 },
               title: m.name,
@@ -212,7 +227,6 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
               const iconName = getEventTypeIcon(e.post_type)
               const iconColor = getEventTypeColor(e.post_type)
 
-              // Create SVG icon similar to iOS Feather icons
               const svgIcon = `
                 <div style="
                   width: 30px; 
@@ -294,8 +308,6 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
                 <Callout>
                   <TouchableOpacity
                     onPress={() => {
-                      // navigation typed as any to avoid TS navigation type complexity here
-                      // navigate to OrganizationDetail with org data
                       if (
                         navigation &&
                         typeof navigation.navigate === 'function'

@@ -1,6 +1,5 @@
 import dotenv from 'dotenv'
 
-// Load local .env for dev; noop if file missing
 dotenv.config({ path: '.env' })
 
 // 1. DETERMINE THE ENVIRONMENT
@@ -20,7 +19,7 @@ const getDisplayName = () => {
 
 // 4. GET BUNDLE ID (Crucial for side-by-side install)
 const getBundleId = () => {
-  if (isDev) return 'com.hassaan141.jamaahapp.dev'
+  if (isDev) return 'com.hassaan141.jamaahapp'
   return 'com.hassaan141.jamaahapp'
 }
 
@@ -42,6 +41,7 @@ export default () => ({
 
     plugins: [
       'expo-font',
+      'expo-asset',
       '@react-native-firebase/app',
       '@react-native-firebase/messaging',
       [
@@ -62,6 +62,7 @@ export default () => ({
 
     ios: {
       bundleIdentifier: getBundleId(), // Dynamic ID
+      buildNumber: '3',
       googleServicesFile: './GoogleService-Info.plist',
       supportsTablet: true,
       entitlements: {
@@ -84,6 +85,7 @@ export default () => ({
 
     android: {
       package: getBundleId(), // Dynamic ID
+      versionCode: 3,
       googleServicesFile: './google-services.json',
       permissions: ['ACCESS_COARSE_LOCATION', 'ACCESS_FINE_LOCATION'],
 

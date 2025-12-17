@@ -24,7 +24,7 @@ export default function ToastError({
   title = 'Error',
 }: Props) {
   const opacity = useRef(new Animated.Value(0)).current
-  const translateY = useRef(new Animated.Value(10)).current
+  const translateY = useRef(new Animated.Value(-20)).current
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined
@@ -62,7 +62,7 @@ export default function ToastError({
         useNativeDriver: true,
       }),
       Animated.timing(translateY, {
-        toValue: 10,
+        toValue: -20,
         duration: 150,
         useNativeDriver: true,
       }),
@@ -97,10 +97,11 @@ const RED = '#DC3545'
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: 40,
+    top: 60,
     left: 16,
     right: 16,
     alignItems: 'center',
+    zIndex: 9999,
   },
   toast: {
     flexDirection: 'row',

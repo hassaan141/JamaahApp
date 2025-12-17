@@ -33,8 +33,8 @@ function TabNavigator() {
           else if (route.name === 'Account') iconName = 'user'
           return <Feather name={iconName} size={size} color={color} />
         },
-        tabBarActiveTintColor: '#34660bff',
-        tabBarInactiveTintColor: '#209b6cff',
+        tabBarActiveTintColor: '#22C55E',
+        tabBarInactiveTintColor: '#A3A3A3',
         headerShown: false,
       })}
     >

@@ -10,7 +10,9 @@ import {
   ScrollView,
   Image,
 } from 'react-native'
+import { Asset } from 'expo-asset'
 import Feather from '@expo/vector-icons/Feather'
+import googleLogo from '../../../assets/google-logo.png'
 import { supabase } from '../../Supabase/supabaseClient'
 import AuthHeader from '../../components/Auth/AuthHeader'
 import { toast } from '@/components/Toast/toast'
@@ -21,9 +23,6 @@ import {
 } from '@react-native-google-signin/google-signin'
 import type { User } from '@supabase/supabase-js'
 
-// FIX 1: Use ES6 import instead of require()
-import googleLogo from '../../../assets/google-logo.png'
-
 type Nav = { navigate: (route: string) => void; goBack: () => void }
 
 export default function SignIn({ navigation }: { navigation: Nav }) {
@@ -31,6 +30,7 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
   const [password, setPassword] = useState('')
   const [passwordVisible, setPasswordVisible] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [assetsReady, setAssetsReady] = useState(false)
 
   useEffect(() => {
     GoogleSignin.configure({
@@ -195,6 +195,16 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    const preload = async () => {
+      await Asset.loadAsync([googleLogo])
+      setAssetsReady(true)
+    }
+    preload()
+  }, [])
+
+  if (!assetsReady) return null
 
   return (
     <KeyboardAvoidingView

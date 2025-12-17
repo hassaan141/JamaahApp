@@ -7,10 +7,12 @@ import {
   fetchMyAnnouncements,
   type Announcement,
 } from '@/Supabase/fetchMyAnnouncements'
+import { useNavigation } from '@react-navigation/native'
 
 const NotificationList: React.FC<{ refreshKey?: boolean }> = ({
   refreshKey,
 }) => {
+  const navigation = useNavigation()
   const [isExpanded, setIsExpanded] = useState(false)
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [loading, setLoading] = useState(true)
@@ -51,7 +53,7 @@ const NotificationList: React.FC<{ refreshKey?: boolean }> = ({
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Feather name="bell" size={16} color="#4A5568" />
-          <Text style={styles.headerTitle}>Notifications</Text>
+          <Text style={styles.headerTitle}>My Events</Text>
         </View>
         {newAnnouncementCount > 0 && (
           <View style={styles.badge}>
@@ -64,7 +66,10 @@ const NotificationList: React.FC<{ refreshKey?: boolean }> = ({
         {loading ? (
           <Text>Loading...</Text>
         ) : announcements.length === 0 ? (
-          <View style={styles.emptyStateContainer}>
+          <TouchableOpacity
+            style={styles.emptyStateContainer}
+            onPress={() => navigation.navigate('Organizations' as never)}
+          >
             <Feather
               name="plus-circle"
               size={40}
@@ -74,7 +79,7 @@ const NotificationList: React.FC<{ refreshKey?: boolean }> = ({
             <Text style={styles.emptyText}>
               Please start following an organization to get events and classes
             </Text>
-          </View>
+          </TouchableOpacity>
         ) : (
           <>
             {visibleAnnouncements.map((announcement) => (

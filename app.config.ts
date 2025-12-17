@@ -41,6 +41,7 @@ export default () => ({
 
     plugins: [
       'expo-font',
+      'expo-asset',
       '@react-native-firebase/app',
       '@react-native-firebase/messaging',
       [

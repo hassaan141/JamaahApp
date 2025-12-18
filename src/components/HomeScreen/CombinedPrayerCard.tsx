@@ -33,8 +33,6 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
 
   const [timeRemaining, setTimeRemaining] = useState('')
 
-  // 1. Simple 24h -> 12h converter
-  // Input: "13:30:00" -> Output: "1:30 PM"
   const formatTime = (time?: string) => {
     if (!time) return ''
     const [h, m] = time.split(':')
@@ -48,12 +46,10 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
     return `${hours}:${minutes} ${ampm}`
   }
 
-  // 2. Determine Next Prayer by direct string comparison
   const determineNextPrayer = (data: PrayerTimes | null) => {
     if (!data) return { name: 'Loading...', adhan: '', iqaamah: '' }
 
     const now = new Date()
-    // Get current time as "13:45" for easy comparison
     const currentHHMM = now.toLocaleTimeString('en-GB', {
       hour12: false,
       hour: '2-digit',
@@ -80,7 +76,6 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
 
     if (next) return next
 
-    // If no match (late night), next is tomorrow's Fajr
     return {
       name: 'Fajr',
       adhan: data.tmrw_fajr_azan,
@@ -88,7 +83,6 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
     }
   }
 
-  // 3. Calculate countdown
   const calculateTimeRemaining = (targetTime: string) => {
     if (!targetTime) return ''
 
@@ -98,7 +92,6 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
 
     targetDate.setHours(parseInt(h), parseInt(m), 0, 0)
 
-    // If target is earlier than now, it must be tomorrow (e.g. 1AM prayer vs 11PM now)
     if (targetDate.getTime() < now.getTime()) {
       targetDate.setDate(targetDate.getDate() + 1)
     }
@@ -111,22 +104,37 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
     return `${diffMinutes}m`
   }
 
-  // Update loop
   useEffect(() => {
     const update = () => {
-      if (prayerTimes) {
-        const next = determineNextPrayer(prayerTimes)
-        setNextPrayer(next)
-        // Count down to the Iqamah of the next prayer
-        setTimeRemaining(calculateTimeRemaining(next.iqaamah))
-      }
+      const next = determineNextPrayer(prayerTimes)
+      setNextPrayer(next)
+      setTimeRemaining(calculateTimeRemaining(next.iqaamah))
     }
 
-    update() // Run immediately
-    const interval = setInterval(update, 1000) // Run every second
+    update()
+    const interval = setInterval(update, 1000)
 
     return () => clearInterval(interval)
   }, [prayerTimes])
+
+  // Early return after all hooks are defined
+  if (!prayerTimes) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.nextPrayerHeader}>
+          <View style={styles.nextPrayerInfo}>
+            <Feather name="clock" size={18} color="#FFFFFF" />
+            <Text style={styles.nextPrayerText}>No Prayer Times Available</Text>
+          </View>
+        </View>
+        <View style={styles.timesLine}>
+          <Text style={styles.timesText}>
+            Please select a masjid to view prayer times
+          </Text>
+        </View>
+      </View>
+    )
+  }
 
   return (
     <View style={styles.container}>

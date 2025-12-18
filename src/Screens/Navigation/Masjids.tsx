@@ -42,7 +42,6 @@ const Masjids: React.FC<NavProps> = ({ navigation, route }) => {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    // simple one-time coarse location; replace with dedicated hook if desired
     ;(async () => {
       try {
         const loc = await getCoarseLocation()
@@ -111,7 +110,14 @@ const Masjids: React.FC<NavProps> = ({ navigation, route }) => {
       const userId = await getUserId()
       await setPinned(userId, orgId)
       toast.success('Masjid selected', 'Success')
-      if (showBackButton && navigation) navigation.goBack()
+      if (showBackButton && navigation) {
+        try {
+          navigation.goBack()
+        } catch {
+          // Intentionally ignore navigation error if can't go back
+          console.debug('Navigation goBack failed - no screen to go back to')
+        }
+      }
     } catch (e) {
       console.error(e)
       toast.error('Failed to select masjid', 'Error')

@@ -30,6 +30,22 @@ const NextPrayerCard: React.FC<NextPrayerCardProps> = ({ prayerTimes }) => {
   }>({ name: '', adhan: '', iqaamah: '' })
   const [timeRemaining, setTimeRemaining] = useState('')
 
+  if (!prayerTimes) {
+    return (
+      <View style={styles.nextPrayerCard}>
+        <View style={styles.leftSection}>
+          <Feather name="clock" size={20} color="#FFFFFF" />
+        </View>
+        <View style={styles.centerSection}>
+          <Text style={styles.nextPrayerName}>No Prayer Times Available</Text>
+          <Text style={styles.prayerTime}>
+            Please select a masjid to view prayer times
+          </Text>
+        </View>
+      </View>
+    )
+  }
+
   const formatTime = (time?: string, prayerName = '') => {
     if (!time) return ''
     const [timeStr] = time.split('.')

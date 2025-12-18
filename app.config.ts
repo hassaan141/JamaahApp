@@ -14,7 +14,7 @@ const getIcon = () => {
 // 3. GET DISPLAY NAME (What user sees on screen)
 const getDisplayName = () => {
   if (isDev) return 'Jamaah (Dev)'
-  return 'JamaahApp'
+  return 'Jamaah'
 }
 
 // 4. GET BUNDLE ID (Crucial for side-by-side install)

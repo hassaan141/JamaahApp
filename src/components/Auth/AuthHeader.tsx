@@ -22,7 +22,7 @@ export default function AuthHeader({
         <Feather name="moon" size={60} color="#FFFFFF" />
       </View>
       <Text style={styles.appName}>Jamaah</Text>
-      <Text style={styles.appTagline}>Prayer Times & Masjid Finder</Text>
+      <Text style={styles.appTagline}>Get Connected To Your Community</Text>
     </View>
   )
 }

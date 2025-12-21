@@ -424,6 +424,12 @@ export interface Database {
           id: string
           name: string
           address: string
+          city: string
+          province_state: string
+          country: string
+          latitude: number
+          longitude: number
+          contact_phone: string
           distance_km: number | null
         }>
       }

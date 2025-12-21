@@ -28,15 +28,28 @@ export default function Home({ navigation }: { navigation: NavigationLike }) {
 
   useFocusEffect(
     useCallback(() => {
-      refetchPrayerTimes()
+      // We fire this without awaiting so it doesn't block the UI navigation
+      refetchPrayerTimes().catch((err) =>
+        console.log('Focus fetch failed (likely network):', err),
+      )
     }, [refetchPrayerTimes]),
   )
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true)
     try {
-      await refetchPrayerTimes()
+      // Create a timeout promise that rejects after 10 seconds
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Network request timed out')), 10000),
+      )
+
+      // Race the actual fetch against the timeout
+      // Whichever finishes first wins. If connection is bad, timeout wins.
+      await Promise.race([refetchPrayerTimes(), timeoutPromise])
+    } catch (error) {
+      console.log('Refresh skipped due to timeout or error:', error)
     } finally {
+      // This ensures the spinner ALWAYS goes away, even if internet is dead
       setRefreshing(false)
     }
   }, [refetchPrayerTimes])

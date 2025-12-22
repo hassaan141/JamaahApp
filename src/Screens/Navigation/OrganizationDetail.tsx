@@ -91,6 +91,8 @@ const OrganizationHeader = ({
     switch (t?.toLowerCase()) {
       case 'masjid':
         return { bg: '#BBF7D0', text: '#166534' }
+      case 'msa':
+        return { bg: '#F3E8FF', text: '#5B21B6' }
       case 'islamic-school':
         return { bg: '#FEF08A', text: '#CA8A04' }
       case 'sisters-group':
@@ -509,12 +511,12 @@ export default function OrganizationDetail() {
         followerCount={followerCount}
       />
 
-      <AmenitiesCard org={org} />
-
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Recent Announcements</Text>
         {renderAnnouncementsSection()}
       </View>
+
+      <AmenitiesCard org={org} />
 
       <ContactInfoCard org={org} />
     </ScrollView>

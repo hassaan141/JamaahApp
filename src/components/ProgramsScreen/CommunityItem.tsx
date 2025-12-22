@@ -52,7 +52,7 @@ export default function CommunityItem({ community }: Props) {
   const description =
     (community as unknown as { description?: string }).description ?? ''
   const hasLongDescription = (description || '').length > 140
-  const displayDescription = description || 'No description provided'
+  const displayDescription = description || ''
 
   const getOrgTypeIcon = (
     type: string,

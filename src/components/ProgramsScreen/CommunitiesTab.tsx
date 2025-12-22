@@ -2,7 +2,6 @@ import React, { useEffect, useState, useCallback } from 'react'
 import {
   View,
   Text,
-  ActivityIndicator,
   ScrollView,
   StyleSheet,
   RefreshControl,
@@ -11,6 +10,7 @@ import { searchOrganizations } from '@/Supabase/fetchOrganizations'
 import type { Organization } from '@/types'
 import CommunityItem from './CommunityItem'
 import MasjidSearchBar from '@/components/MasjidScreen/MasjidSearchBar'
+import LoadingAnimation from '@/components/Loading/Loading'
 
 export default function CommunitiesTab() {
   const [loading, setLoading] = useState(false)
@@ -45,12 +45,7 @@ export default function CommunitiesTab() {
   }, [debouncedQuery, loadCommunities])
 
   if (loading && (!Array.isArray(communities) || communities.length === 0)) {
-    return (
-      <View style={styles.centeredContainer}>
-        <ActivityIndicator size="large" color="#38A169" />
-        <Text style={styles.loadingText}>Loading communities...</Text>
-      </View>
-    )
+    return <LoadingAnimation />
   }
 
   return (

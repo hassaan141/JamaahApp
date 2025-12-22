@@ -68,10 +68,12 @@ const OrganizationHeader = ({
     switch (t?.toLowerCase()) {
       case 'masjid':
         return 'home'
+      case 'msa':
+        return 'users'
       case 'islamic-school':
         return 'book-open'
       case 'sisters-group':
-        return 'users'
+        return 'heart'
       case 'youth-group':
         return 'user-plus'
       case 'book-club':

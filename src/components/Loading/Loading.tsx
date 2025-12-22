@@ -69,7 +69,7 @@ export default function LoadingAnimation() {
         >
           <Feather name="moon" size={40} color="#48BB78" />
         </Animated.View>
-        <Text style={styles.loadingText}>Loading Prayer Times</Text>
+        <Text style={styles.loadingText}>Loading</Text>
         <View style={styles.dotsContainer}>
           <Animated.View
             style={[

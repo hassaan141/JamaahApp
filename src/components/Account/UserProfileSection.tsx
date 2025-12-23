@@ -53,7 +53,7 @@ export default function UserProfileSection({
     try {
       const [posts, followers] = await Promise.all([
         fetchOrgPostCount(profile.org_id),
-        fetchOrgFollowerCount(),
+        fetchOrgFollowerCount(profile.org_id),
       ])
       return {
         posts: typeof posts === 'number' ? posts : 0,

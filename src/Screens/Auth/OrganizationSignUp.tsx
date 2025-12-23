@@ -81,7 +81,8 @@ export default function OrganizationSignUp({
 
   const orgTypeOptions = useMemo<Option[]>(
     () => [
-      { label: 'Masjid', value: 'masjid' },
+      { label: 'Masjid / Mussalah', value: 'masjid' },
+      { label: 'MSA', value: 'msa' },
       { label: 'Islamic School', value: 'islamic_school' },
       { label: 'Sisters Group', value: 'sisters_group' },
       { label: 'Youth Group', value: 'youth_group' },

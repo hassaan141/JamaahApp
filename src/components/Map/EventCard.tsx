@@ -1,7 +1,12 @@
 import React from 'react'
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
-import type { OrgPost } from '@/types'
+import type { EventItem } from '@/Supabase/fetchEventsFromRPC'
+
+type EventWithExtras = EventItem & {
+  recurs_on_days?: (string | number)[] | null
+  organizations?: { name: string } | null
+}
 
 const getEventTypeIcon = (
   postType: string | null,
@@ -57,17 +62,18 @@ export default function EventCard({
   onPress,
   onDirections,
 }: {
-  event: OrgPost
+  event: EventItem
   onPress?: () => void
-  onDirections?: (event: OrgPost) => void
+  onDirections?: (event: EventItem) => void
 }) {
   const iconName = getEventTypeIcon(event.post_type)
   const iconColor = getEventTypeColor(event.post_type)
 
   const isRepeating = event.post_type === 'Repeating_classes'
+
   const recurringDisplay = (() => {
     if (!isRepeating) return ''
-    const days = event.recurs_on_days
+    const days = (event as EventWithExtras).recurs_on_days
     if (!days || days.length === 0) return ''
     const dayNames = [
       'Monday',
@@ -106,13 +112,16 @@ export default function EventCard({
           <Feather name="map-pin" size={12} color="#718096" />
           <Text style={styles.location} numberOfLines={1}>
             {event.location || 'Location TBD'}
+            {event.dist_km ? ` • ${event.dist_km.toFixed(1)} km` : ''}
           </Text>
         </View>
       </View>
 
       <View style={styles.organizationRow}>
         <Feather name="users" size={12} color="#718096" />
-        <Text style={styles.organizationText}>{event.organizations?.name}</Text>
+        <Text style={styles.organizationText}>
+          {(event as EventWithExtras).organizations?.name}
+        </Text>
       </View>
 
       {(event.date || recurringDisplay) && (

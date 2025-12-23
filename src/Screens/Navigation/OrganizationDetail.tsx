@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import {
   View,
   Text,
   StyleSheet,
-  FlatList,
   ActivityIndicator,
   ScrollView,
   TouchableOpacity,
@@ -57,10 +56,12 @@ const OrganizationHeader = ({
   onFollowToggle: () => void
   followerCount?: number | null
 }) => {
+  const [expanded, setExpanded] = useState(false)
   const organizationName = org.name || 'Organization'
   const description = org.description || ''
   const memberCount = org.member_count || 0
   const type = org.type ?? ''
+  const hasLongDescription = description.length > 140
 
   const getOrgTypeIcon = (
     t?: string,
@@ -68,10 +69,12 @@ const OrganizationHeader = ({
     switch (t?.toLowerCase()) {
       case 'masjid':
         return 'home'
+      case 'msa':
+        return 'users'
       case 'islamic-school':
         return 'book-open'
       case 'sisters-group':
-        return 'users'
+        return 'heart'
       case 'youth-group':
         return 'user-plus'
       case 'book-club':
@@ -89,6 +92,8 @@ const OrganizationHeader = ({
     switch (t?.toLowerCase()) {
       case 'masjid':
         return { bg: '#BBF7D0', text: '#166534' }
+      case 'msa':
+        return { bg: '#F3E8FF', text: '#5B21B6' }
       case 'islamic-school':
         return { bg: '#FEF08A', text: '#CA8A04' }
       case 'sisters-group':
@@ -103,6 +108,29 @@ const OrganizationHeader = ({
         return { bg: '#A7F3D0', text: '#059669' }
       default:
         return { bg: '#E2E8F0', text: '#64748B' }
+    }
+  }
+
+  const getOrgTypeLabel = (type: string): string => {
+    switch (type?.toLowerCase()) {
+      case 'masjid':
+        return 'Masjid'
+      case 'msa':
+        return 'MSA'
+      case 'islamic-school':
+        return 'Islamic School'
+      case 'sisters-group':
+        return 'Sisters Group'
+      case 'youth-group':
+        return 'Youth Group'
+      case 'book-club':
+        return 'Book Club'
+      case 'book-store':
+        return 'Book Store'
+      case 'run-club':
+        return 'Run Club'
+      default:
+        return 'Organization'
     }
   }
 
@@ -126,15 +154,32 @@ const OrganizationHeader = ({
             {organizationName}
           </Text>
           {description ? (
-            <Text style={styles.organizationDescription} numberOfLines={3}>
-              {description}
-            </Text>
+            <>
+              <Text
+                style={styles.organizationDescription}
+                numberOfLines={expanded ? undefined : 3}
+              >
+                {description}
+              </Text>
+
+              {hasLongDescription && (
+                <TouchableOpacity
+                  onPress={() => setExpanded(!expanded)}
+                  activeOpacity={0.7}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Text style={styles.readMoreText}>
+                    {expanded ? 'Show less' : 'Read more'}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </>
           ) : null}
           {type ? (
             <Text
               style={[styles.typeLabel, { color: getOrgTypeColor(type).text }]}
             >
-              {type.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+              {getOrgTypeLabel(type)}
             </Text>
           ) : null}
         </View>
@@ -260,8 +305,6 @@ const ContactInfoCard = ({ org }: { org: OrgParam }) => {
   )
 }
 
-// Using shared AnnouncementCard component imported above
-
 const AmenitiesCard = ({ org }: { org: OrgParam }) => {
   const amenities = org.amenities || {}
   const items: {
@@ -337,6 +380,124 @@ const EmptyState = ({
   </View>
 )
 
+const TABS = [
+  { label: 'Classes', value: 'CLASSES' },
+  { label: 'Events', value: 'EVENTS' },
+  { label: 'Volunteer', value: 'VOLUNTEER' },
+]
+
+const AnnouncementsSection = ({
+  announcements,
+  loading,
+  error,
+}: {
+  announcements: OrgPost[]
+  loading: boolean
+  error: string | null
+}) => {
+  const [activeTab, setActiveTab] = useState('CLASSES')
+  const [isExpanded, setIsExpanded] = useState(false)
+
+  const filteredAnnouncements = useMemo(() => {
+    return announcements.filter((item) => {
+      const type = item.post_type || ''
+      if (activeTab === 'CLASSES') return type === 'Repeating_classes'
+      if (activeTab === 'EVENTS') return type === 'Event'
+      if (activeTab === 'VOLUNTEER') return type === 'Volunteerng'
+      return true
+    })
+  }, [announcements, activeTab])
+
+  useEffect(() => {
+    setIsExpanded(false)
+  }, [activeTab])
+
+  const visibleAnnouncements = isExpanded
+    ? filteredAnnouncements
+    : filteredAnnouncements.slice(0, 2)
+  const hiddenCount = Math.max(0, filteredAnnouncements.length - 2)
+
+  const handleExpand = () => setIsExpanded(true)
+  const handleCollapse = () => setIsExpanded(false)
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#2D6A4F" />
+        <Text style={styles.loadingText}>Loading announcements...</Text>
+      </View>
+    )
+  }
+  if (error) return <EmptyState message={error} icon="alert-circle" />
+  if (!announcements.length)
+    return <EmptyState message="No announcements yet" icon="inbox" />
+
+  return (
+    <View>
+      <View style={styles.tabContainer}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {TABS.map((tab) => {
+            const isActive = activeTab === tab.value
+            return (
+              <TouchableOpacity
+                key={tab.value}
+                style={[styles.tab, isActive && styles.activeTab]}
+                onPress={() => setActiveTab(tab.value)}
+                activeOpacity={0.7}
+              >
+                <Text
+                  style={[styles.tabText, isActive && styles.activeTabText]}
+                >
+                  {tab.label}
+                </Text>
+              </TouchableOpacity>
+            )
+          })}
+        </ScrollView>
+      </View>
+
+      {filteredAnnouncements.length === 0 ? (
+        <View style={styles.emptyStateContainer}>
+          <Text style={styles.emptyText}>
+            No {activeTab.toLowerCase()} found.
+          </Text>
+        </View>
+      ) : (
+        <>
+          <View style={styles.announcementsList}>
+            {visibleAnnouncements.map((item) => (
+              <AnnouncementCard key={item.id} announcement={item} />
+            ))}
+          </View>
+
+          {!isExpanded && hiddenCount > 0 && (
+            <TouchableOpacity
+              style={styles.expandButton}
+              onPress={handleExpand}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.expandButtonText}>
+                +{hiddenCount} more {activeTab.toLowerCase()}
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          {isExpanded && (
+            <TouchableOpacity
+              style={styles.collapseButton}
+              onPress={handleCollapse}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.collapseButtonText}>Show less</Text>
+              <Feather name="chevron-up" size={16} color="#718096" />
+            </TouchableOpacity>
+          )}
+        </>
+      )}
+    </View>
+  )
+}
+
 type OrgDetailRoute = RouteProp<
   Record<'OrganizationDetail', { org?: OrgParam }>,
   'OrganizationDetail'
@@ -385,12 +546,13 @@ export default function OrganizationDetail() {
     }
   }, [orgId, org?.is_following])
 
-  // Fetch follower count (uses helper that returns current org's follower count)
+  // Fetch follower count
   useEffect(() => {
+    if (!orgId) return
     let mounted = true
     const loadCount = async () => {
       try {
-        const c = await fetchOrgFollowerCount()
+        const c = await fetchOrgFollowerCount(orgId)
         if (mounted) setFollowerCount(c)
       } catch (err) {
         console.error('Error fetching follower count', err)
@@ -400,7 +562,7 @@ export default function OrganizationDetail() {
     return () => {
       mounted = false
     }
-  }, [])
+  }, [orgId])
 
   // Fetch announcements
   useEffect(() => {
@@ -438,39 +600,15 @@ export default function OrganizationDetail() {
       } else {
         await OrgFollow.followOrganization(orgId)
       }
+      // Re-fetch follower count after toggle
+      const c = await fetchOrgFollowerCount(orgId)
+      setFollowerCount(c)
     } catch (err) {
       console.error('Error toggling follow:', err)
       setFollowing(previousFollowState)
     } finally {
       setFollowLoading(false)
     }
-  }
-
-  const renderAnnouncementItem = ({ item }: { item: OrgPost }) => (
-    <AnnouncementCard announcement={item} />
-  )
-
-  const renderAnnouncementsSection = () => {
-    if (loading) {
-      return (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#2D6A4F" />
-          <Text style={styles.loadingText}>Loading announcements...</Text>
-        </View>
-      )
-    }
-    if (error) return <EmptyState message={error} icon="alert-circle" />
-    if (!announcements.length)
-      return <EmptyState message="No announcements yet" icon="inbox" />
-    return (
-      <FlatList
-        data={announcements}
-        keyExtractor={(item) => String(item.id)}
-        renderItem={renderAnnouncementItem}
-        scrollEnabled={false}
-        contentContainerStyle={styles.announcementsList}
-      />
-    )
   }
 
   if (!org) {
@@ -507,12 +645,16 @@ export default function OrganizationDetail() {
         followerCount={followerCount}
       />
 
-      <AmenitiesCard org={org} />
-
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Recent Announcements</Text>
-        {renderAnnouncementsSection()}
+        <AnnouncementsSection
+          announcements={announcements}
+          loading={loading}
+          error={error}
+        />
       </View>
+
+      {org.type?.toLowerCase() === 'masjid' && <AmenitiesCard org={org} />}
 
       <ContactInfoCard org={org} />
     </ScrollView>
@@ -575,6 +717,13 @@ const styles = StyleSheet.create({
     color: '#52796F',
     fontWeight: '600',
     marginLeft: 4,
+  },
+  readMoreText: {
+    color: '#2563EB',
+    fontSize: 13,
+    fontWeight: '600',
+    marginTop: 2,
+    marginBottom: 6,
   },
   followButton: {
     backgroundColor: '#2D6A4F',
@@ -646,48 +795,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginBottom: 16,
   },
-  announcementsList: { paddingHorizontal: 16 },
-  announcementCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: '#E8F5E9',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.03,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  announcementHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  announcementTypeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  announcementType: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#2D6A4F',
-    marginLeft: 4,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  announcementTime: { fontSize: 12, color: '#52796F' },
-  announcementTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1B4332',
-    marginBottom: 4,
-    lineHeight: 22,
-  },
-  announcementBody: { fontSize: 14, color: '#52796F', lineHeight: 20 },
+  announcementsList: { paddingHorizontal: 16, gap: 12 },
   loadingContainer: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -716,7 +824,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E8F5E9',
   },
-  amenitiesList: { marginTop: 8, flexDirection: 'row', flexWrap: 'wrap' },
   amenitiesRow: {
     marginTop: 8,
     flexDirection: 'row',
@@ -754,4 +861,69 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   linkPillLabel: { marginLeft: 8, fontSize: 13, color: '#1B4332' },
+  tabContainer: {
+    flexDirection: 'row',
+    marginBottom: 16,
+    paddingHorizontal: 16,
+  },
+  tab: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    backgroundColor: '#EDF2F7',
+    marginRight: 8,
+  },
+  activeTab: {
+    backgroundColor: '#48BB78',
+  },
+  tabText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#718096',
+  },
+  activeTabText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  expandButton: {
+    alignItems: 'center',
+    padding: 12,
+    backgroundColor: '#F7FAFC',
+    borderRadius: 8,
+    marginTop: 12,
+    marginHorizontal: 16,
+  },
+  expandButtonText: {
+    fontSize: 14,
+    color: '#48BB78',
+    fontWeight: '500',
+  },
+  collapseButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+    backgroundColor: '#F7FAFC',
+    borderRadius: 8,
+    marginTop: 12,
+    marginHorizontal: 16,
+  },
+  collapseButtonText: {
+    fontSize: 14,
+    color: '#718096',
+    fontWeight: '500',
+    marginRight: 4,
+  },
+  emptyStateContainer: {
+    alignItems: 'center',
+    paddingVertical: 20,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+  },
+  emptyText: {
+    textAlign: 'center',
+    fontSize: 14,
+    color: '#4A5568',
+    maxWidth: 260,
+  },
 })

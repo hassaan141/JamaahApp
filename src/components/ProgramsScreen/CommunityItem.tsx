@@ -52,7 +52,7 @@ export default function CommunityItem({ community }: Props) {
   const description =
     (community as unknown as { description?: string }).description ?? ''
   const hasLongDescription = (description || '').length > 140
-  const displayDescription = description || 'No description provided'
+  const displayDescription = description || ''
 
   const getOrgTypeIcon = (
     type: string,
@@ -60,10 +60,12 @@ export default function CommunityItem({ community }: Props) {
     switch (type?.toLowerCase()) {
       case 'masjid':
         return 'home'
+      case 'msa':
+        return 'users'
       case 'islamic-school':
         return 'book-open'
       case 'sisters-group':
-        return 'users'
+        return 'heart'
       case 'youth-group':
         return 'user-plus'
       case 'book-club':
@@ -81,6 +83,8 @@ export default function CommunityItem({ community }: Props) {
     switch (type?.toLowerCase()) {
       case 'masjid':
         return 'Masjid'
+      case 'msa':
+        return 'MSA'
       case 'islamic-school':
         return 'Islamic School'
       case 'sisters-group':
@@ -102,6 +106,8 @@ export default function CommunityItem({ community }: Props) {
     switch (type?.toLowerCase()) {
       case 'masjid':
         return { bg: '#BBF7D0', text: '#166534' }
+      case 'msa':
+        return { bg: '#F3E8FF', text: '#5B21B6' }
       case 'islamic-school':
         return { bg: '#FEF08A', text: '#CA8A04' }
       case 'sisters-group':

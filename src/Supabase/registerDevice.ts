@@ -118,7 +118,7 @@ export async function cleanupInvalidToken(profileId: string, fcmToken: string) {
     if (error) {
       console.error('Error cleaning up invalid token:', error)
     } else {
-      console.log(`🧹 Cleaned up invalid token for user ${profileId}`)
+      console.log(`Cleaned up invalid token for user ${profileId}`)
     }
   } catch (error) {
     console.error('Error in cleanupInvalidToken:', error)

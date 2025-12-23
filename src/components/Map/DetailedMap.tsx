@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
+import type { Region } from 'react-native-maps';
 import MapView, { Marker, Circle, Callout } from 'react-native-maps'
 import {
   StyleSheet,
@@ -18,6 +19,34 @@ import LoadingAnimation from '@/components/Loading/Loading'
 import mosqueIcon from '../../../assets/mosque.png'
 import type { MasjidItem } from '@/Hooks/useMasjidList'
 import type { OrgPost } from '@/types'
+
+// --- Types ---
+
+// FIX: 'event' must be optional to match the library's 'WebviewLeafletMessage' type
+interface LeafletWebViewMessage {
+  event?: string
+  payload?: {
+    mapCenterPosition?: {
+      lat: number
+      lng: number
+    }
+  }
+}
+
+// --- Helpers ---
+
+const debounce = <T extends unknown[], R>(
+  func: (...args: T) => R,
+  waitFor: number,
+) => {
+  let timeout: ReturnType<typeof setTimeout> | null = null
+
+  return (...args: T): Promise<R> =>
+    new Promise((resolve) => {
+      if (timeout) clearTimeout(timeout)
+      timeout = setTimeout(() => resolve(func(...args)), waitFor)
+    })
+}
 
 const getEventTypeIcon = (
   postType: string | null,
@@ -79,8 +108,48 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
   const [events, setEvents] = useState<OrgPost[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const mapRef = useRef<MapView>(null)
 
+  const mapRef = useRef<MapView>(null)
+  const isFetching = useRef(false)
+  const hasInitialZoomed = useRef(false)
+
+  const fetchAndSetMasjids = useCallback(async (lat: number, lon: number) => {
+    if (isFetching.current) return
+    isFetching.current = true
+
+    try {
+      const newMasjids = await fetchNearbyMasjids(lat, lon)
+
+      setNearbyMasjids((prevMasjids) => {
+        const existingIds = new Set(prevMasjids.map((m) => m.id))
+        const filteredNewMasjids = (newMasjids as MasjidItem[]).filter(
+          (m) => !existingIds.has(m.id),
+        )
+        return [...prevMasjids, ...filteredNewMasjids]
+      })
+    } catch (err) {
+      console.error('Error fetching on pan:', err)
+    } finally {
+      isFetching.current = false
+    }
+  }, [])
+
+  const debouncedRegionFetch = useCallback(
+    debounce((newRegion: Region) => {
+      fetchAndSetMasjids(newRegion.latitude, newRegion.longitude)
+    }, 500),
+    [fetchAndSetMasjids],
+  )
+
+  const onRegionChangeComplete = (newRegion: Region) => {
+    if (loading) return
+
+    if (mode === 'masjids') {
+      debouncedRegionFetch(newRegion)
+    }
+  }
+
+  // Initial Load
   useEffect(() => {
     const loadData = async () => {
       if (!location) {
@@ -91,27 +160,36 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
       try {
         setError(null)
         if (mode === 'masjids') {
-          const ten_masjid_list = await fetchNearbyMasjids(
+          // Fetch initial data
+          const initialList = await fetchNearbyMasjids(
             location.latitude,
             location.longitude,
           )
-          setNearbyMasjids(ten_masjid_list as MasjidItem[])
+          setNearbyMasjids(initialList as MasjidItem[])
         } else {
           const posts = await fetchAnnouncements()
           setEvents(posts)
         }
-        setLoading(false)
       } catch (err: unknown) {
         console.error('Error loading map data:', err)
         setError((err as Error)?.message ?? 'Failed to load data')
+      } finally {
         setLoading(false)
       }
     }
     loadData()
   }, [location, mode])
 
+  // Auto-zoom Effect
   useEffect(() => {
     if (!mapRef.current || !location) return
+
+    if (hasInitialZoomed.current) return
+
+    const dataToCheck = mode === 'masjids' ? nearbyMasjids : events
+    if (dataToCheck.length === 0) return
+
+    hasInitialZoomed.current = true
 
     const userCoord = {
       latitude: location.latitude,
@@ -127,17 +205,16 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
       return dLat * dLat + dLon * dLon
     }
 
-    // collect marker coordinates, sort by proximity to user, take up to 3 nearest
     const markerCoords: { latitude: number; longitude: number }[] =
       mode === 'masjids'
         ? nearbyMasjids
-            .filter((m) => m.latitude != null && m.longitude != null)
+            .filter((m) => m.latitude && m.longitude && m.latitude !== 0)
             .map((m) => ({
               latitude: m.latitude as number,
               longitude: m.longitude as number,
             }))
         : events
-            .filter((e) => e.lat != null && e.long != null)
+            .filter((e) => e.lat && e.long && e.lat !== 0)
             .map((e) => ({
               latitude: e.lat as number,
               longitude: e.long as number,
@@ -151,10 +228,12 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
     const targets = [userCoord, ...nearest]
 
     if (targets.length > 1) {
-      mapRef.current.fitToCoordinates(targets, {
-        edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
-        animated: true,
-      })
+      setTimeout(() => {
+        mapRef.current?.fitToCoordinates(targets, {
+          edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
+          animated: true,
+        })
+      }, 500)
     }
   }, [nearbyMasjids, events, mode, location])
 
@@ -170,7 +249,6 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
     )
   }
 
-  // Android: Use react-native-leaflet-view, iOS: Use existing MapView
   if (Platform.OS === 'android') {
     const mapLayers = [
       {
@@ -182,7 +260,6 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
       },
     ]
 
-    // Create a mosque SVG icon for Android since Image.resolveAssetSource doesn't work in HTML context
     const mosqueSvgIcon = `
       <div style="
         width: 30px; 
@@ -209,7 +286,6 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
         size: { x: 20, y: 20 },
         iconAnchor: { x: 10, y: 10 },
       },
-      // Add other markers based on mode
       ...(mode === 'masjids'
         ? nearbyMasjids
             .filter((m) => m.latitude && m.longitude)
@@ -266,6 +342,17 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
             lng: location.longitude,
           }}
           zoom={13}
+          onMessageReceived={(msg: LeafletWebViewMessage) => {
+            if (msg.event === 'onMoveEnd' && msg.payload?.mapCenterPosition) {
+              const { lat, lng } = msg.payload.mapCenterPosition
+              onRegionChangeComplete({
+                latitude: lat,
+                longitude: lng,
+                latitudeDelta: 0.05,
+                longitudeDelta: 0.05,
+              } as Region)
+            }
+          }}
         />
       </View>
     )
@@ -285,6 +372,7 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
         showsUserLocation={true}
         showsMyLocationButton={true}
         followsUserLocation={false}
+        onRegionChangeComplete={onRegionChangeComplete}
       >
         <Marker
           coordinate={{

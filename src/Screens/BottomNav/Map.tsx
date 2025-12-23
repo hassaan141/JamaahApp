@@ -10,7 +10,7 @@ import {
 } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
 import DetailedMap from '@/components/Map/DetailedMap'
-import MasjidSearchBar from '@/components/MasjidScreen/MasjidSearchBar'
+import SearchBar from '@/components/SearchBar/SearchBar'
 import MapHeader from '@/components/Map/MapHeader'
 import MapTabs from '@/components/Map/MapTabs'
 import CompactMapView from '@/components/Map/CompactMapView'
@@ -20,28 +20,67 @@ import NoResults from '@/components/Map/NoResults'
 import { useLocation } from '@/Utils/useLocation'
 import LoadingAnimation from '@/components/Loading/Loading'
 import { openDirections, openCall } from '@/Utils/links'
+
+// 1. Import your new hooks and types
 import { useMasjidList, type MasjidItem } from '@/Hooks/useMasjidList'
-import { fetchAnnouncements } from '@/Supabase/fetchAllAnnouncements'
-import type { OrgPost } from '@/types'
+import { useEventList } from '@/Hooks/useEventList' // <--- NEW: Import the event hook
+import type { EventItem } from '@/Supabase/fetchEventsFromRPC' // <--- NEW: Import correct type
+
+// Define a base type for events in the list, which may not have the calculated distance
+type EventListEvent = Omit<EventItem, 'dist_km'>
 
 export default function MapScreen() {
   const [isExpanded, setIsExpanded] = useState(false)
-  const [mapMode, setMapMode] = useState<'masjids' | 'events'>('masjids')
-  const [events, setEvents] = useState<OrgPost[]>([])
-  const [eventsLoading, setEventsLoading] = useState(false)
+  const [mapMode, setMapMode] = useState<'masjids' | 'events'>('events')
+
+  // 2. Remove the old "events" useState and useEffect.
+  // We don't need manual fetching anymore.
+
   const fadeAnim = useRef(new Animated.Value(1)).current
   const slideAnim = useRef(new Animated.Value(0)).current
   const { location } = useLocation()
-  const {
-    filteredMasjids,
-    loading,
-    error,
-    refreshing,
-    searchQuery,
-    handleSearch,
-    handleClearSearch,
-    onRefresh,
-  } = useMasjidList(location as { latitude: number; longitude: number } | null)
+
+  // 3. Initialize BOTH hooks
+  const masjidLogic = useMasjidList(location)
+  const eventLogic = useEventList(location) // <--- NEW: Init event logic
+
+  // 4. Create "Dynamic" variables based on the current mode
+  // This acts as the "Traffic Controller" for your UI
+  const isMasjidMode = mapMode === 'masjids'
+
+  const currentSearchQuery = isMasjidMode
+    ? masjidLogic.searchQuery
+    : eventLogic.searchQuery
+
+  const currentLoading = isMasjidMode ? masjidLogic.loading : eventLogic.loading
+
+  const currentError = isMasjidMode ? masjidLogic.error : eventLogic.error
+
+  const handleUnifiedSearch = (text: string) => {
+    if (isMasjidMode) {
+      masjidLogic.handleSearch(text)
+    } else {
+      eventLogic.handleSearch(text)
+    }
+  }
+
+  const handleUnifiedClear = () => {
+    if (isMasjidMode) {
+      masjidLogic.handleClearSearch()
+    } else {
+      eventLogic.handleClearSearch()
+    }
+  }
+
+  const handleUnifiedRefresh = () => {
+    if (isMasjidMode) {
+      masjidLogic.onRefresh()
+    } else {
+      eventLogic.onRefresh()
+    }
+  }
+
+  // --- Handlers ---
 
   const handleMasjidPress = (masjid: MasjidItem) => {
     console.log('Masjid selected:', masjid?.name)
@@ -70,34 +109,25 @@ export default function MapScreen() {
     openCall(masjid?.contact_phone || masjid?.phone)
   }
 
-  const handleEventPress = (event: OrgPost) => {
+  // Updated to use EventListEvent type
+  const handleEventPress = (event: EventListEvent) => {
     console.log('Event selected:', event?.title)
   }
 
-  const handleEventDirections = (event: OrgPost) => {
+  const handleEventDirections = (event: EventListEvent) => {
     if (event.lat && event.long) {
       openDirections({
         userLat: location?.latitude ?? null,
         userLon: location?.longitude ?? null,
         destLat: event.lat,
         destLon: event.long,
-        destAddress: event.location || null,
+        destAddress: event.location || null, // Updated to match new RPC return
         placeLabel: event.title ?? '',
       })
     }
   }
 
-  // Load events when tab changes to events
-  React.useEffect(() => {
-    if (mapMode === 'events') {
-      setEventsLoading(true)
-      fetchAnnouncements()
-        .then((data) => setEvents(Array.isArray(data) ? data : []))
-        .catch((err) => console.error('Error loading events:', err))
-        .finally(() => setEventsLoading(false))
-    }
-  }, [mapMode])
-
+  // --- Animation Logic (Unchanged) ---
   const expandMap = () => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
@@ -167,15 +197,25 @@ export default function MapScreen() {
       <ScrollView
         style={styles.content}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl
+            refreshing={
+              isMasjidMode ? masjidLogic.refreshing : eventLogic.refreshing
+            }
+            onRefresh={handleUnifiedRefresh}
+          />
         }
       >
         <View style={styles.searchContainer}>
-          <MasjidSearchBar
-            value={searchQuery}
-            onChangeText={handleSearch}
-            onClear={handleClearSearch}
-            placeholder="Search for masjids nearby..."
+          {/* 5. Update Search Bar to use Unified Handlers */}
+          <SearchBar
+            value={currentSearchQuery}
+            onChangeText={handleUnifiedSearch}
+            onClear={handleUnifiedClear}
+            placeholder={
+              isMasjidMode
+                ? 'Search for masjids nearby...'
+                : "Search events (e.g. 'Quran', 'Sisters')..."
+            }
           />
         </View>
 
@@ -188,56 +228,62 @@ export default function MapScreen() {
           <CompactMapView mode={mapMode} />
         </View>
 
-        {(loading || eventsLoading) && (
+        {currentLoading && (
           <View style={styles.loadingContainer}>
             <LoadingAnimation />
             <Text style={styles.loadingText}>
-              {mapMode === 'masjids'
-                ? 'Loading masjids...'
-                : 'Loading events...'}
+              {isMasjidMode ? 'Loading masjids...' : 'Loading events...'}
             </Text>
           </View>
         )}
 
-        {error && (
+        {currentError && (
           <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>{error}</Text>
+            <Text style={styles.errorText}>{currentError}</Text>
           </View>
         )}
 
-        {!loading && !error && !eventsLoading && (
+        {!currentLoading && !currentError && (
           <View style={styles.masjidListContainer}>
             <Text style={styles.masjidListTitle}>
-              {mapMode === 'masjids'
-                ? searchQuery
-                  ? `Search Results (${filteredMasjids.length})`
+              {isMasjidMode
+                ? currentSearchQuery
+                  ? `Search Results (${masjidLogic.filteredMasjids.length})`
                   : 'Nearest Masjids'
-                : 'Upcoming Events & Classes'}
+                : currentSearchQuery
+                  ? `Search Results (${eventLogic.events.length})`
+                  : 'Upcoming Events & Classes'}
             </Text>
-            {mapMode === 'masjids' ? (
-              filteredMasjids.length === 0 ? (
+
+            {/* 6. Render the Correct List based on mode */}
+            {isMasjidMode ? (
+              masjidLogic.filteredMasjids.length === 0 ? (
                 <NoResults
                   message={
-                    searchQuery.trim() === ''
+                    currentSearchQuery.trim() === ''
                       ? 'No masjids found in your area'
-                      : `No masjids found for "${searchQuery}"`
+                      : `No masjids found for "${currentSearchQuery}"`
                   }
                 />
               ) : (
                 <MasjidList
                   items={
-                    searchQuery ? filteredMasjids : filteredMasjids.slice(0, 3)
+                    currentSearchQuery
+                      ? masjidLogic.filteredMasjids
+                      : masjidLogic.filteredMasjids.slice(0, 3)
                   }
                   onPress={handleMasjidPress}
                   onDirections={handleDirections}
                   onCall={handleCall}
                 />
               )
-            ) : events.length === 0 ? (
+            ) : eventLogic.events.length === 0 ? (
               <NoResults message="No events found" />
             ) : (
               <EventList
-                items={events.slice(0, 3)}
+                // We slice(0,3) because this is just the "Preview" list
+                // The full list would be in a separate "See All" screen or similar
+                items={eventLogic.events.slice(0, 3)}
                 onPress={handleEventPress}
                 onDirections={handleEventDirections}
               />
@@ -249,6 +295,7 @@ export default function MapScreen() {
   )
 }
 
+// ... Styles remain exactly the same ...
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F7FAFC' },
   content: { flex: 1 },

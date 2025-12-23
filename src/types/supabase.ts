@@ -433,6 +433,30 @@ export interface Database {
           distance_km: number | null
         }>
       }
+      search_events: {
+        Args: {
+          user_lat: number
+          user_long: number
+          search_query: string
+          filter_demographic: string | null
+          limit_count: number
+          offset_count: number
+        }
+        Returns: Array<{
+          id: string
+          organization_id: string
+          title: string
+          body: string
+          date: string
+          start_time: string
+          end_time: string
+          location: string
+          demographic: string
+          lat: number
+          long: number
+          dist_km: number
+        }>
+      }
       register_device_token: {
         Args: {
           p_fcm_token: string

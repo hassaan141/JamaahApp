@@ -11,7 +11,7 @@ import { getCoarseLocation } from '@/Utils/useLocation'
 import { fetchNearbyMasjids } from '@/Supabase/fetchMasjidList'
 import { getUserId } from '@/Utils/getUserID'
 import { setPinned } from '@/Utils/switchMasjidMode'
-import MasjidSearchBar from '@/components/MasjidScreen/MasjidSearchBar'
+import SearchBar from '@/components/SearchBar/SearchBar'
 import MasjidListItem from '@/components/MasjidScreen/MasjidListItem'
 import LoadingAnimation from '@/components/Loading/Loading'
 import { toast } from '@/components/Toast/toast'
@@ -166,7 +166,7 @@ const Masjids: React.FC<NavProps> = ({ navigation, route }) => {
         </Text>
       )}
 
-      <MasjidSearchBar
+      <SearchBar
         value={q}
         onChangeText={onChangeSearch}
         onClear={clearSearch}

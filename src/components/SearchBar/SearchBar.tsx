@@ -1,19 +1,13 @@
 import React from 'react'
-import type {
-  TextInputProps} from 'react-native';
-import {
-  View,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet
-} from 'react-native'
+import type { TextInputProps } from 'react-native'
+import { View, TextInput, TouchableOpacity, StyleSheet } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
 
-export default function MasjidSearchBar({
+export default function SearchBar({
   value,
   onChangeText,
   onClear,
-  placeholder = 'Search masjids by name or location...',
+  placeholder = 'Search...',
   onSubmitEditing,
 }: {
   value: string

@@ -1,16 +1,18 @@
 import React from 'react'
 import { FlatList, StyleSheet } from 'react-native'
 import EventCard from '@/components/Map/EventCard'
-import type { OrgPost } from '@/types'
+// 1. Change Import: Use the new type we created
+import type { EventItem } from '@/Supabase/fetchEventsFromRPC'
 
 export default function EventList({
   items,
   onPress,
   onDirections,
 }: {
-  items: OrgPost[]
-  onPress: (item: OrgPost) => void
-  onDirections: (item: OrgPost) => void
+  // 2. Update Props: Expect EventItem instead of OrgPost
+  items: EventItem[]
+  onPress: (item: EventItem) => void
+  onDirections: (item: EventItem) => void
 }) {
   if (!items.length) return null
   return (

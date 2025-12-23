@@ -12,7 +12,7 @@ import { Feather } from '@expo/vector-icons'
 import { searchOrganizations } from '@/Supabase/fetchOrganizations'
 import type { Organization } from '@/types'
 import CommunityItem from './CommunityItem'
-import MasjidSearchBar from '@/components/MasjidScreen/MasjidSearchBar'
+import SearchBar from '@/components/SearchBar/SearchBar'
 import LoadingAnimation from '@/components/Loading/Loading'
 
 const FILTER_OPTIONS = [
@@ -156,7 +156,7 @@ export default function CommunitiesTab() {
     <View style={styles.container}>
       <View style={styles.searchRow}>
         <View style={styles.searchBarWrapper}>
-          <MasjidSearchBar
+          <SearchBar
             value={searchQuery}
             onChangeText={setSearchQuery}
             onClear={() => setSearchQuery('')}

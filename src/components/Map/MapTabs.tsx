@@ -13,19 +13,6 @@ export default function MapTabs({
   return (
     <View style={styles.tabsContainer}>
       <TouchableOpacity
-        style={[styles.tab, selectedTab === 'masjids' && styles.activeTab]}
-        onPress={() => onTabChange('masjids')}
-      >
-        <Text
-          style={[
-            styles.tabText,
-            selectedTab === 'masjids' && styles.activeTabText,
-          ]}
-        >
-          Masjids
-        </Text>
-      </TouchableOpacity>
-      <TouchableOpacity
         style={[styles.tab, selectedTab === 'events' && styles.activeTab]}
         onPress={() => onTabChange('events')}
       >
@@ -36,6 +23,20 @@ export default function MapTabs({
           ]}
         >
           Events & Classes
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[styles.tab, selectedTab === 'masjids' && styles.activeTab]}
+        onPress={() => onTabChange('masjids')}
+      >
+        <Text
+          style={[
+            styles.tabText,
+            selectedTab === 'masjids' && styles.activeTabText,
+          ]}
+        >
+          Masjids
         </Text>
       </TouchableOpacity>
     </View>

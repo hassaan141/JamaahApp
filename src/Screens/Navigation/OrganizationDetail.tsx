@@ -56,10 +56,12 @@ const OrganizationHeader = ({
   onFollowToggle: () => void
   followerCount?: number | null
 }) => {
+  const [expanded, setExpanded] = useState(false)
   const organizationName = org.name || 'Organization'
   const description = org.description || ''
   const memberCount = org.member_count || 0
   const type = org.type ?? ''
+  const hasLongDescription = description.length > 140
 
   const getOrgTypeIcon = (
     t?: string,
@@ -109,6 +111,29 @@ const OrganizationHeader = ({
     }
   }
 
+  const getOrgTypeLabel = (type: string): string => {
+    switch (type?.toLowerCase()) {
+      case 'masjid':
+        return 'Masjid'
+      case 'msa':
+        return 'MSA'
+      case 'islamic-school':
+        return 'Islamic School'
+      case 'sisters-group':
+        return 'Sisters Group'
+      case 'youth-group':
+        return 'Youth Group'
+      case 'book-club':
+        return 'Book Club'
+      case 'book-store':
+        return 'Book Store'
+      case 'run-club':
+        return 'Run Club'
+      default:
+        return 'Organization'
+    }
+  }
+
   return (
     <View style={styles.headerCard}>
       <View style={styles.headerContent}>
@@ -129,15 +154,32 @@ const OrganizationHeader = ({
             {organizationName}
           </Text>
           {description ? (
-            <Text style={styles.organizationDescription} numberOfLines={3}>
-              {description}
-            </Text>
+            <>
+              <Text
+                style={styles.organizationDescription}
+                numberOfLines={expanded ? undefined : 3}
+              >
+                {description}
+              </Text>
+
+              {hasLongDescription && (
+                <TouchableOpacity
+                  onPress={() => setExpanded(!expanded)}
+                  activeOpacity={0.7}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Text style={styles.readMoreText}>
+                    {expanded ? 'Show less' : 'Read more'}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </>
           ) : null}
           {type ? (
             <Text
               style={[styles.typeLabel, { color: getOrgTypeColor(type).text }]}
             >
-              {type.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+              {getOrgTypeLabel(type)}
             </Text>
           ) : null}
         </View>
@@ -612,7 +654,7 @@ export default function OrganizationDetail() {
         />
       </View>
 
-      <AmenitiesCard org={org} />
+      {org.type?.toLowerCase() === 'masjid' && <AmenitiesCard org={org} />}
 
       <ContactInfoCard org={org} />
     </ScrollView>
@@ -675,6 +717,13 @@ const styles = StyleSheet.create({
     color: '#52796F',
     fontWeight: '600',
     marginLeft: 4,
+  },
+  readMoreText: {
+    color: '#2563EB',
+    fontSize: 13,
+    fontWeight: '600',
+    marginTop: 2,
+    marginBottom: 6,
   },
   followButton: {
     backgroundColor: '#2D6A4F',

@@ -17,10 +17,9 @@ export async function registerDeviceToken(
   try {
     const messagingModule = await getMessagingModule()
     if (!messagingModule) {
-      console.warn('[registerDeviceToken] Firebase messaging not available')
       return {
         success: false,
-        error: 'Firebase messaging not available (native module missing)',
+        error: 'Firebase messaging not available',
       }
     }
 
@@ -33,23 +32,16 @@ export async function registerDeviceToken(
     } = messagingModule
     const messaging = getMessaging()
 
-    // Request permission first
     const authStatus = await requestPermission(messaging)
     const enabled =
       authStatus === AuthorizationStatus.AUTHORIZED ||
       authStatus === AuthorizationStatus.PROVISIONAL
 
-    console.log('[registerDeviceToken] Authorization status:', authStatus)
-
     if (!enabled) {
-      console.log('[registerDeviceToken] Push notifications not authorized')
       return { success: false, error: 'Push notifications not authorized' }
     }
 
     if (Platform.OS === 'ios') {
-      console.log(
-        '[registerDeviceToken] Registering for remote messages (iOS)...',
-      )
       await registerDeviceForRemoteMessages(messaging)
     }
 
@@ -57,38 +49,55 @@ export async function registerDeviceToken(
     try {
       fcmToken = await getToken(messaging)
     } catch (e) {
-      const errorMessage = e instanceof Error ? e.message : 'Unknown error'
-      console.error('[registerDeviceToken] Failed to get FCM token:', e)
       return {
         success: false,
-        error: `Failed to get FCM token: ${errorMessage}`,
+        error: `Failed to get FCM token: ${e instanceof Error ? e.message : 'Unknown'}`,
       }
     }
 
     if (!fcmToken) {
-      console.log('[registerDeviceToken] No FCM token returned')
       return { success: false, error: 'No FCM token returned' }
     }
 
-    console.log('[registerDeviceToken] Got FCM token:', fcmToken)
-
-    const { error } = await supabase.rpc('register_device_token', {
+    // 1. Try RPC First (Best for handling ownership transfer securely)
+    const { error: rpcError } = await supabase.rpc('register_device_token', {
       p_fcm_token: fcmToken,
       p_platform: Platform.OS,
     })
 
-    if (error) {
-      console.error('[registerDeviceToken] DB Error:', error)
-      return { success: false, error: `DB Error: ${error.message}` }
+    if (!rpcError) {
+      console.log('[registerDeviceToken] Success via RPC')
+      return { success: true, token: fcmToken }
     }
 
-    console.log('[registerDeviceToken] Success! Device registered via RPC')
+    console.warn(
+      '[registerDeviceToken] RPC failed, trying upsert fallback:',
+      rpcError.message,
+    )
+
+    // 2. Fallback: Standard Upsert (If RPC missing/fails)
+    const { error: upsertError } = await supabase.from('devices').upsert(
+      {
+        profile_id: profileId,
+        fcm_token: fcmToken,
+        platform: Platform.OS || 'unknown',
+        last_seen_at: new Date().toISOString(),
+      },
+      { onConflict: 'fcm_token' },
+    )
+
+    if (upsertError) {
+      console.error('[registerDeviceToken] Fallback failed:', upsertError)
+      return { success: false, error: upsertError.message }
+    }
+
+    console.log('[registerDeviceToken] Success via Upsert')
     return { success: true, token: fcmToken }
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error'
     console.error('[registerDeviceToken] Unexpected error:', error)
-    return { success: false, error: `Unexpected error: ${errorMessage}` }
+    return { success: false, error: errorMessage }
   }
 }
 
@@ -99,26 +108,23 @@ export async function updateDeviceLastSeen(profileId: string) {
       .update({ last_seen_at: new Date().toISOString() })
       .eq('profile_id', profileId)
 
-    if (error) {
-      console.error('Error updating device last seen:', error)
-    }
+    if (error) console.error('Error updating last seen:', error)
   } catch (error) {
     console.error('Error in updateDeviceLastSeen:', error)
   }
 }
 
-// Self-healing function to clean up invalid FCM tokens
 export async function cleanupInvalidToken(profileId: string, fcmToken: string) {
   try {
+    // Try RPC first
     const { error } = await supabase.rpc('cleanup_invalid_fcm_token', {
       p_profile_id: profileId,
       p_fcm_token: fcmToken,
     })
 
+    // Fallback delete if RPC fails
     if (error) {
-      console.error('Error cleaning up invalid token:', error)
-    } else {
-      console.log(`Cleaned up invalid token for user ${profileId}`)
+      await supabase.from('devices').delete().match({ fcm_token: fcmToken })
     }
   } catch (error) {
     console.error('Error in cleanupInvalidToken:', error)

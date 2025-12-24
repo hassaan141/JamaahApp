@@ -1,5 +1,7 @@
 import { supabase } from './supabaseClient'
 import { getUserId } from '@/Utils/getUserID'
+import { syncPrayerSubscription } from '@/Utils/pushNotifications'
+import messaging from '@react-native-firebase/messaging'
 
 export async function deleteAccount() {
   try {
@@ -8,7 +10,22 @@ export async function deleteAccount() {
       return { ok: false, error: 'User not authenticated' }
     }
 
-    // Hard delete the user's profile
+    console.log('[deleteAccount] Starting cleanup...')
+
+    // 1. Unsubscribe from current prayer topic (Stop the Radio)
+    await syncPrayerSubscription(null)
+
+    // 2. Remove the Device Token from DB (Stop the Signal)
+    try {
+      const token = await messaging().getToken()
+      if (token) {
+        await supabase.from('devices').delete().eq('fcm_token', token)
+      }
+    } catch (e) {
+      console.warn('[deleteAccount] Failed to cleanup token:', e)
+    }
+
+    // 3. Delete the Profile
     const { error } = await supabase.from('profiles').delete().eq('id', userId)
 
     if (error) {
@@ -16,7 +33,7 @@ export async function deleteAccount() {
       return { ok: false, error: error.message }
     }
 
-    // Sign out the user
+    // 4. Sign Out
     const { error: signOutError } = await supabase.auth.signOut()
     if (signOutError) {
       console.error('[deleteAccount] Sign out error:', signOutError)

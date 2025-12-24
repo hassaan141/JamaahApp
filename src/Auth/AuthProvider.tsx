@@ -17,7 +17,6 @@ import messaging from '@react-native-firebase/messaging'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
 type NotificationPreference = 'None' | 'Adhan' | 'Event_Adhan'
-
 type Session = SupabaseSession | null
 
 type AuthContextValue = {
@@ -35,7 +34,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let mounted = true
-
     const getInitialSession = async () => {
       try {
         const { data } = await supabase.auth.getSession()
@@ -48,7 +46,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (mounted) setLoading(false)
       }
     }
-
     getInitialSession()
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
@@ -59,7 +56,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       },
     )
-
     return () => {
       mounted = false
       authListener.subscription.unsubscribe()
@@ -120,7 +116,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error('[AuthProvider] Init failed:', err)
       }
     }
-
     initUserData()
   }, [session?.user?.id])
 
@@ -130,8 +125,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const userId = session?.user?.id
 
+      // 1. Stop location tracking
       await stopBackgroundTracking()
 
+      // 2. Clean up DB Token
       if (userId) {
         console.log('[AuthProvider] Cleaning up FCM token for user:', userId)
         try {
@@ -152,6 +149,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
+      // 3. Unsubscribe from Topic (Using the CORRECT key)
       const currentTopicId = await AsyncStorage.getItem('current_prayer_topic')
       if (currentTopicId) {
         await messaging().unsubscribeFromTopic(`org_${currentTopicId}_prayers`)

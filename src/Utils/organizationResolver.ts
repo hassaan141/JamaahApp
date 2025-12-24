@@ -7,7 +7,6 @@ import { minutesSince, sameLocalDate } from '@/Utils/datetime'
 import { getProfile } from '@/Utils/profile'
 import { syncPrayerSubscription } from '@/Utils/pushNotifications'
 
-// Simple haversine implementation (meters)
 function haversine(lat1: number, lon1: number, lat2: number, lon2: number) {
   const toRad = (v: number) => (v * Math.PI) / 180
   const R = 6371000
@@ -44,18 +43,26 @@ async function getOrgMeta(orgId: string) {
   }
 }
 
-export async function resolveOrgForTimes(userId: string) {
+export async function resolveOrgForTimes(
+  userId: string,
+  overrideLocation?: { lat: number; lon: number },
+) {
   const profile = await getProfile(userId)
 
+  // 1. PINNED MODE
   if (profile.mode === 'pinned' && profile.pinned_org_id) {
     const [times, org] = await Promise.all([
       getPrayerTimes(profile.pinned_org_id),
       getOrgMeta(profile.pinned_org_id),
     ])
 
+    // Optional: Calculate distance just for display
     let distance_m: number | null = null
     try {
-      const location = await getCoarseLocation()
+      const location = overrideLocation
+        ? { latitude: overrideLocation.lat, longitude: overrideLocation.lon }
+        : await getCoarseLocation()
+
       if (location && org.latitude && org.longitude) {
         distance_m = Math.round(
           haversine(
@@ -73,13 +80,26 @@ export async function resolveOrgForTimes(userId: string) {
     return { org, distance_m, times }
   }
 
+  // 2. AUTO MODE
   const [locOrNull, state] = await Promise.all([
-    getCoarseLocation().catch(() => null),
+    overrideLocation
+      ? Promise.resolve({
+          latitude: overrideLocation.lat,
+          longitude: overrideLocation.lon,
+        })
+      : getCoarseLocation().catch(() => null),
     getLocState(userId),
   ])
 
+  // Fallback: No location access, use last known state
   if (!locOrNull) {
     if (!state?.last_org_id) throw new Error('location-denied-and-no-cache')
+
+    // Even if using fallback, ensure we are subscribed!
+    if (profile.notification_preference !== 'None') {
+      await syncPrayerSubscription(state.last_org_id)
+    }
+
     const [times, org] = await Promise.all([
       getPrayerTimes(state.last_org_id),
       getOrgMeta(state.last_org_id),
@@ -101,6 +121,7 @@ export async function resolveOrgForTimes(userId: string) {
     return { org, distance_m: distance_m ?? null, times }
   }
 
+  // Live Location Logic
   const osLoc = locOrNull
   const moved =
     state?.last_lat && state?.last_lon
@@ -121,13 +142,14 @@ export async function resolveOrgForTimes(userId: string) {
 
   let orgId = state?.last_org_id || null
   let dist = state?.last_distance_m || 0
-  //
+
+  // Only calculate nearest if necessary
   if (!orgId || movedFar || ttlExpired || dayChanged) {
     const [nearest] = await nearestOrg(osLoc.latitude, osLoc.longitude)
-    const mosqueChanged = orgId !== nearest.org_id
 
     orgId = nearest.org_id
     dist = Math.round(nearest.distance_m)
+
     await upsertLocState({
       user_id: userId,
       last_lat: osLoc.latitude,
@@ -136,13 +158,10 @@ export async function resolveOrgForTimes(userId: string) {
       last_distance_m: dist,
       last_resolved_at: new Date().toISOString(),
     })
+  }
 
-    // 👇 TRAP 1 FIX: Only sync if mosque changed AND user wants notifications
-    if (mosqueChanged) {
-      if (profile.notification_preference !== 'None') {
-        await syncPrayerSubscription(orgId)
-      }
-    }
+  if (orgId && profile.notification_preference !== 'None') {
+    await syncPrayerSubscription(orgId)
   }
 
   const [times, org] = await Promise.all([

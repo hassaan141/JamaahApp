@@ -9,11 +9,14 @@ import {
   PushNotificationManager,
   syncPrayerSubscription,
 } from '../Utils/pushNotifications'
+import {
+  startBackgroundTracking,
+  stopBackgroundTracking,
+} from '../Utils/BackgroundLocationTask'
 import messaging from '@react-native-firebase/messaging'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
 type NotificationPreference = 'None' | 'Adhan' | 'Event_Adhan'
-
 type Session = SupabaseSession | null
 
 type AuthContextValue = {
@@ -29,10 +32,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSessionState] = useState<Session>(null)
   const [loading, setLoading] = useState(true)
 
-  // 1. Initial Session Check
   useEffect(() => {
     let mounted = true
-
     const getInitialSession = async () => {
       try {
         const { data } = await supabase.auth.getSession()
@@ -45,7 +46,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (mounted) setLoading(false)
       }
     }
-
     getInitialSession()
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
@@ -56,27 +56,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       },
     )
-
     return () => {
       mounted = false
       authListener.subscription.unsubscribe()
     }
   }, [])
 
-  // 2. Hydrate User Data (Profile & Notifications)
   useEffect(() => {
     const id = session?.user?.id
     if (!id) return
 
     const initUserData = async () => {
       try {
-        // Fallback: Ensure profile exists if the DB trigger failed or hasn't run yet
         await ensureProfileExists(id)
-
-        // Initialize Push Notifications
         await PushNotificationManager.getInstance().initialize(id)
 
-        // Fetch User Preferences (Note: No phone/country here)
         const { data: profile, error } = await supabase
           .from('profiles')
           .select('mode, pinned_org_id, notification_preference, is_org')
@@ -91,7 +85,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return
         }
 
-        // Logic to determine which Organization ID to subscribe to
         let targetOrgId: string | null = null
         const preference =
           (profile?.notification_preference as NotificationPreference) ||
@@ -100,6 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (preference !== 'None') {
           if (profile?.mode === 'pinned') {
             targetOrgId = profile.pinned_org_id
+            await stopBackgroundTracking()
           } else {
             const { data: locationState } = await supabase
               .from('last_location_state')
@@ -108,7 +102,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               .maybeSingle()
 
             targetOrgId = locationState?.last_org_id || null
+            await startBackgroundTracking()
           }
+        } else {
+          await stopBackgroundTracking()
         }
 
         if (preference !== 'None') {
@@ -119,7 +116,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error('[AuthProvider] Init failed:', err)
       }
     }
-
     initUserData()
   }, [session?.user?.id])
 
@@ -129,7 +125,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const userId = session?.user?.id
 
-      // 1. Clean up FCM token from database BEFORE signing out
+      // 1. Stop location tracking
+      await stopBackgroundTracking()
+
+      // 2. Clean up DB Token
       if (userId) {
         console.log('[AuthProvider] Cleaning up FCM token for user:', userId)
         try {
@@ -150,14 +149,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      // 2. Unsubscribe from current topic
-      const currentTopicId = await AsyncStorage.getItem('prayer_sub_org_id')
+      // 3. Unsubscribe from Topic (Using the CORRECT key)
+      const currentTopicId = await AsyncStorage.getItem('current_prayer_topic')
       if (currentTopicId) {
         await messaging().unsubscribeFromTopic(`org_${currentTopicId}_prayers`)
-        await AsyncStorage.removeItem('prayer_sub_org_id')
+        await AsyncStorage.removeItem('current_prayer_topic')
       }
 
-      // 3. Sign out of Supabase
       const { error } = await supabase.auth.signOut()
       if (error) throw error
     } catch (e) {

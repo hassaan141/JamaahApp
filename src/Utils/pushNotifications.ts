@@ -3,6 +3,8 @@ import messaging from '@react-native-firebase/messaging'
 import { registerDeviceToken } from '@/Supabase/registerDevice'
 import { toast } from '@/components/Toast/toast'
 
+const STORAGE_KEY_TOPIC = 'current_prayer_topic'
+
 export class PushNotificationManager {
   private static instance: PushNotificationManager
   private initialized = false
@@ -20,11 +22,11 @@ export class PushNotificationManager {
 
     try {
       this.currentUserId = userId
-
       console.log(
         '[PushNotificationManager] Registering token for user:',
         userId,
       )
+
       const result = await registerDeviceToken(userId)
       if (!result.success) {
         console.warn(
@@ -33,7 +35,6 @@ export class PushNotificationManager {
         )
       }
 
-      // 1. Handle Token Refresh
       messaging().onTokenRefresh(async (token) => {
         console.log('FCM Token refreshed:', token)
         if (this.currentUserId) {
@@ -41,9 +42,7 @@ export class PushNotificationManager {
         }
       })
 
-      // 2. Setup Listeners (Only once)
       if (!this.initialized) {
-        // Foreground Handler (Shows Toast when app is open)
         messaging().onMessage(async (remoteMessage) => {
           console.log('[Foreground Message]', remoteMessage)
           const title = remoteMessage.notification?.title || 'Notification'
@@ -51,7 +50,6 @@ export class PushNotificationManager {
           toast.info(body, title)
         })
 
-        // Background Handler
         messaging().setBackgroundMessageHandler(async (remoteMessage) => {
           console.log('[Background Message]', remoteMessage)
         })
@@ -89,32 +87,27 @@ export class PushNotificationManager {
 
 export async function syncPrayerSubscription(targetOrgId: string | null) {
   try {
-    const currentSubscribedOrg = await AsyncStorage.getItem('prayer_sub_org_id')
+    const currentSubscribedOrg = await AsyncStorage.getItem(STORAGE_KEY_TOPIC)
 
-    // OPTIMIZATION: If we are already subscribed to this org, stop here.
     if (currentSubscribedOrg === targetOrgId) {
       return
     }
 
     console.log(
-      `[PrayerSub] Switching subscription: ${currentSubscribedOrg} -> ${targetOrgId}`,
+      `[PrayerSub] Switching: ${currentSubscribedOrg} -> ${targetOrgId}`,
     )
 
-    // 1. Unsubscribe from the OLD topic
     if (currentSubscribedOrg) {
       const oldTopic = `org_${currentSubscribedOrg}_prayers`
       await messaging().unsubscribeFromTopic(oldTopic)
     }
 
-    // 2. Subscribe to the NEW topic
     if (targetOrgId) {
       const newTopic = `org_${targetOrgId}_prayers`
       await messaging().subscribeToTopic(newTopic)
-      // Save state so we remember next time
-      await AsyncStorage.setItem('prayer_sub_org_id', targetOrgId)
+      await AsyncStorage.setItem(STORAGE_KEY_TOPIC, targetOrgId)
     } else {
-      // User has no mosque selected, just clear storage
-      await AsyncStorage.removeItem('prayer_sub_org_id')
+      await AsyncStorage.removeItem(STORAGE_KEY_TOPIC)
     }
   } catch (error) {
     console.error('[PrayerSub] Failed to sync topic:', error)

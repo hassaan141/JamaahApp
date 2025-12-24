@@ -115,6 +115,9 @@ export default () => ({
       EXPO_PUBLIC_TESTING_MODE: process.env.EXPO_PUBLIC_TESTING_MODE,
       EXPO_PUBLIC_TEST_EMAIL: process.env.EXPO_PUBLIC_TEST_EMAIL,
       EXPO_PUBLIC_TEST_PASSWORD: process.env.EXPO_PUBLIC_TEST_PASSWORD,
+      eas: {
+        projectId: '738cfaa7-cbea-4042-b627-a2a351da154b',
+      },
     },
   },
 })

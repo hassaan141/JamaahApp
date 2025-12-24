@@ -11,6 +11,7 @@ import { getCoarseLocation } from '@/Utils/useLocation'
 import { fetchNearbyMasjids } from '@/Supabase/fetchMasjidList'
 import { getUserId } from '@/Utils/getUserID'
 import { setPinned } from '@/Utils/switchMasjidMode'
+import { syncPrayerSubscription } from '@/Utils/pushNotifications'
 import SearchBar from '@/components/SearchBar/SearchBar'
 import MasjidListItem from '@/components/MasjidScreen/MasjidListItem'
 import LoadingAnimation from '@/components/Loading/Loading'
@@ -108,13 +109,18 @@ const Masjids: React.FC<NavProps> = ({ navigation, route }) => {
   const onSelectMasjid = async (orgId: string) => {
     try {
       const userId = await getUserId()
+
+      // 1. Update DB
       await setPinned(userId, orgId)
+
+      // 2. 🚨 FIX: Update Push Notifications Subscription
+      await syncPrayerSubscription(orgId)
+
       toast.success('Masjid selected', 'Success')
       if (showBackButton && navigation) {
         try {
           navigation.goBack()
         } catch {
-          // Intentionally ignore navigation error if can't go back
           console.debug('Navigation goBack failed - no screen to go back to')
         }
       }

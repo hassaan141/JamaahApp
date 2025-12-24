@@ -7,7 +7,6 @@ import { minutesSince, sameLocalDate } from '@/Utils/datetime'
 import { getProfile } from '@/Utils/profile'
 import { syncPrayerSubscription } from '@/Utils/pushNotifications'
 
-// Simple haversine implementation (meters)
 function haversine(lat1: number, lon1: number, lat2: number, lon2: number) {
   const toRad = (v: number) => (v * Math.PI) / 180
   const R = 6371000
@@ -44,7 +43,10 @@ async function getOrgMeta(orgId: string) {
   }
 }
 
-export async function resolveOrgForTimes(userId: string) {
+export async function resolveOrgForTimes(
+  userId: string,
+  overrideLocation?: { lat: number; lon: number },
+) {
   const profile = await getProfile(userId)
 
   if (profile.mode === 'pinned' && profile.pinned_org_id) {
@@ -55,7 +57,10 @@ export async function resolveOrgForTimes(userId: string) {
 
     let distance_m: number | null = null
     try {
-      const location = await getCoarseLocation()
+      const location = overrideLocation
+        ? { latitude: overrideLocation.lat, longitude: overrideLocation.lon }
+        : await getCoarseLocation()
+
       if (location && org.latitude && org.longitude) {
         distance_m = Math.round(
           haversine(
@@ -74,7 +79,12 @@ export async function resolveOrgForTimes(userId: string) {
   }
 
   const [locOrNull, state] = await Promise.all([
-    getCoarseLocation().catch(() => null),
+    overrideLocation
+      ? Promise.resolve({
+          latitude: overrideLocation.lat,
+          longitude: overrideLocation.lon,
+        })
+      : getCoarseLocation().catch(() => null),
     getLocState(userId),
   ])
 
@@ -121,7 +131,7 @@ export async function resolveOrgForTimes(userId: string) {
 
   let orgId = state?.last_org_id || null
   let dist = state?.last_distance_m || 0
-  //
+
   if (!orgId || movedFar || ttlExpired || dayChanged) {
     const [nearest] = await nearestOrg(osLoc.latitude, osLoc.longitude)
     const mosqueChanged = orgId !== nearest.org_id
@@ -137,7 +147,6 @@ export async function resolveOrgForTimes(userId: string) {
       last_resolved_at: new Date().toISOString(),
     })
 
-    // 👇 TRAP 1 FIX: Only sync if mosque changed AND user wants notifications
     if (mosqueChanged) {
       if (profile.notification_preference !== 'None') {
         await syncPrayerSubscription(orgId)

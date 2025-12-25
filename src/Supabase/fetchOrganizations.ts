@@ -54,3 +54,28 @@ export async function searchOrganizations({ query = '' } = {}): Promise<
     return []
   }
 }
+
+export async function fetchOrganizationById(
+  id: string,
+): Promise<Organization | null> {
+  try {
+    const { data, error } = await supabase
+      .from('organizations')
+      .select('*')
+      .eq('id', id)
+      .single()
+
+    if (error) {
+      console.error(
+        `[fetchOrganizationById] Error fetching organization with id ${id}:`,
+        error,
+      )
+      throw error
+    }
+
+    return data as Organization | null
+  } catch (err) {
+    console.error(`[fetchOrganizationById] Unexpected error for id ${id}:`, err)
+    return null
+  }
+}

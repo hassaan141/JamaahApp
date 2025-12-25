@@ -13,6 +13,7 @@ import { useNavigation, useRoute } from '@react-navigation/native'
 import type { RouteProp, NavigationProp } from '@react-navigation/native'
 import * as OrgFollow from '@/Supabase/organizationFollow'
 import { fetchOrgAnnouncements } from '@/Supabase/fetchOrgAnnouncements'
+import { fetchOrganizationById } from '@/Supabase/fetchOrganizations'
 import type { OrgPost } from '@/types'
 import { fetchOrgFollowerCount } from '@/Supabase/fetchOrgFollowerCount'
 import AnnouncementCard from '@/components/Shared/AnnouncementCard'
@@ -161,7 +162,6 @@ const OrganizationHeader = ({
               >
                 {description}
               </Text>
-
               {hasLongDescription && (
                 <TouchableOpacity
                   onPress={() => setExpanded(!expanded)}
@@ -416,18 +416,16 @@ const AnnouncementsSection = ({
     ? filteredAnnouncements
     : filteredAnnouncements.slice(0, 2)
   const hiddenCount = Math.max(0, filteredAnnouncements.length - 2)
-
   const handleExpand = () => setIsExpanded(true)
   const handleCollapse = () => setIsExpanded(false)
 
-  if (loading) {
+  if (loading)
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#2D6A4F" />
         <Text style={styles.loadingText}>Loading announcements...</Text>
       </View>
     )
-  }
   if (error) return <EmptyState message={error} icon="alert-circle" />
   if (!announcements.length)
     return <EmptyState message="No announcements yet" icon="inbox" />
@@ -469,7 +467,6 @@ const AnnouncementsSection = ({
               <AnnouncementCard key={item.id} announcement={item} />
             ))}
           </View>
-
           {!isExpanded && hiddenCount > 0 && (
             <TouchableOpacity
               style={styles.expandButton}
@@ -481,7 +478,6 @@ const AnnouncementsSection = ({
               </Text>
             </TouchableOpacity>
           )}
-
           {isExpanded && (
             <TouchableOpacity
               style={styles.collapseButton}
@@ -507,22 +503,57 @@ type GenericNav = NavigationProp<Record<string, object | undefined>>
 export default function OrganizationDetail() {
   const route = useRoute<OrgDetailRoute>()
   const navigation = useNavigation<GenericNav>()
-  const org = route.params?.org as OrgParam | undefined
+  const initialOrg = route.params?.org as OrgParam | undefined
+
+  // FIX 1: Turn 'org' into state so we can update it with full details
+  const [org, setOrg] = useState<OrgParam | undefined>(initialOrg)
+
   const rawId = org?.id ?? org?.org_id
   const orgId = rawId != null ? String(rawId) : undefined
 
   const [announcements, setAnnouncements] = useState<OrgPost[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  // Follow logic
   const [following, setFollowing] = useState<boolean>(
     typeof org?.is_following === 'boolean' ? org.is_following : false,
   )
   const [followLoading, setFollowLoading] = useState(false)
   const [followerCount, setFollowerCount] = useState<number | null>(null)
 
+  // FIX 2: State for fetching the full details
+  const [detailsLoading, setDetailsLoading] = useState(false)
+
   const handleGoBack = () => {
     navigation.goBack()
   }
+
+  // FIX 3: Detect "Lite" object (from Map) and fetch full details
+  useEffect(() => {
+    if (!orgId) return
+
+    // Heuristic: If description, phone, and amenities are all missing, it's likely a partial object
+    const isLiteObject = !org?.description && !org?.phone && !org?.amenities
+
+    if (isLiteObject) {
+      const loadFullDetails = async () => {
+        setDetailsLoading(true)
+        try {
+          const fullData = await fetchOrganizationById(orgId)
+          if (fullData) {
+            // Merge existing data with new full data
+            setOrg((prev) => ({ ...prev, ...fullData }))
+          }
+        } catch (err) {
+          console.error('Error fetching full org details:', err)
+        } finally {
+          setDetailsLoading(false)
+        }
+      }
+      loadFullDetails()
+    }
+  }, [orgId]) // Run once when we get the ID
 
   // Fetch follow status if not provided
   useEffect(() => {
@@ -600,7 +631,6 @@ export default function OrganizationDetail() {
       } else {
         await OrgFollow.followOrganization(orgId)
       }
-      // Re-fetch follower count after toggle
       const c = await fetchOrgFollowerCount(orgId)
       setFollowerCount(c)
     } catch (err) {
@@ -644,6 +674,13 @@ export default function OrganizationDetail() {
         onFollowToggle={handleFollowToggle}
         followerCount={followerCount}
       />
+
+      {/* Show tiny loader if we are fetching the missing details */}
+      {detailsLoading && (
+        <View style={{ padding: 10 }}>
+          <ActivityIndicator size="small" color="#2D6A4F" />
+        </View>
+      )}
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Recent Announcements</Text>

@@ -5,7 +5,7 @@ import CombinedPrayerCard from '@/components/HomeScreen/CombinedPrayerCard'
 import MasjidButton from '@/components/HomeScreen/MasjidButton'
 import NotificationCard from '@/components/HomeScreen/NotificationButton'
 import NotificationList from '@/components/HomeScreen/NotificationList'
-import JummahCard from '@/components/HomeScreen/JummahCard'
+// import JummahCard from '@/components/HomeScreen/JummahCard'
 import { usePrayerTimes } from '@/Hooks/usePrayerTimes'
 
 type HomeRouteParams = { refreshPrayerTimes?: boolean }
@@ -15,7 +15,17 @@ type NavigationLike = {
 }
 
 export default function Home({ navigation }: { navigation: NavigationLike }) {
-  const { org, distance_m, times, refetchPrayerTimes } = usePrayerTimes()
+  const {
+    org,
+    distance_m,
+    times,
+    todayTimes,
+    refetchPrayerTimes,
+    targetDate,
+    nextDay,
+    prevDay,
+  } = usePrayerTimes()
+
   const [refreshing, setRefreshing] = useState(false)
   const route = useRoute() as { params?: HomeRouteParams }
 
@@ -28,7 +38,6 @@ export default function Home({ navigation }: { navigation: NavigationLike }) {
 
   useFocusEffect(
     useCallback(() => {
-      // We fire this without awaiting so it doesn't block the UI navigation
       refetchPrayerTimes().catch((err) =>
         console.log('Focus fetch failed (likely network):', err),
       )
@@ -38,18 +47,13 @@ export default function Home({ navigation }: { navigation: NavigationLike }) {
   const onRefresh = useCallback(async () => {
     setRefreshing(true)
     try {
-      // Create a timeout promise that rejects after 10 seconds
       const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Network request timed out')), 10000),
       )
-
-      // Race the actual fetch against the timeout
-      // Whichever finishes first wins. If connection is bad, timeout wins.
       await Promise.race([refetchPrayerTimes(), timeoutPromise])
     } catch (error) {
       console.log('Refresh skipped due to timeout or error:', error)
     } finally {
-      // This ensures the spinner ALWAYS goes away, even if internet is dead
       setRefreshing(false)
     }
   }, [refetchPrayerTimes])
@@ -79,12 +83,22 @@ export default function Home({ navigation }: { navigation: NavigationLike }) {
         </View>
       </View>
 
-      <JummahCard
-        prayerTimes={times}
+      {/* <JummahCard
+        prayerTimes={todayTimes} // Use todayTimes here too
         org={org ? { name: org.name, timezone: org.timezone } : null}
-      />
+      /> */}
 
-      <CombinedPrayerCard prayerTimes={times} />
+      {/* 2. Pass the date props to the card so the modal can use them */}
+      <CombinedPrayerCard
+        // 1. Card uses Today's Data (Fixed)
+        prayerTimes={todayTimes}
+        // 2. Modal uses Selected Data (Dynamic)
+        modalPrayerTimes={times}
+        orgName={org?.name}
+        currentDate={targetDate}
+        onNextDay={nextDay}
+        onPrevDay={prevDay}
+      />
 
       <NotificationList refreshKey={refreshing} />
     </ScrollView>

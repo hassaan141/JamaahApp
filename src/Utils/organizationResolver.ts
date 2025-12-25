@@ -43,8 +43,10 @@ async function getOrgMeta(orgId: string) {
   }
 }
 
+// UPDATE: Added dateStr parameter
 export async function resolveOrgForTimes(
   userId: string,
+  dateStr?: string,
   overrideLocation?: { lat: number; lon: number },
 ) {
   const profile = await getProfile(userId)
@@ -52,7 +54,8 @@ export async function resolveOrgForTimes(
   // 1. PINNED MODE
   if (profile.mode === 'pinned' && profile.pinned_org_id) {
     const [times, org] = await Promise.all([
-      getPrayerTimes(profile.pinned_org_id),
+      // Pass dateStr here
+      getPrayerTimes(profile.pinned_org_id, dateStr),
       getOrgMeta(profile.pinned_org_id),
     ])
 
@@ -101,7 +104,8 @@ export async function resolveOrgForTimes(
     }
 
     const [times, org] = await Promise.all([
-      getPrayerTimes(state.last_org_id),
+      // Pass dateStr here
+      getPrayerTimes(state.last_org_id, dateStr),
       getOrgMeta(state.last_org_id),
     ])
 
@@ -165,7 +169,8 @@ export async function resolveOrgForTimes(
   }
 
   const [times, org] = await Promise.all([
-    getPrayerTimes(orgId as string),
+    // Pass dateStr here
+    getPrayerTimes(orgId as string, dateStr),
     getOrgMeta(orgId as string),
   ])
 

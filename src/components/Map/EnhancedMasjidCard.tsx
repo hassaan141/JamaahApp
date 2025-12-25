@@ -14,15 +14,12 @@ export default function EnhancedMasjidCard({
   onDirections?: (it: MasjidItem) => void
   onCall?: (it: MasjidItem) => void
 }) {
-  const rating = (item.rating as number) || 4.5
-
   return (
     <TouchableOpacity style={styles.card} onPress={onPress}>
       <View style={styles.header}>
         <Text style={styles.name}>{item.name}</Text>
         <View style={styles.ratingContainer}>
           <Feather name="star" size={12} color="#FFD700" />
-          <Text style={styles.rating}>{rating}</Text>
         </View>
       </View>
 
@@ -99,12 +96,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
-  },
-  rating: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#2D3748',
-    marginLeft: 2,
   },
   infoRow: {
     flexDirection: 'row',

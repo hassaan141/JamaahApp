@@ -15,11 +15,6 @@ export default function EnhancedMasjidCard({
   onCall?: (it: MasjidItem) => void
 }) {
   const rating = (item.rating as number) || 4.5
-  const amenities = (item.amenities as string[]) || [
-    'Halal Food',
-    'Islamic School',
-    'Library',
-  ]
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress}>
@@ -43,14 +38,6 @@ export default function EnhancedMasjidCard({
             ? `${item.distance_km.toFixed(1)} mi`
             : '— mi'}
         </Text>
-      </View>
-
-      <View style={styles.amenitiesContainer}>
-        {amenities.slice(0, 3).map((amenity, index) => (
-          <View key={index} style={styles.amenityTag}>
-            <Text style={styles.amenityText}>{amenity}</Text>
-          </View>
-        ))}
       </View>
 
       <View style={styles.actionButtons}>

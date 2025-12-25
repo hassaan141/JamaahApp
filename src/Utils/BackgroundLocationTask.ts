@@ -38,7 +38,9 @@ TaskManager.defineTask(
           return
         }
 
-        await resolveOrgForTimes(user.id, {
+        // FIX: Pass 'undefined' for the dateStr (2nd arg) so it defaults to Today
+        // The location object is now the 3rd argument.
+        await resolveOrgForTimes(user.id, undefined, {
           lat: latestLocation.coords.latitude,
           lon: latestLocation.coords.longitude,
         })

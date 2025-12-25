@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'
-import type { Region } from 'react-native-maps';
+import React, { useState, useEffect, useRef } from 'react'
 import MapView, { Marker, Circle, Callout } from 'react-native-maps'
 import {
   StyleSheet,
@@ -16,37 +15,9 @@ import { fetchNearbyMasjids } from '@/Supabase/fetchMasjidList'
 import { fetchAnnouncements } from '@/Supabase/fetchAllAnnouncements'
 import { useLocation } from '@/Utils/useLocation'
 import LoadingAnimation from '@/components/Loading/Loading'
-import mosqueIcon from '../../../assets/mosque.png'
+import mosqueIcon from '../../../assets/mosque_new.png'
 import type { MasjidItem } from '@/Hooks/useMasjidList'
 import type { OrgPost } from '@/types'
-
-// --- Types ---
-
-// FIX: 'event' must be optional to match the library's 'WebviewLeafletMessage' type
-interface LeafletWebViewMessage {
-  event?: string
-  payload?: {
-    mapCenterPosition?: {
-      lat: number
-      lng: number
-    }
-  }
-}
-
-// --- Helpers ---
-
-const debounce = <T extends unknown[], R>(
-  func: (...args: T) => R,
-  waitFor: number,
-) => {
-  let timeout: ReturnType<typeof setTimeout> | null = null
-
-  return (...args: T): Promise<R> =>
-    new Promise((resolve) => {
-      if (timeout) clearTimeout(timeout)
-      timeout = setTimeout(() => resolve(func(...args)), waitFor)
-    })
-}
 
 const getEventTypeIcon = (
   postType: string | null,
@@ -104,52 +75,35 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
     navigate?: (route: string, params?: Record<string, unknown>) => void
   }
   const { location } = useLocation()
+
+  // Data States
   const [nearbyMasjids, setNearbyMasjids] = useState<MasjidItem[]>([])
   const [events, setEvents] = useState<OrgPost[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // STATE: Visual Center (Where the map looks)
+  // FIX: Removed unused 'mapCenter' state
+  const [initialRegion, setInitialRegion] = useState<{
+    lat: number
+    lng: number
+  } | null>(null)
+
   const mapRef = useRef<MapView>(null)
-  const isFetching = useRef(false)
   const hasInitialZoomed = useRef(false)
 
-  const fetchAndSetMasjids = useCallback(async (lat: number, lon: number) => {
-    if (isFetching.current) return
-    isFetching.current = true
+  // --- Effects ---
 
-    try {
-      const newMasjids = await fetchNearbyMasjids(lat, lon)
-
-      setNearbyMasjids((prevMasjids) => {
-        const existingIds = new Set(prevMasjids.map((m) => m.id))
-        const filteredNewMasjids = (newMasjids as MasjidItem[]).filter(
-          (m) => !existingIds.has(m.id),
-        )
-        return [...prevMasjids, ...filteredNewMasjids]
-      })
-    } catch (err) {
-      console.error('Error fetching on pan:', err)
-    } finally {
-      isFetching.current = false
+  // 1. Set Initial Map Center
+  useEffect(() => {
+    if (location && !initialRegion) {
+      const start = { lat: location.latitude, lng: location.longitude }
+      setInitialRegion(start)
+      // FIX: Removed setMapCenter(start) here
     }
-  }, [])
+  }, [location])
 
-  const debouncedRegionFetch = useCallback(
-    debounce((newRegion: Region) => {
-      fetchAndSetMasjids(newRegion.latitude, newRegion.longitude)
-    }, 500),
-    [fetchAndSetMasjids],
-  )
-
-  const onRegionChangeComplete = (newRegion: Region) => {
-    if (loading) return
-
-    if (mode === 'masjids') {
-      debouncedRegionFetch(newRegion)
-    }
-  }
-
-  // Initial Load
+  // 2. Initial Data Load (Loads ONCE when location is found)
   useEffect(() => {
     const loadData = async () => {
       if (!location) {
@@ -160,7 +114,6 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
       try {
         setError(null)
         if (mode === 'masjids') {
-          // Fetch initial data
           const initialList = await fetchNearbyMasjids(
             location.latitude,
             location.longitude,
@@ -171,7 +124,6 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
           setEvents(posts)
         }
       } catch (err: unknown) {
-        console.error('Error loading map data:', err)
         setError((err as Error)?.message ?? 'Failed to load data')
       } finally {
         setLoading(false)
@@ -180,62 +132,96 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
     loadData()
   }, [location, mode])
 
-  // Auto-zoom Effect
+  // 3. Auto-zoom to fit markers
   useEffect(() => {
-    if (!mapRef.current || !location) return
-
-    if (hasInitialZoomed.current) return
+    if (!mapRef.current || !location || hasInitialZoomed.current) return
 
     const dataToCheck = mode === 'masjids' ? nearbyMasjids : events
     if (dataToCheck.length === 0) return
 
     hasInitialZoomed.current = true
+  }, [nearbyMasjids, events, mode, location])
 
-    const userCoord = {
-      latitude: location.latitude,
-      longitude: location.longitude,
-    }
+  // --- Render Preparation ---
 
-    const distanceSq = (
-      a: { latitude: number; longitude: number },
-      b: { latitude: number; longitude: number },
-    ) => {
-      const dLat = a.latitude - b.latitude
-      const dLon = a.longitude - b.longitude
-      return dLat * dLat + dLon * dLon
-    }
+  const mapLayers = React.useMemo(
+    () => [
+      {
+        attribution: '&copy; OpenStreetMap contributors',
+        baseLayerIsChecked: true,
+        baseLayerName: 'OpenStreetMap',
+        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      },
+    ],
+    [],
+  )
 
-    const markerCoords: { latitude: number; longitude: number }[] =
-      mode === 'masjids'
+  const markers = React.useMemo(() => {
+    if (Platform.OS !== 'android') return []
+
+    const mosqueIconUri = Image.resolveAssetSource(mosqueIcon).uri
+
+    const userLocationIcon = `
+      <div style="width: 20px; height: 20px; background: #007AFF; border: 3px solid white; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>
+    `
+
+    return [
+      {
+        id: 'user-location',
+        position: {
+          lat: location?.latitude ?? 0,
+          lng: location?.longitude ?? 0,
+        },
+        icon: userLocationIcon,
+        size: [24, 24],
+        iconAnchor: [12, 12],
+      },
+      ...(mode === 'masjids'
         ? nearbyMasjids
-            .filter((m) => m.latitude && m.longitude && m.latitude !== 0)
-            .map((m) => ({
-              latitude: m.latitude as number,
-              longitude: m.longitude as number,
+            .filter((m) => m.latitude && m.longitude)
+            .map((m, index) => ({
+              id: `masjid-${index}`,
+              position: { lat: m.latitude!, lng: m.longitude! },
+              icon: mosqueIconUri,
+              size: [32, 32],
+              iconAnchor: [16, 16],
+              title: m.name,
             }))
         : events
-            .filter((e) => e.lat && e.long && e.lat !== 0)
-            .map((e) => ({
-              latitude: e.lat as number,
-              longitude: e.long as number,
-            }))
+            .filter((e) => e.lat && e.long)
+            .map((e, index) => {
+              const iconName = getEventTypeIcon(e.post_type)
+              const iconColor = getEventTypeColor(e.post_type)
 
-    const nearest = markerCoords
-      .slice()
-      .sort((a, b) => distanceSq(a, userCoord) - distanceSq(b, userCoord))
-      .slice(0, 3)
+              const svgIcon = `
+                  <div style="
+                    width: 30px; 
+                    height: 30px; 
+                    background: ${iconColor}; 
+                    border-radius: 15px; 
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: center; 
+                    border: 2px solid white;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                  ">
+                    <svg width="16" height="16" fill="white" viewBox="0 0 24 24" stroke="white" stroke-width="2">
+                      ${getFeatherIconSVG(iconName)}
+                    </svg>
+                  </div>
+                `
 
-    const targets = [userCoord, ...nearest]
-
-    if (targets.length > 1) {
-      setTimeout(() => {
-        mapRef.current?.fitToCoordinates(targets, {
-          edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
-          animated: true,
-        })
-      }, 500)
-    }
-  }, [nearbyMasjids, events, mode, location])
+              return {
+                id: `event-${index}`,
+                position: { lat: e.lat!, lng: e.long! },
+                icon: svgIcon,
+                size: [30, 30],
+                iconAnchor: [15, 15],
+                title: e.title,
+              }
+            })),
+    ]
+  }, [mode, nearbyMasjids, events])
 
   if (loading || !location) {
     return <LoadingAnimation />
@@ -250,109 +236,15 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
   }
 
   if (Platform.OS === 'android') {
-    const mapLayers = [
-      {
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        baseLayerIsChecked: true,
-        baseLayerName: 'OpenStreetMap',
-        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-      },
-    ]
-
-    const mosqueSvgIcon = `
-      <div style="
-        width: 30px; 
-        height: 30px; 
-        background: #2D6A4F; 
-        border-radius: 15px; 
-        display: flex; 
-        align-items: center; 
-        justify-content: center; 
-        border: 2px solid white;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-      ">
-        <svg width="16" height="16" fill="white" viewBox="0 0 24 24">
-          <path d="M12 2C8 2 5.5 4.5 5.5 8c0 2.5 1.5 4.5 3 6L12 22l3.5-8c1.5-1.5 3-3.5 3-6C18.5 4.5 16 2 12 2zm0 9.5c-1.4 0-2.5-1.1-2.5-2.5S10.6 6.5 12 6.5s2.5 1.1 2.5 2.5S13.4 11.5 12 11.5z"/>
-        </svg>
-      </div>
-    `
-
-    const markers = [
-      {
-        id: 'user-location',
-        position: { lat: location.latitude, lng: location.longitude },
-        icon: `<div style="width: 20px; height: 20px; background: #007AFF; border: 3px solid white; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
-        size: { x: 20, y: 20 },
-        iconAnchor: { x: 10, y: 10 },
-      },
-      ...(mode === 'masjids'
-        ? nearbyMasjids
-            .filter((m) => m.latitude && m.longitude)
-            .map((m, index) => ({
-              id: `masjid-${index}`,
-              position: { lat: m.latitude!, lng: m.longitude! },
-              icon: mosqueSvgIcon,
-              size: { x: 30, y: 30 },
-              iconAnchor: { x: 15, y: 15 },
-              title: m.name,
-            }))
-        : events
-            .filter((e) => e.lat && e.long)
-            .map((e, index) => {
-              const iconName = getEventTypeIcon(e.post_type)
-              const iconColor = getEventTypeColor(e.post_type)
-
-              const svgIcon = `
-                <div style="
-                  width: 30px; 
-                  height: 30px; 
-                  background: ${iconColor}; 
-                  border-radius: 15px; 
-                  display: flex; 
-                  align-items: center; 
-                  justify-content: center; 
-                  border: 2px solid white;
-                  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-                ">
-                  <svg width="16" height="16" fill="white" viewBox="0 0 24 24" stroke="white" stroke-width="2">
-                    ${getFeatherIconSVG(iconName)}
-                  </svg>
-                </div>
-              `
-
-              return {
-                id: `event-${index}`,
-                position: { lat: e.lat!, lng: e.long! },
-                icon: svgIcon,
-                size: { x: 30, y: 30 },
-                iconAnchor: { x: 15, y: 15 },
-                title: e.title,
-              }
-            })),
-    ]
-
     return (
       <View style={styles.container}>
         <LeafletView
           mapLayers={mapLayers}
           mapMarkers={markers}
-          mapCenterPosition={{
-            lat: location.latitude,
-            lng: location.longitude,
-          }}
+          mapCenterPosition={
+            initialRegion || { lat: location.latitude, lng: location.longitude }
+          }
           zoom={13}
-          onMessageReceived={(msg: LeafletWebViewMessage) => {
-            if (msg.event === 'onMoveEnd' && msg.payload?.mapCenterPosition) {
-              const { lat, lng } = msg.payload.mapCenterPosition
-              onRegionChangeComplete({
-                latitude: lat,
-                longitude: lng,
-                latitudeDelta: 0.05,
-                longitudeDelta: 0.05,
-              } as Region)
-            }
-          }}
         />
       </View>
     )
@@ -372,7 +264,6 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
         showsUserLocation={true}
         showsMyLocationButton={true}
         followsUserLocation={false}
-        onRegionChangeComplete={onRegionChangeComplete}
       >
         <Marker
           coordinate={{
@@ -391,22 +282,35 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
                   latitude: marker.latitude ?? 0,
                   longitude: marker.longitude ?? 0,
                 }}
+                tracksViewChanges={false}
               >
-                <Image source={mosqueIcon} style={styles.markerIcon} />
+                <View
+                  style={{
+                    width: 30,
+                    height: 30,
+                    borderRadius: 15,
+                    backgroundColor: '#2F855A',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    borderWidth: 2,
+                    borderColor: 'white',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 3.84,
+                    elevation: 5,
+                  }}
+                >
+                  <Feather name="home" size={16} color="white" />
+                </View>
+
                 <Callout>
                   <TouchableOpacity
                     onPress={() => {
-                      if (
-                        navigation &&
-                        typeof navigation.navigate === 'function'
-                      ) {
+                      if (navigation?.navigate) {
                         navigation.navigate('OrganizationDetail', {
                           org: marker,
                         })
-                      } else {
-                        console.warn(
-                          'Navigation prop not available. Cannot navigate to OrganizationDetail.',
-                        )
                       }
                     }}
                     style={styles.calloutContainer}
@@ -439,10 +343,7 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
             return (
               <Marker
                 key={event.id ?? index}
-                coordinate={{
-                  latitude: event.lat,
-                  longitude: event.long,
-                }}
+                coordinate={{ latitude: event.lat, longitude: event.long }}
               >
                 <View
                   style={[

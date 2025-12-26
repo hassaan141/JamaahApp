@@ -160,7 +160,7 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
     return (
       <View style={styles.container}>
         <View style={styles.headerRow}>
-          <Text style={styles.headerTitle}>No Data</Text>
+          <Text style={styles.headerTitle}>Loading...</Text>
         </View>
         <View style={styles.infoBar}>
           <Text style={styles.infoBarText}>Select a masjid to view times</Text>

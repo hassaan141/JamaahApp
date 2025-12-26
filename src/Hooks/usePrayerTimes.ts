@@ -3,6 +3,7 @@ import { resolveOrgForTimes } from '@/Utils/organizationResolver'
 import { getUserId } from '@/Utils/getUserID'
 import { getPrayerTimesRange, type DailyPrayerTimes } from '@/Utils/prayerTimes'
 
+// 1. Define the State Type including 'mode'
 type UIState = {
   org: {
     id?: string
@@ -11,6 +12,7 @@ type UIState = {
     timezone?: string | null
   } | null
   distance_m: number | null
+  mode: 'pinned' | 'auto'
 }
 
 function toYYYYMMDD(date: Date) {
@@ -23,13 +25,17 @@ function toYYYYMMDD(date: Date) {
 export function usePrayerTimes() {
   const [loading, setLoading] = useState(true)
   const [targetDate, setTargetDate] = useState<Date>(new Date())
+
+  // Cache for prayer times to allow instant switching
   const [timesCache, setTimesCache] = useState<
     Record<string, DailyPrayerTimes>
   >({})
 
+  // 2. Initialize state with default mode
   const [state, setState] = useState<UIState>({
     org: null,
     distance_m: null,
+    mode: 'pinned',
   })
 
   const retrieve = useCallback(async () => {
@@ -38,16 +44,22 @@ export function usePrayerTimes() {
       const userID = await getUserId()
       const todayStr = toYYYYMMDD(new Date())
 
+      // Fetch Org, Location, and Mode
       const resolved = await resolveOrgForTimes(userID, todayStr)
+
       setState({
         org: resolved.org ?? null,
         distance_m: resolved.distance_m ?? null,
+        // 3. Save the mode from the resolver
+        mode: resolved.mode ?? 'pinned',
       })
 
+      // Cache today's times
       if (resolved.times) {
         setTimesCache((prev) => ({ ...prev, [todayStr]: resolved.times! }))
       }
 
+      // Prefetch next 14 days
       if (resolved.org?.id) {
         prefetchRange(resolved.org.id)
       }
@@ -97,7 +109,6 @@ export function usePrayerTimes() {
     setTargetDate(prev)
   }
 
-  // DATA SELECTORS
   const selectedKey = toYYYYMMDD(targetDate)
   const todayKey = toYYYYMMDD(new Date())
 
@@ -105,11 +116,9 @@ export function usePrayerTimes() {
     loading,
     org: state.org,
     distance_m: state.distance_m,
+    mode: state.mode,
 
-    // 1. DYNAMIC (For Modal - Changes with navigation)
     times: timesCache[selectedKey] || null,
-
-    // 2. STABLE (For Card - Always Today)
     todayTimes: timesCache[todayKey] || null,
 
     refetchPrayerTimes: retrieve,

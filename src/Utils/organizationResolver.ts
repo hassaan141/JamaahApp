@@ -43,7 +43,6 @@ async function getOrgMeta(orgId: string) {
   }
 }
 
-// UPDATE: Added dateStr parameter
 export async function resolveOrgForTimes(
   userId: string,
   dateStr?: string,
@@ -51,15 +50,14 @@ export async function resolveOrgForTimes(
 ) {
   const profile = await getProfile(userId)
 
-  // 1. PINNED MODE
-  if (profile.mode === 'pinned' && profile.pinned_org_id) {
+  const mode = profile.mode as 'pinned' | 'auto'
+
+  if (mode === 'pinned' && profile.pinned_org_id) {
     const [times, org] = await Promise.all([
-      // Pass dateStr here
       getPrayerTimes(profile.pinned_org_id, dateStr),
       getOrgMeta(profile.pinned_org_id),
     ])
 
-    // Optional: Calculate distance just for display
     let distance_m: number | null = null
     try {
       const location = overrideLocation
@@ -76,14 +74,13 @@ export async function resolveOrgForTimes(
           ),
         )
       }
-    } catch {
-      // ignore distance errors
+    } catch (e) {
+      console.log('[organizationResolver]', e)
     }
 
-    return { org, distance_m, times }
+    return { org, distance_m, times, mode }
   }
 
-  // 2. AUTO MODE
   const [locOrNull, state] = await Promise.all([
     overrideLocation
       ? Promise.resolve({
@@ -94,17 +91,14 @@ export async function resolveOrgForTimes(
     getLocState(userId),
   ])
 
-  // Fallback: No location access, use last known state
   if (!locOrNull) {
     if (!state?.last_org_id) throw new Error('location-denied-and-no-cache')
 
-    // Even if using fallback, ensure we are subscribed!
     if (profile.notification_preference !== 'None') {
       await syncPrayerSubscription(state.last_org_id)
     }
 
     const [times, org] = await Promise.all([
-      // Pass dateStr here
       getPrayerTimes(state.last_org_id, dateStr),
       getOrgMeta(state.last_org_id),
     ])
@@ -122,10 +116,10 @@ export async function resolveOrgForTimes(
       )
     }
 
-    return { org, distance_m: distance_m ?? null, times }
+    // NEW: Return 'mode' here
+    return { org, distance_m: distance_m ?? null, times, mode }
   }
 
-  // Live Location Logic
   const osLoc = locOrNull
   const moved =
     state?.last_lat && state?.last_lon
@@ -147,7 +141,6 @@ export async function resolveOrgForTimes(
   let orgId = state?.last_org_id || null
   let dist = state?.last_distance_m || 0
 
-  // Only calculate nearest if necessary
   if (!orgId || movedFar || ttlExpired || dayChanged) {
     const [nearest] = await nearestOrg(osLoc.latitude, osLoc.longitude)
 
@@ -169,10 +162,9 @@ export async function resolveOrgForTimes(
   }
 
   const [times, org] = await Promise.all([
-    // Pass dateStr here
     getPrayerTimes(orgId as string, dateStr),
     getOrgMeta(orgId as string),
   ])
 
-  return { org, distance_m: dist, times }
+  return { org, distance_m: dist, times, mode }
 }

@@ -5,7 +5,7 @@ import CombinedPrayerCard from '@/components/HomeScreen/CombinedPrayerCard'
 import MasjidButton from '@/components/HomeScreen/MasjidButton'
 import NotificationCard from '@/components/HomeScreen/NotificationButton'
 import NotificationList from '@/components/HomeScreen/NotificationList'
-// import JummahCard from '@/components/HomeScreen/JummahCard'
+import JummahCard from '@/components/HomeScreen/JummahCard'
 import { usePrayerTimes } from '@/Hooks/usePrayerTimes'
 
 type HomeRouteParams = { refreshPrayerTimes?: boolean }
@@ -24,6 +24,7 @@ export default function Home({ navigation }: { navigation: NavigationLike }) {
     targetDate,
     nextDay,
     prevDay,
+    mode, // NEW: Get mode
   } = usePrayerTimes()
 
   const [refreshing, setRefreshing] = useState(false)
@@ -39,7 +40,7 @@ export default function Home({ navigation }: { navigation: NavigationLike }) {
   useFocusEffect(
     useCallback(() => {
       refetchPrayerTimes().catch((err) =>
-        console.log('Focus fetch failed (likely network):', err),
+        console.log('Focus fetch failed:', err),
       )
     }, [refetchPrayerTimes]),
   )
@@ -76,6 +77,7 @@ export default function Home({ navigation }: { navigation: NavigationLike }) {
             }}
             navigation={navigation}
             onRefreshPrayerTimes={refetchPrayerTimes}
+            activeMode={mode} // NEW: Pass activeMode here!
           />
         </View>
         <View style={styles.notificationWrapper}>
@@ -83,16 +85,13 @@ export default function Home({ navigation }: { navigation: NavigationLike }) {
         </View>
       </View>
 
-      {/* <JummahCard
-        prayerTimes={todayTimes} // Use todayTimes here too
-        org={org ? { name: org.name, timezone: org.timezone } : null}
-      /> */}
-
-      {/* 2. Pass the date props to the card so the modal can use them */}
-      <CombinedPrayerCard
-        // 1. Card uses Today's Data (Fixed)
+      <JummahCard
         prayerTimes={todayTimes}
-        // 2. Modal uses Selected Data (Dynamic)
+        org={org ? { name: org.name, timezone: org.timezone } : null}
+      />
+
+      <CombinedPrayerCard
+        prayerTimes={todayTimes}
         modalPrayerTimes={times}
         orgName={org?.name}
         currentDate={targetDate}

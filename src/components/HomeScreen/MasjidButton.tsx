@@ -7,7 +7,6 @@ import { formatDistance } from '@/Utils/formatDistance'
 export type PrayerTimesWithOrg = {
   org?: { id?: string; name?: string; address?: string }
   distance_m?: number | null
-  // Allow extra fields – we only read a few here
   [key: string]: unknown
 }
 
@@ -17,28 +16,37 @@ interface Props {
     navigate: (route: string, params?: Record<string, unknown>) => void
   }
   onRefreshPrayerTimes?: () => void
+  // NEW: Prop to know which mode we are in
+  activeMode?: 'pinned' | 'auto'
 }
 
 const MasjidButton: React.FC<Props> = ({
   prayerTimes,
   navigation,
   onRefreshPrayerTimes,
+  activeMode = 'pinned', // Default to pinned if undefined
 }) => {
   const [modalVisible, setModalVisible] = useState(false)
 
   const handlePress = () => setModalVisible(true)
   const handleCloseModal = () => setModalVisible(false)
 
+  // Dynamic Icon Logic
+  const isAuto = activeMode === 'auto'
+  const iconName = isAuto ? 'navigation' : 'map-pin'
+  const iconColor = isAuto ? '#F6AD55' : '#48BB78' // Orange for Auto, Green for Pinned
+
   return (
     <>
       <TouchableOpacity style={styles.masjidButton} onPress={handlePress}>
         <View style={styles.masjidButtonContent}>
           <View style={styles.iconContainer}>
-            <Feather name="map-pin" size={20} color="#48BB78" />
+            {/* Dynamic Icon */}
+            <Feather name={iconName} size={20} color={iconColor} />
           </View>
           <View style={styles.textContainer}>
             <Text style={styles.masjidName} numberOfLines={1}>
-              {prayerTimes?.org?.name ?? ''}
+              {prayerTimes?.org?.name ?? 'Loading...'}
             </Text>
             <Text style={styles.metaLine} numberOfLines={1}>
               {(prayerTimes?.org?.address ?? '') +
@@ -59,6 +67,7 @@ const MasjidButton: React.FC<Props> = ({
         masjidData={prayerTimes}
         navigation={navigation}
         onRefreshPrayerTimes={onRefreshPrayerTimes}
+        activeMode={activeMode} // Pass mode to modal
       />
     </>
   )
@@ -86,6 +95,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     padding: 8,
     borderRadius: 10,
+    // Optional: Add a subtle border to match the clean look
+    borderWidth: 1,
+    borderColor: '#F7FAFC',
   },
   textContainer: {
     flex: 1,

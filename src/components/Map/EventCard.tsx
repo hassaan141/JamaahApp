@@ -3,9 +3,13 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
 import type { EventItem } from '@/Supabase/fetchEventsFromRPC'
 
+/**
+ * Extended type to handle recurring days and organization name
+ * as returned by the updated Supabase RPC.
+ */
 type EventWithExtras = EventItem & {
   recurs_on_days?: (string | number)[] | null
-  organizations?: { name: string } | null
+  organization_name?: string | null
 }
 
 const getEventTypeIcon = (
@@ -23,6 +27,25 @@ const getEventTypeIcon = (
       return 'users'
     default:
       return 'calendar'
+  }
+}
+
+/**
+ * Converts a standard date string (YYYY-MM-DD) into
+ * a legible format: "26 December 2025"
+ */
+const formatLegibleDate = (dateStr: string | null) => {
+  if (!dateStr) return null
+  try {
+    const date = new Date(dateStr)
+    if (isNaN(date.getTime())) return dateStr
+    return date.toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    })
+  } catch {
+    return dateStr
   }
 }
 
@@ -68,7 +91,6 @@ export default function EventCard({
 }) {
   const iconName = getEventTypeIcon(event.post_type)
   const iconColor = getEventTypeColor(event.post_type)
-
   const isRepeating = event.post_type === 'Repeating_classes'
 
   const recurringDisplay = (() => {
@@ -96,6 +118,7 @@ export default function EventCard({
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress}>
+      {/* Title Header */}
       <View style={styles.header}>
         <View style={styles.titleRow}>
           <View style={[styles.typeIcon, { backgroundColor: iconColor }]}>
@@ -107,31 +130,48 @@ export default function EventCard({
         </View>
       </View>
 
-      <View style={styles.infoRow}>
-        <View style={styles.locationInfo}>
-          <Feather name="map-pin" size={12} color="#718096" />
-          <Text style={styles.location} numberOfLines={1}>
-            {event.location || 'Location TBD'}
-            {event.dist_km ? ` • ${event.dist_km.toFixed(1)} km` : ''}
+      {/* 1. Organization Row (Moved before Address) */}
+      {(event as EventWithExtras).organization_name && (
+        <View style={styles.organizationRow}>
+          <Feather name="users" size={12} color="#718096" />
+          <Text style={styles.organizationText}>
+            {(event as EventWithExtras).organization_name}
           </Text>
         </View>
+      )}
+
+      {/* 2. Location Row: Address (Left) and Distance (Right) */}
+      <View style={styles.splitInfoRow}>
+        <View style={styles.leftContainer}>
+          <Feather name="map-pin" size={12} color="#718096" />
+          <Text style={styles.infoText} numberOfLines={1}>
+            {event.location || 'Location TBD'}
+          </Text>
+        </View>
+        {event.dist_km != null && (
+          <Text style={styles.rightHighlightText}>
+            {event.dist_km.toFixed(1)} km
+          </Text>
+        )}
       </View>
 
-      <View style={styles.organizationRow}>
-        <Feather name="users" size={12} color="#718096" />
-        <Text style={styles.organizationText}>
-          {(event as EventWithExtras).organizations?.name}
-        </Text>
-      </View>
-
-      {(event.date || recurringDisplay) && (
-        <View style={styles.dateRow}>
-          <Feather name="calendar" size={12} color="#718096" />
-          <Text style={styles.dateText}>{recurringDisplay || event.date}</Text>
-          {event.start_time && (
-            <Text style={styles.timeText}>
-              • {formatTime(event.start_time)}
-              {event.end_time ? ` - ${formatTime(event.end_time)}` : ''}
+      {/* 3. Date & Time Row: Time (Left) and Formatted Date (Right) */}
+      {(event.date || recurringDisplay || event.start_time) && (
+        <View style={styles.splitInfoRow}>
+          <View style={styles.leftContainer}>
+            <Feather name="clock" size={12} color="#718096" />
+            {event.start_time ? (
+              <Text style={styles.infoText}>
+                {formatTime(event.start_time)}
+                {event.end_time ? ` - ${formatTime(event.end_time)}` : ''}
+              </Text>
+            ) : (
+              <Text style={styles.infoText}>Time TBD</Text>
+            )}
+          </View>
+          {(recurringDisplay || event.date) && (
+            <Text style={styles.rightNormalText}>
+              {recurringDisplay || formatLegibleDate(event.date)}
             </Text>
           )}
         </View>
@@ -156,14 +196,14 @@ export default function EventCard({
 const styles = StyleSheet.create({
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 12,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
   },
   header: {
     marginBottom: 8,
@@ -178,7 +218,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 8,
+    marginRight: 10,
     marginTop: 2,
   },
   title: {
@@ -188,58 +228,56 @@ const styles = StyleSheet.create({
     flex: 1,
     lineHeight: 20,
   },
-  infoRow: {
+  splitInfoRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 8,
   },
-  locationInfo: {
+  leftContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
+    marginRight: 8,
   },
-  location: {
-    fontSize: 12,
+  infoText: {
+    fontSize: 13,
     color: '#718096',
-    marginLeft: 4,
-    flex: 1,
+    marginLeft: 6,
+  },
+  rightHighlightText: {
+    fontSize: 13,
+    fontWeight: '600',
+    // color: '#48BB78', // Changed to green
+    color: '#718096',
+  },
+  rightNormalText: {
+    fontSize: 13,
+    color: '#718096',
+    fontWeight: '500',
   },
   organizationRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 8,
   },
   organizationText: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#718096',
-    marginLeft: 4,
+    marginLeft: 6,
     fontWeight: '500',
-  },
-  dateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  dateText: {
-    fontSize: 12,
-    color: '#718096',
-    marginLeft: 4,
-  },
-  timeText: {
-    fontSize: 12,
-    color: '#718096',
-    marginLeft: 4,
   },
   actionButtons: {
     flexDirection: 'row',
+    marginTop: 4,
   },
   actionButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 8,
-    borderRadius: 6,
+    paddingVertical: 10,
+    borderRadius: 8,
   },
   directionsButton: {
     backgroundColor: '#48BB78',
@@ -247,7 +285,7 @@ const styles = StyleSheet.create({
   directionsText: {
     color: '#FFFFFF',
     fontWeight: '600',
-    fontSize: 12,
-    marginLeft: 4,
+    fontSize: 14,
+    marginLeft: 6,
   },
 })

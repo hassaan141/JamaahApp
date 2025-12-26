@@ -19,6 +19,7 @@ export type EventItem = Pick<
   | 'long'
 > & {
   dist_km: number
+  organization_name: string
 }
 
 export async function fetchNearbyEvents(

@@ -96,6 +96,7 @@ export default () => ({
         'ACCESS_FINE_LOCATION',
         'ACCESS_BACKGROUND_LOCATION',
         'FOREGROUND_SERVICE',
+        //'FOREGROUND_SERVICE_LOCATION'
       ],
       adaptiveIcon: {
         foregroundImage: getIcon(),

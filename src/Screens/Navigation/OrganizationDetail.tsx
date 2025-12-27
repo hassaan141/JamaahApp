@@ -17,6 +17,8 @@ import { fetchOrganizationById } from '@/Supabase/fetchOrganizations'
 import type { OrgPost } from '@/types'
 import { fetchOrgFollowerCount } from '@/Supabase/fetchOrgFollowerCount'
 import AnnouncementCard from '@/components/Shared/AnnouncementCard'
+import { useOrgPrayerTimes } from '@/Hooks/useOrgPrayerTimes'
+import CombinedPrayerCard from '@/components/HomeScreen/CombinedPrayerCard'
 
 type OrgParam = {
   id?: string | number
@@ -529,6 +531,16 @@ export default function OrganizationDetail() {
     navigation.goBack()
   }
 
+  const {
+    times,
+    todayTimes,
+    orgName: prayerOrgName,
+    targetDate,
+    nextDay,
+    prevDay,
+    loading: prayerLoading,
+  } = useOrgPrayerTimes(orgId)
+
   // FIX 3: Detect "Lite" object (from Map) and fetch full details
   useEffect(() => {
     if (!orgId) return
@@ -679,6 +691,19 @@ export default function OrganizationDetail() {
       {detailsLoading && (
         <View style={{ padding: 10 }}>
           <ActivityIndicator size="small" color="#2D6A4F" />
+        </View>
+      )}
+
+      {org.type?.toLowerCase() === 'masjid' && !prayerLoading && todayTimes && (
+        <View style={{ marginVertical: 10 }}>
+          <CombinedPrayerCard
+            prayerTimes={todayTimes}
+            modalPrayerTimes={times}
+            orgName={prayerOrgName || org.name}
+            currentDate={targetDate}
+            onNextDay={nextDay}
+            onPrevDay={prevDay}
+          />
         </View>
       )}
 

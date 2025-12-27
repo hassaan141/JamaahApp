@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react'
 import {
   View,
   Text,
-  ActivityIndicator,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
@@ -15,6 +14,8 @@ import { deleteOrgAnnouncement } from '@/Supabase/deleteOrgAnnouncement'
 import AnnouncementCard from '@/components/Shared/AnnouncementCard'
 import EditAnnouncementModal from './EditAnnouncementModal'
 import { toast } from '@/components/Toast/toast'
+// Import the custom loading component
+import LoadingAnimation from '@/components/Loading/Loading'
 
 const TABS = [
   { label: 'Classes', value: 'CLASSES' },
@@ -124,11 +125,14 @@ export default function AnnouncementsList({
   const handleExpand = () => setIsExpanded(true)
   const handleCollapse = () => setIsExpanded(false)
 
+  // Loading state wrapped in the card container for visual consistency
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2F855A" />
-        <Text style={styles.loadingText}>Loading announcements...</Text>
+      <View style={styles.sectionCard}>
+        <View style={styles.loadingContainer}>
+          <LoadingAnimation />
+          <Text style={styles.loadingText}>Loading announcements...</Text>
+        </View>
       </View>
     )
   }

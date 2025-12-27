@@ -22,6 +22,9 @@ function haversine(lat1: number, lon1: number, lat2: number, lon2: number) {
 const DIST_M = 500
 const TTL_MIN = 360
 
+/**
+ * PURE FUNCTION: Fetches raw metadata for a specific organization
+ */
 async function getOrgMeta(orgId: string) {
   const { data, error } = await supabase
     .from('organizations')
@@ -43,20 +46,34 @@ async function getOrgMeta(orgId: string) {
   }
 }
 
+/**
+ * PURE DATA FETCHING FUNCTION:
+ * Use this in OrganizationDetail.tsx to get prayer times for a specific ID.
+ */
+export async function fetchPrayerData(orgId: string, dateStr?: string) {
+  const [times, org] = await Promise.all([
+    getPrayerTimes(orgId, dateStr),
+    getOrgMeta(orgId),
+  ])
+  return { org, times }
+}
+
+/**
+ * GLOBAL RESOLVER:
+ * Handles the logic for "Auto" vs "Pinned" mode for the Home Screen.
+ */
 export async function resolveOrgForTimes(
   userId: string,
   dateStr?: string,
   overrideLocation?: { lat: number; lon: number },
 ) {
   const profile = await getProfile(userId)
-
   const mode = profile.mode as 'pinned' | 'auto'
 
+  // --- CASE 1: PINNED MODE ---
   if (mode === 'pinned' && profile.pinned_org_id) {
-    const [times, org] = await Promise.all([
-      getPrayerTimes(profile.pinned_org_id, dateStr),
-      getOrgMeta(profile.pinned_org_id),
-    ])
+    const data = await fetchPrayerData(profile.pinned_org_id, dateStr)
+    const { org } = data
 
     let distance_m: number | null = null
     try {
@@ -75,12 +92,13 @@ export async function resolveOrgForTimes(
         )
       }
     } catch (e) {
-      console.log('[organizationResolver]', e)
+      console.log('[organizationResolver] distance calc error:', e)
     }
 
-    return { org, distance_m, times, mode }
+    return { ...data, distance_m, mode }
   }
 
+  // --- CASE 2: AUTO MODE (GPS) ---
   const [locOrNull, state] = await Promise.all([
     overrideLocation
       ? Promise.resolve({
@@ -91,6 +109,7 @@ export async function resolveOrgForTimes(
     getLocState(userId),
   ])
 
+  // Handle No GPS available
   if (!locOrNull) {
     if (!state?.last_org_id) throw new Error('location-denied-and-no-cache')
 
@@ -98,10 +117,8 @@ export async function resolveOrgForTimes(
       await syncPrayerSubscription(state.last_org_id)
     }
 
-    const [times, org] = await Promise.all([
-      getPrayerTimes(state.last_org_id, dateStr),
-      getOrgMeta(state.last_org_id),
-    ])
+    const data = await fetchPrayerData(state.last_org_id, dateStr)
+    const { org } = data
 
     let distance_m = state.last_distance_m
     if (
@@ -116,10 +133,10 @@ export async function resolveOrgForTimes(
       )
     }
 
-    // NEW: Return 'mode' here
-    return { org, distance_m: distance_m ?? null, times, mode }
+    return { ...data, distance_m: distance_m ?? null, mode }
   }
 
+  // Handle GPS Movement / TTL Logic
   const osLoc = locOrNull
   const moved =
     state?.last_lat && state?.last_lon
@@ -141,6 +158,7 @@ export async function resolveOrgForTimes(
   let orgId = state?.last_org_id || null
   let dist = state?.last_distance_m || 0
 
+  // Trigger nearest masjid calculation if moved or cache expired
   if (!orgId || movedFar || ttlExpired || dayChanged) {
     const [nearest] = await nearestOrg(osLoc.latitude, osLoc.longitude)
 
@@ -161,10 +179,7 @@ export async function resolveOrgForTimes(
     await syncPrayerSubscription(orgId)
   }
 
-  const [times, org] = await Promise.all([
-    getPrayerTimes(orgId as string, dateStr),
-    getOrgMeta(orgId as string),
-  ])
+  const data = await fetchPrayerData(orgId as string, dateStr)
 
-  return { org, distance_m: dist, times, mode }
+  return { ...data, distance_m: dist, mode }
 }

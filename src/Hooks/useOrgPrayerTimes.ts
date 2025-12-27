@@ -1,19 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { resolveOrgForTimes } from '@/Utils/organizationResolver'
-import { getUserId } from '@/Utils/getUserID'
+import { fetchPrayerData } from '@/Utils/organizationResolver'
 import { getPrayerTimesRange, type DailyPrayerTimes } from '@/Utils/prayerTimes'
-
-// 1. Define the State Type including 'mode'
-type UIState = {
-  org: {
-    id?: string
-    name?: string
-    address?: string
-    timezone?: string | null
-  } | null
-  distance_m: number | null
-  mode: 'pinned' | 'auto'
-}
 
 function toYYYYMMDD(date: Date) {
   const y = date.getFullYear()
@@ -22,56 +9,31 @@ function toYYYYMMDD(date: Date) {
   return `${y}-${m}-${d}`
 }
 
-export function usePrayerTimes() {
+export function useOrgPrayerTimes(orgId: string | undefined) {
   const [loading, setLoading] = useState(true)
   const [targetDate, setTargetDate] = useState<Date>(new Date())
-
-  // Cache for prayer times to allow instant switching
   const [timesCache, setTimesCache] = useState<
     Record<string, DailyPrayerTimes>
   >({})
-
-  // 2. Initialize state with default mode
-  const [state, setState] = useState<UIState>({
-    org: null,
-    distance_m: null,
-    mode: 'pinned',
-  })
+  const [orgMeta, setOrgMeta] = useState<{ name?: string; id?: string } | null>(
+    null,
+  )
 
   const retrieve = useCallback(async () => {
+    if (!orgId) return
     setLoading(true)
     try {
-      const userID = await getUserId()
       const todayStr = toYYYYMMDD(new Date())
+      // Use the pure fetcher to get specific org data
+      const resolved = await fetchPrayerData(orgId, todayStr)
 
-      // Fetch Org, Location, and Mode
-      const resolved = await resolveOrgForTimes(userID, todayStr)
+      setOrgMeta(resolved.org)
 
-      setState({
-        org: resolved.org ?? null,
-        distance_m: resolved.distance_m ?? null,
-        // 3. Save the mode from the resolver
-        mode: resolved.mode ?? 'pinned',
-      })
-
-      // Cache today's times
       if (resolved.times) {
         setTimesCache((prev) => ({ ...prev, [todayStr]: resolved.times! }))
       }
 
-      // Prefetch next 14 days
-      if (resolved.org?.id) {
-        prefetchRange(resolved.org.id)
-      }
-    } catch (e) {
-      console.error('Error fetching prayer times:', e)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  const prefetchRange = async (orgId: string) => {
-    try {
+      // Prefetch range for this specific masjid
       const start = new Date()
       start.setDate(start.getDate() - 2)
       const end = new Date()
@@ -89,9 +51,11 @@ export function usePrayerTimes() {
 
       setTimesCache((prev) => ({ ...prev, ...newCache }))
     } catch (e) {
-      console.warn('Prefetch failed', e)
+      console.error('[useOrgPrayerTimes] Error:', e)
+    } finally {
+      setLoading(false)
     }
-  }
+  }, [orgId])
 
   useEffect(() => {
     retrieve()
@@ -114,17 +78,12 @@ export function usePrayerTimes() {
 
   return {
     loading,
-    org: state.org,
-    distance_m: state.distance_m,
-    mode: state.mode,
-
+    orgName: orgMeta?.name,
     times: timesCache[selectedKey] || null,
     todayTimes: timesCache[todayKey] || null,
-
-    refetchPrayerTimes: retrieve,
-    setLoading,
     targetDate,
     nextDay,
     prevDay,
+    refresh: retrieve,
   }
 }

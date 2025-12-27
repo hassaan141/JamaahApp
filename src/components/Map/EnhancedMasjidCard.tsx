@@ -18,9 +18,6 @@ export default function EnhancedMasjidCard({
     <TouchableOpacity style={styles.card} onPress={onPress}>
       <View style={styles.header}>
         <Text style={styles.name}>{item.name}</Text>
-        <View style={styles.ratingContainer}>
-          <Feather name="star" size={12} color="#FFD700" />
-        </View>
       </View>
 
       <View style={styles.infoRow}>
@@ -88,14 +85,6 @@ const styles = StyleSheet.create({
     color: '#2D3748',
     flex: 1,
     marginRight: 8,
-  },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F7FAFC',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
   },
   infoRow: {
     flexDirection: 'row',

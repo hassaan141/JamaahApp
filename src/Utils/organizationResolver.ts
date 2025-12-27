@@ -22,6 +22,9 @@ function haversine(lat1: number, lon1: number, lat2: number, lon2: number) {
 const DIST_M = 500
 const TTL_MIN = 360
 
+/**
+ * PURE FUNCTION: Fetches raw metadata for a specific organization
+ */
 async function getOrgMeta(orgId: string) {
   const { data, error } = await supabase
     .from('organizations')
@@ -43,23 +46,35 @@ async function getOrgMeta(orgId: string) {
   }
 }
 
-// UPDATE: Added dateStr parameter
+/**
+ * PURE DATA FETCHING FUNCTION:
+ * Use this in OrganizationDetail.tsx to get prayer times for a specific ID.
+ */
+export async function fetchPrayerData(orgId: string, dateStr?: string) {
+  const [times, org] = await Promise.all([
+    getPrayerTimes(orgId, dateStr),
+    getOrgMeta(orgId),
+  ])
+  return { org, times }
+}
+
+/**
+ * GLOBAL RESOLVER:
+ * Handles the logic for "Auto" vs "Pinned" mode for the Home Screen.
+ */
 export async function resolveOrgForTimes(
   userId: string,
   dateStr?: string,
   overrideLocation?: { lat: number; lon: number },
 ) {
   const profile = await getProfile(userId)
+  const mode = profile.mode as 'pinned' | 'auto'
 
-  // 1. PINNED MODE
-  if (profile.mode === 'pinned' && profile.pinned_org_id) {
-    const [times, org] = await Promise.all([
-      // Pass dateStr here
-      getPrayerTimes(profile.pinned_org_id, dateStr),
-      getOrgMeta(profile.pinned_org_id),
-    ])
+  // --- CASE 1: PINNED MODE ---
+  if (mode === 'pinned' && profile.pinned_org_id) {
+    const data = await fetchPrayerData(profile.pinned_org_id, dateStr)
+    const { org } = data
 
-    // Optional: Calculate distance just for display
     let distance_m: number | null = null
     try {
       const location = overrideLocation
@@ -76,14 +91,14 @@ export async function resolveOrgForTimes(
           ),
         )
       }
-    } catch {
-      // ignore distance errors
+    } catch (e) {
+      console.log('[organizationResolver] distance calc error:', e)
     }
 
-    return { org, distance_m, times }
+    return { ...data, distance_m, mode }
   }
 
-  // 2. AUTO MODE
+  // --- CASE 2: AUTO MODE (GPS) ---
   const [locOrNull, state] = await Promise.all([
     overrideLocation
       ? Promise.resolve({
@@ -94,20 +109,16 @@ export async function resolveOrgForTimes(
     getLocState(userId),
   ])
 
-  // Fallback: No location access, use last known state
+  // Handle No GPS available
   if (!locOrNull) {
     if (!state?.last_org_id) throw new Error('location-denied-and-no-cache')
 
-    // Even if using fallback, ensure we are subscribed!
     if (profile.notification_preference !== 'None') {
       await syncPrayerSubscription(state.last_org_id)
     }
 
-    const [times, org] = await Promise.all([
-      // Pass dateStr here
-      getPrayerTimes(state.last_org_id, dateStr),
-      getOrgMeta(state.last_org_id),
-    ])
+    const data = await fetchPrayerData(state.last_org_id, dateStr)
+    const { org } = data
 
     let distance_m = state.last_distance_m
     if (
@@ -122,10 +133,10 @@ export async function resolveOrgForTimes(
       )
     }
 
-    return { org, distance_m: distance_m ?? null, times }
+    return { ...data, distance_m: distance_m ?? null, mode }
   }
 
-  // Live Location Logic
+  // Handle GPS Movement / TTL Logic
   const osLoc = locOrNull
   const moved =
     state?.last_lat && state?.last_lon
@@ -147,7 +158,7 @@ export async function resolveOrgForTimes(
   let orgId = state?.last_org_id || null
   let dist = state?.last_distance_m || 0
 
-  // Only calculate nearest if necessary
+  // Trigger nearest masjid calculation if moved or cache expired
   if (!orgId || movedFar || ttlExpired || dayChanged) {
     const [nearest] = await nearestOrg(osLoc.latitude, osLoc.longitude)
 
@@ -168,11 +179,7 @@ export async function resolveOrgForTimes(
     await syncPrayerSubscription(orgId)
   }
 
-  const [times, org] = await Promise.all([
-    // Pass dateStr here
-    getPrayerTimes(orgId as string, dateStr),
-    getOrgMeta(orgId as string),
-  ])
+  const data = await fetchPrayerData(orgId as string, dateStr)
 
-  return { org, distance_m: dist, times }
+  return { ...data, distance_m: dist, mode }
 }

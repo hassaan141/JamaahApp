@@ -13,6 +13,8 @@ interface Props {
     navigate: (route: string, params?: Record<string, unknown>) => void
   }
   onRefreshPrayerTimes?: () => void
+  // NEW: Prop to control highlighting
+  activeMode?: 'pinned' | 'auto'
 }
 
 const MasjidDetailsModal: React.FC<Props> = ({
@@ -21,6 +23,7 @@ const MasjidDetailsModal: React.FC<Props> = ({
   masjidData,
   navigation,
   onRefreshPrayerTimes,
+  activeMode = 'pinned',
 }) => {
   const handleChooseSpecificMasjid = () => {
     onClose()
@@ -37,6 +40,10 @@ const MasjidDetailsModal: React.FC<Props> = ({
       console.log('Use nearest failed:', e)
     }
   }
+
+  // Helper styles for active states
+  const isPinnedActive = activeMode === 'pinned'
+  const isAutoActive = activeMode === 'auto'
 
   return (
     <Modal
@@ -58,8 +65,12 @@ const MasjidDetailsModal: React.FC<Props> = ({
             Choose how you'd like to receive prayer times and notifications
           </Text>
 
+          {/* Option 1: Pinned / Specific */}
           <TouchableOpacity
-            style={styles.optionButton}
+            style={[
+              styles.optionButton,
+              isPinnedActive && styles.activeOptionPinned, // Green highlight if active
+            ]}
             onPress={handleChooseSpecificMasjid}
           >
             <View style={styles.optionIcon}>
@@ -71,11 +82,20 @@ const MasjidDetailsModal: React.FC<Props> = ({
                 Select a masjid to always get its prayer times
               </Text>
             </View>
-            <Feather name="chevron-right" size={20} color="#CBD5E0" />
+            {isPinnedActive && (
+              <Feather name="check" size={20} color="#48BB78" />
+            )}
+            {!isPinnedActive && (
+              <Feather name="chevron-right" size={20} color="#CBD5E0" />
+            )}
           </TouchableOpacity>
 
+          {/* Option 2: Auto / Nearest */}
           <TouchableOpacity
-            style={styles.optionButton}
+            style={[
+              styles.optionButton,
+              isAutoActive && styles.activeOptionAuto, // Orange highlight if active
+            ]}
             onPress={handleUseNearestMasjid}
           >
             <View style={styles.optionIcon}>
@@ -87,13 +107,21 @@ const MasjidDetailsModal: React.FC<Props> = ({
                 Always show the closest masjid to your location
               </Text>
             </View>
-            <Feather name="chevron-right" size={20} color="#CBD5E0" />
+            {isAutoActive && <Feather name="check" size={20} color="#F6AD55" />}
+            {!isAutoActive && (
+              <Feather name="chevron-right" size={20} color="#CBD5E0" />
+            )}
           </TouchableOpacity>
 
           <View style={styles.currentMasjidSection}>
             <Text style={styles.currentLabel}>Currently using:</Text>
             <View style={styles.currentMasjidInfo}>
-              <Feather name="map-pin" size={16} color="#48BB78" />
+              {/* Dynamic Icon here too */}
+              <Feather
+                name={isAutoActive ? 'navigation' : 'map-pin'}
+                size={16}
+                color={isAutoActive ? '#F6AD55' : '#48BB78'}
+              />
               <Text style={styles.currentMasjidName}>
                 {masjidData?.org?.name || 'Loading...'}
               </Text>
@@ -157,6 +185,15 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderColor: '#E2E8F0',
+  },
+  // NEW STYLES FOR HIGHLIGHTING
+  activeOptionPinned: {
+    backgroundColor: '#F0FFF4', // Light Green
+    borderColor: '#48BB78',
+  },
+  activeOptionAuto: {
+    backgroundColor: '#FFFAF0', // Light Orange
+    borderColor: '#F6AD55',
   },
   optionIcon: {
     width: 40,

@@ -1,7 +1,6 @@
 import React from 'react'
 import { FlatList, StyleSheet } from 'react-native'
 import EventCard from '@/components/Map/EventCard'
-// 1. Change Import: Use the new type we created
 import type { EventItem } from '@/Supabase/fetchEventsFromRPC'
 
 export default function EventList({

@@ -1,6 +1,8 @@
 import { supabase } from './supabaseClient'
 
-export async function fetchDevicesByProfileIds(profileIds: string[]) {
+export async function fetchDevicesByProfileIds(
+  profileIds: string[],
+): Promise<string[]> {
   const { data, error } = await supabase
     .from('devices')
     .select('profile_id, fcm_token, platform, last_seen_at')
@@ -16,7 +18,6 @@ export async function fetchDevicesByProfileIds(profileIds: string[]) {
     `[fetchDevicesByProfileIds] Found ${devices.length} devices for ${profileIds.length} profiles`,
   )
 
-  // Group devices by profile for better logging (filter out devices with null profile_id)
   const devicesByProfile = devices
     .filter((device) => device.profile_id !== null)
     .reduce(
@@ -37,5 +38,13 @@ export async function fetchDevicesByProfileIds(profileIds: string[]) {
     })
   })
 
-  return devices
+  const uniqueTokens = [
+    ...new Set(
+      devices
+        .map((d) => d.fcm_token)
+        .filter((token): token is string => token !== null && token !== ''),
+    ),
+  ]
+
+  return uniqueTokens
 }

@@ -694,18 +694,21 @@ export default function OrganizationDetail() {
         </View>
       )}
 
-      {org.type?.toLowerCase() === 'masjid' && !prayerLoading && todayTimes && (
-        <View style={{ marginVertical: 10 }}>
-          <CombinedPrayerCard
-            prayerTimes={todayTimes}
-            modalPrayerTimes={times}
-            orgName={prayerOrgName || org.name}
-            currentDate={targetDate}
-            onNextDay={nextDay}
-            onPrevDay={prevDay}
-          />
-        </View>
-      )}
+      {(org.type?.toLowerCase() === 'masjid' ||
+        org.type?.toLowerCase() === 'msa') &&
+        !prayerLoading &&
+        todayTimes && (
+          <View style={{ marginVertical: 10 }}>
+            <CombinedPrayerCard
+              prayerTimes={todayTimes}
+              modalPrayerTimes={times}
+              orgName={prayerOrgName || org.name}
+              currentDate={targetDate}
+              onNextDay={nextDay}
+              onPrevDay={prevDay}
+            />
+          </View>
+        )}
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Recent Announcements</Text>

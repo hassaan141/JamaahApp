@@ -8,7 +8,7 @@ import {
   Animated,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import logo from '../../../assets/JamahProd.png'
+import logo from '../../../assets/JamahProdNoBG.png'
 
 const { width } = Dimensions.get('window')
 
@@ -18,7 +18,7 @@ const HINTS = [
 ]
 
 // ✅ FIX 1: Updated to a warmer 'Sage' green to match your JPG logo background
-const THEME_BG_COLOR = '#E1EBC5'
+const THEME_BG_COLOR = '#48BB78'
 
 // Dark green extracted from the calligraphy ink
 const THEME_INK_COLOR = '#1F5126'

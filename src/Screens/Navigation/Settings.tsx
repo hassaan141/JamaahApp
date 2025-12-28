@@ -8,9 +8,18 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  RefreshControl,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useNavigation } from '@react-navigation/native'
+// CHANGED: Imported ParamListBase
+import type {
+  NavigationProp,
+  ParamListBase} from '@react-navigation/native';
+import {
+  useNavigation
+} from '@react-navigation/native'
 import { Feather } from '@expo/vector-icons'
 import { useProfile } from '@/Auth/fetchProfile'
 import { updateProfile } from '@/Supabase/updateProfile'
@@ -23,7 +32,9 @@ import type { Database } from '@/types/supabase'
 type Organization = Database['public']['Tables']['organizations']['Row']
 
 export default function Settings() {
-  const navigation = useNavigation()
+  // CHANGED: Replaced 'any' with 'ParamListBase' to satisfy the linter
+  const navigation = useNavigation<NavigationProp<ParamListBase>>()
+
   const { profile, loading: profileLoading, refetch } = useProfile()
   const [loading, setLoading] = useState(false)
   const [organization, setOrganization] = useState<Organization | null>(null)
@@ -42,6 +53,14 @@ export default function Settings() {
   const [orgFacebook, setOrgFacebook] = useState('')
   const [orgInstagram, setOrgInstagram] = useState('')
   const [orgTwitter, setOrgTwitter] = useState('')
+
+  const [refreshing, setRefreshing] = useState(false)
+
+  const onRefresh = async () => {
+    setRefreshing(true)
+    await refetch()
+    setRefreshing(false)
+  }
 
   const isOrganization = profile?.is_org === true && !!profile?.org_id
 
@@ -129,32 +148,40 @@ export default function Settings() {
   }
 
   const handleDeleteAccount = () => {
+    setLoading(true)
+
     Alert.alert(
       'Delete Account',
-      'Are you sure you want to delete your account? This action cannot be undone.',
+      'Are you sure? This action is permanent.',
       [
-        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Cancel',
+          style: 'cancel',
+          onPress: () => setLoading(false),
+        },
         {
           text: 'Delete',
           style: 'destructive',
           onPress: async () => {
-            setLoading(true)
             try {
               const { ok, error } = await deleteAccount()
-              if (!ok) {
+              if (ok) {
+                toast.success('Account deleted', 'Success')
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: 'SignIn' }],
+                })
+              } else {
                 toast.error(error || 'Failed to delete account', 'Error')
                 setLoading(false)
-              } else {
-                toast.success('Account deleted successfully', 'Success')
               }
-              // If successful, user will be signed out automatically
             } catch {
-              toast.error('Failed to delete account', 'Error')
               setLoading(false)
             }
           },
         },
       ],
+      { onDismiss: () => setLoading(false) },
     )
   }
 
@@ -171,212 +198,224 @@ export default function Settings() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        >
-          <Feather name="arrow-left" size={24} color="#1D4732" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Settings</Text>
-      </View>
-
-      <ScrollView
-        style={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
       >
-        {/* Profile Settings Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Feather name="user" size={20} color="#2F855A" />
-            <Text style={styles.sectionTitle}>Profile Settings</Text>
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>First Name</Text>
-            <TextInput
-              style={styles.input}
-              value={firstName}
-              onChangeText={setFirstName}
-              placeholder="Enter your first name"
-              placeholderTextColor="#999"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Last Name</Text>
-            <TextInput
-              style={styles.input}
-              value={lastName}
-              onChangeText={setLastName}
-              placeholder="Enter your last name"
-              placeholderTextColor="#999"
-            />
-          </View>
-
+        <View style={styles.header}>
           <TouchableOpacity
-            style={[styles.button, styles.primaryButton]}
-            onPress={handleUpdateProfile}
-            disabled={loading}
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
           >
-            {loading ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
-            ) : (
-              <Text style={styles.primaryButtonText}>Update Profile</Text>
-            )}
+            <Feather name="arrow-left" size={24} color="#1D4732" />
           </TouchableOpacity>
+          <Text style={styles.headerTitle}>Settings</Text>
         </View>
 
-        {/* Organization Settings Section - Only for organizations */}
-        {isOrganization && (
+        <ScrollView
+          style={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#2F855A"
+            />
+          }
+        >
+          {/* Profile Settings Section */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Feather name="briefcase" size={20} color="#2F855A" />
-              <Text style={styles.sectionTitle}>Organization Settings</Text>
+              <Feather name="user" size={20} color="#2F855A" />
+              <Text style={styles.sectionTitle}>Profile Settings</Text>
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Organization Name</Text>
+              <Text style={styles.label}>First Name</Text>
               <TextInput
                 style={styles.input}
-                value={orgName}
-                onChangeText={setOrgName}
-                placeholder="Enter organization name"
+                value={firstName}
+                onChangeText={setFirstName}
+                placeholder="Enter your first name"
                 placeholderTextColor="#999"
               />
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Description</Text>
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                value={orgDescription}
-                onChangeText={setOrgDescription}
-                placeholder="Enter organization description"
-                placeholderTextColor="#999"
-                multiline
-                numberOfLines={3}
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Contact Name</Text>
+              <Text style={styles.label}>Last Name</Text>
               <TextInput
                 style={styles.input}
-                value={orgContactName}
-                onChangeText={setOrgContactName}
-                placeholder="Enter contact person name"
+                value={lastName}
+                onChangeText={setLastName}
+                placeholder="Enter your last name"
                 placeholderTextColor="#999"
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Contact Phone</Text>
-              <TextInput
-                style={styles.input}
-                value={orgContactPhone}
-                onChangeText={setOrgContactPhone}
-                placeholder="Enter contact phone"
-                placeholderTextColor="#999"
-                keyboardType="phone-pad"
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Contact Email</Text>
-              <TextInput
-                style={styles.input}
-                value={orgContactEmail}
-                onChangeText={setOrgContactEmail}
-                placeholder="Enter contact email"
-                placeholderTextColor="#999"
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Website</Text>
-              <TextInput
-                style={styles.input}
-                value={orgWebsite}
-                onChangeText={setOrgWebsite}
-                placeholder="Enter website URL"
-                placeholderTextColor="#999"
-                autoCapitalize="none"
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Facebook</Text>
-              <TextInput
-                style={styles.input}
-                value={orgFacebook}
-                onChangeText={setOrgFacebook}
-                placeholder="Enter Facebook URL"
-                placeholderTextColor="#999"
-                autoCapitalize="none"
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Instagram</Text>
-              <TextInput
-                style={styles.input}
-                value={orgInstagram}
-                onChangeText={setOrgInstagram}
-                placeholder="Enter Instagram URL"
-                placeholderTextColor="#999"
-                autoCapitalize="none"
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Twitter</Text>
-              <TextInput
-                style={styles.input}
-                value={orgTwitter}
-                onChangeText={setOrgTwitter}
-                placeholder="Enter Twitter URL"
-                placeholderTextColor="#999"
-                autoCapitalize="none"
               />
             </View>
 
             <TouchableOpacity
               style={[styles.button, styles.primaryButton]}
-              onPress={handleUpdateOrganization}
+              onPress={handleUpdateProfile}
               disabled={loading}
             >
               {loading ? (
                 <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
-                <Text style={styles.primaryButtonText}>
-                  Update Organization
-                </Text>
+                <Text style={styles.primaryButtonText}>Update Profile</Text>
               )}
             </TouchableOpacity>
           </View>
-        )}
 
-        {/* Account Actions Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Feather name="alert-triangle" size={20} color="#E53E3E" />
-            <Text style={styles.sectionTitle}>Account Actions</Text>
+          {/* Organization Settings Section - Only for organizations */}
+          {isOrganization && (
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Feather name="briefcase" size={20} color="#2F855A" />
+                <Text style={styles.sectionTitle}>Organization Settings</Text>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Organization Name</Text>
+                <TextInput
+                  style={styles.input}
+                  value={orgName}
+                  onChangeText={setOrgName}
+                  placeholder="Enter organization name"
+                  placeholderTextColor="#999"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Description</Text>
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  value={orgDescription}
+                  onChangeText={setOrgDescription}
+                  placeholder="Enter organization description"
+                  placeholderTextColor="#999"
+                  multiline
+                  numberOfLines={3}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Contact Name</Text>
+                <TextInput
+                  style={styles.input}
+                  value={orgContactName}
+                  onChangeText={setOrgContactName}
+                  placeholder="Enter contact person name"
+                  placeholderTextColor="#999"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Contact Phone</Text>
+                <TextInput
+                  style={styles.input}
+                  value={orgContactPhone}
+                  onChangeText={setOrgContactPhone}
+                  placeholder="Enter contact phone"
+                  placeholderTextColor="#999"
+                  keyboardType="phone-pad"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Contact Email</Text>
+                <TextInput
+                  style={styles.input}
+                  value={orgContactEmail}
+                  onChangeText={setOrgContactEmail}
+                  placeholder="Enter contact email"
+                  placeholderTextColor="#999"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Website</Text>
+                <TextInput
+                  style={styles.input}
+                  value={orgWebsite}
+                  onChangeText={setOrgWebsite}
+                  placeholder="Enter website URL"
+                  placeholderTextColor="#999"
+                  autoCapitalize="none"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Facebook</Text>
+                <TextInput
+                  style={styles.input}
+                  value={orgFacebook}
+                  onChangeText={setOrgFacebook}
+                  placeholder="Enter Facebook URL"
+                  placeholderTextColor="#999"
+                  autoCapitalize="none"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Instagram</Text>
+                <TextInput
+                  style={styles.input}
+                  value={orgInstagram}
+                  onChangeText={setOrgInstagram}
+                  placeholder="Enter Instagram URL"
+                  placeholderTextColor="#999"
+                  autoCapitalize="none"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Twitter</Text>
+                <TextInput
+                  style={styles.input}
+                  value={orgTwitter}
+                  onChangeText={setOrgTwitter}
+                  placeholder="Enter Twitter URL"
+                  placeholderTextColor="#999"
+                  autoCapitalize="none"
+                />
+              </View>
+
+              <TouchableOpacity
+                style={[styles.button, styles.primaryButton]}
+                onPress={handleUpdateOrganization}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.primaryButtonText}>
+                    Update Organization
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Account Actions Section */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Feather name="alert-triangle" size={20} color="#E53E3E" />
+              <Text style={styles.sectionTitle}>Account Actions</Text>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.button, styles.dangerButton]}
+              onPress={handleDeleteAccount}
+              disabled={loading}
+            >
+              <Text style={styles.dangerButtonText}>Delete Account</Text>
+            </TouchableOpacity>
           </View>
 
-          <TouchableOpacity
-            style={[styles.button, styles.dangerButton]}
-            onPress={handleDeleteAccount}
-            disabled={loading}
-          >
-            <Text style={styles.dangerButtonText}>Delete Account</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={{ height: 40 }} />
-      </ScrollView>
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   )
 }

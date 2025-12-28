@@ -12,10 +12,10 @@ export async function deleteAccount() {
 
     console.log('[deleteAccount] Starting cleanup...')
 
-    // 1. Unsubscribe from current prayer topic (Stop the Radio)
+    // 1. Unsubscribe from current prayer topic
     await syncPrayerSubscription(null)
 
-    // 2. Remove the Device Token from DB (Stop the Signal)
+    // 2. Remove the Device Token from DB
     try {
       const token = await messaging().getToken()
       if (token) {
@@ -25,15 +25,17 @@ export async function deleteAccount() {
       console.warn('[deleteAccount] Failed to cleanup token:', e)
     }
 
-    // 3. Delete the Profile
-    const { error } = await supabase.from('profiles').delete().eq('id', userId)
+    // 3. SECURE DELETION: Call the Postgres RPC
+    // This removes the user from 'auth.users'
+    const { error: rpcError } = await supabase.rpc('delete_user_account')
 
-    if (error) {
-      console.error('[deleteAccount] Database error:', error)
-      return { ok: false, error: error.message }
+    if (rpcError) {
+      console.error('[deleteAccount] RPC error:', rpcError)
+      return { ok: false, error: rpcError.message }
     }
 
-    // 4. Sign Out
+    // 4. Final Sign Out
+    // This clears the local session and SecureStore tokens
     const { error: signOutError } = await supabase.auth.signOut()
     if (signOutError) {
       console.error('[deleteAccount] Sign out error:', signOutError)

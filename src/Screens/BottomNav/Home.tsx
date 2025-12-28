@@ -1,5 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { ScrollView, RefreshControl, View, StyleSheet } from 'react-native'
+import {
+  ScrollView,
+  RefreshControl,
+  View,
+  StyleSheet,
+  ActivityIndicator, // <--- 1. Import ActivityIndicator
+} from 'react-native'
 import { useFocusEffect, useRoute } from '@react-navigation/native'
 import CombinedPrayerCard from '@/components/HomeScreen/CombinedPrayerCard'
 import MasjidButton from '@/components/HomeScreen/MasjidButton'
@@ -24,7 +30,8 @@ export default function Home({ navigation }: { navigation: NavigationLike }) {
     targetDate,
     nextDay,
     prevDay,
-    mode, // NEW: Get mode
+    mode,
+    loading, // <--- 2. Get the loading state
   } = usePrayerTimes()
 
   const [refreshing, setRefreshing] = useState(false)
@@ -70,15 +77,28 @@ export default function Home({ navigation }: { navigation: NavigationLike }) {
       <View style={{ height: 56 }} />
       <View style={styles.topRow}>
         <View style={styles.masjidContainer}>
-          <MasjidButton
-            prayerTimes={{
-              org: org ?? undefined,
-              distance_m: distance_m ?? undefined,
-            }}
-            navigation={navigation}
-            onRefreshPrayerTimes={refetchPrayerTimes}
-            activeMode={mode} // NEW: Pass activeMode here!
-          />
+          {/* 3. Show Spinner if loading AND we don't have data yet */}
+          {loading && !org ? (
+            <View
+              style={{
+                height: 50,
+                justifyContent: 'center',
+                alignItems: 'flex-start',
+              }}
+            >
+              <ActivityIndicator size="small" color="#000" />
+            </View>
+          ) : (
+            <MasjidButton
+              prayerTimes={{
+                org: org ?? undefined,
+                distance_m: distance_m ?? undefined,
+              }}
+              navigation={navigation}
+              onRefreshPrayerTimes={refetchPrayerTimes}
+              activeMode={mode}
+            />
+          )}
         </View>
         <View style={styles.notificationWrapper}>
           <NotificationCard navigation={navigation} />

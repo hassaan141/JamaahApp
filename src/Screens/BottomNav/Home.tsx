@@ -4,7 +4,7 @@ import {
   RefreshControl,
   View,
   StyleSheet,
-  ActivityIndicator, // <--- 1. Import ActivityIndicator
+  // ActivityIndicator,
 } from 'react-native'
 import { useFocusEffect, useRoute } from '@react-navigation/native'
 import CombinedPrayerCard from '@/components/HomeScreen/CombinedPrayerCard'
@@ -13,6 +13,7 @@ import NotificationCard from '@/components/HomeScreen/NotificationButton'
 import NotificationList from '@/components/HomeScreen/NotificationList'
 import JummahCard from '@/components/HomeScreen/JummahCard'
 import { usePrayerTimes } from '@/Hooks/usePrayerTimes'
+import MiniLoading from '@/components/Loading/MiniLoading'
 
 type HomeRouteParams = { refreshPrayerTimes?: boolean }
 type NavigationLike = {
@@ -31,7 +32,7 @@ export default function Home({ navigation }: { navigation: NavigationLike }) {
     nextDay,
     prevDay,
     mode,
-    loading, // <--- 2. Get the loading state
+    loading,
   } = usePrayerTimes()
 
   const [refreshing, setRefreshing] = useState(false)
@@ -77,17 +78,8 @@ export default function Home({ navigation }: { navigation: NavigationLike }) {
       <View style={{ height: 56 }} />
       <View style={styles.topRow}>
         <View style={styles.masjidContainer}>
-          {/* 3. Show Spinner if loading AND we don't have data yet */}
           {loading && !org ? (
-            <View
-              style={{
-                height: 50,
-                justifyContent: 'center',
-                alignItems: 'flex-start',
-              }}
-            >
-              <ActivityIndicator size="small" color="#000" />
-            </View>
+            <MiniLoading />
           ) : (
             <MasjidButton
               prayerTimes={{

@@ -6,7 +6,7 @@ import {
   RefreshControl,
   StyleSheet,
 } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+// SafeAreaView is no longer needed here
 import { useAuth, useAuthStatus } from '@/Auth/AuthProvider'
 import { useProfile } from '@/Auth/fetchProfile'
 import LoadingAnimation from '@/components/Loading/Loading'
@@ -19,7 +19,7 @@ import UserProfileSection from '@/components/Account/UserProfileSection'
 import CreateAnnouncementSection from '@/components/Account/CreateAnnouncementSection'
 import AnnouncementsList from '@/components/Account/AnnouncementsList'
 import SignOutButton from '@/components/Account/SignOutButton'
-import VersionFooter from '@/components/Account/VersionFooter'
+// import VersionFooter from '@/components/Account/VersionFooter'
 
 export default function Account() {
   const { logout } = useAuth()
@@ -96,7 +96,8 @@ export default function Account() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    // We now use a standard View instead of SafeAreaView
+    <View style={styles.container}>
       <ScrollView
         style={styles.scrollContainer}
         contentContainerStyle={styles.scrollContent}
@@ -108,6 +109,9 @@ export default function Account() {
           />
         }
       >
+        {/* This spacer pushes content down from the status bar */}
+        <View style={{ height: 56 }} />
+
         <UserProfileSection
           profile={profile}
           isVerified={isVerified}
@@ -126,15 +130,8 @@ export default function Account() {
         )}
 
         <SignOutButton onLogout={logout} />
-
-        <VersionFooter
-          styles={{
-            versionContainer: { alignItems: 'center', paddingVertical: 20 },
-            versionText: { fontSize: 12, color: '#6C757D' },
-          }}
-        />
       </ScrollView>
-    </SafeAreaView>
+    </View>
   )
 }
 
@@ -147,6 +144,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingBottom: 32, // Added more bottom padding for spacing
   },
 })

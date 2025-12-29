@@ -16,6 +16,7 @@ import { Country, State, City } from 'country-state-city'
 import { supabase } from '../../Supabase/supabaseClient'
 import type { Database } from '../../types'
 import { toast } from '@/components/Toast/toast'
+// Removed useSafeAreaInsets import
 
 type Nav = { navigate: (route: string) => void; goBack: () => void }
 
@@ -24,6 +25,7 @@ export default function OrganizationSignUp({
 }: {
   navigation: Nav
 }) {
+  // Removed insets hook
   const [loading, setLoading] = useState(false)
 
   const [email, setEmail] = useState('')
@@ -730,9 +732,12 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     backgroundColor: '#F7FAFC',
+    // Added static bottom padding to replace dynamic insets
+    paddingBottom: 40,
   },
   headerContainer: {
-    paddingTop: 50,
+    // Increased top padding to clear status bar status static spacer
+    paddingTop: 60,
     paddingHorizontal: 20,
     paddingBottom: 10,
   },

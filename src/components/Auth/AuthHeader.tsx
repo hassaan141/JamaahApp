@@ -46,6 +46,7 @@ const styles = StyleSheet.create({
   topSection: {
     // 2. Reduce padding on small screens so it doesn't push everything down too far
     paddingBottom: 20,
+    paddingTop: 20,
     alignItems: 'center',
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,

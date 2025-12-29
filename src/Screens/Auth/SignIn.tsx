@@ -11,6 +11,7 @@ import {
   Image,
 } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
+// Removed useSafeAreaInsets as we are switching to standard spacing
 import { supabase } from '../../Supabase/supabaseClient'
 import AuthHeader from '../../components/Auth/AuthHeader'
 import { toast } from '@/components/Toast/toast'
@@ -20,13 +21,12 @@ import {
   isErrorWithCode,
 } from '@react-native-google-signin/google-signin'
 import type { User } from '@supabase/supabase-js'
-
-// FIX 1: Use ES6 import instead of require()
 import googleLogo from '../../../assets/google-logo.png'
 
 type Nav = { navigate: (route: string) => void; goBack: () => void }
 
 export default function SignIn({ navigation }: { navigation: Nav }) {
+  // Removed insets hook
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [passwordVisible, setPasswordVisible] = useState(false)
@@ -40,12 +40,10 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
     })
   }, [])
 
-  // Helper to sync metadata
   const ensureUserMetadata = async (user: User, isGoogle: boolean = false) => {
     let needsAuthUpdate = false
     const updateData: Record<string, string | null> = {}
 
-    // 1. Handle Display Name
     if (!user.user_metadata?.display_name) {
       needsAuthUpdate = true
       const fullName = user.user_metadata?.full_name
@@ -61,7 +59,6 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
       }
     }
 
-    // 2. Handle Organization Logic
     if (isGoogle) {
       if (user.user_metadata?.user_type !== 'individual') {
         needsAuthUpdate = true
@@ -144,7 +141,6 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
         throw new Error('No ID token present')
       }
     } catch (error: unknown) {
-      // FIX 2: Use unknown instead of any
       if (isErrorWithCode(error)) {
         switch (error.code) {
           case statusCodes.SIGN_IN_CANCELLED:
@@ -289,7 +285,7 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
             disabled={loading}
           >
             <Image
-              source={googleLogo} // FIX 1 Usage
+              source={googleLogo}
               style={styles.googleIcon}
               fadeDuration={0}
             />
@@ -313,7 +309,12 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F7FAFC' },
-  scrollContent: { flexGrow: 1, backgroundColor: '#F7FAFC' },
+  scrollContent: {
+    flexGrow: 1,
+    backgroundColor: '#F7FAFC',
+    // Added static bottom padding for spacing instead of dynamic insets
+    paddingBottom: 40,
+  },
   formContainer: { flex: 1, paddingHorizontal: 30, paddingTop: 40 },
   title: {
     fontSize: 28,

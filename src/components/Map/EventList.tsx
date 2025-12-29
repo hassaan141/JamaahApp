@@ -32,4 +32,4 @@ export default function EventList({
   )
 }
 
-const styles = StyleSheet.create({ list: { paddingBottom: 8 } })
+const styles = StyleSheet.create({ list: { paddingBottom: 20 } })

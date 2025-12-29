@@ -11,6 +11,7 @@ import {
   Image,
 } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
+// Removed useSafeAreaInsets
 import { supabase } from '../../Supabase/supabaseClient'
 import { toast } from '@/components/Toast/toast'
 import {
@@ -25,6 +26,7 @@ import googleLogo from '../../../assets/google-logo.png'
 type Nav = { navigate: (route: string) => void; goBack: () => void }
 
 export default function SignUp({ navigation }: { navigation: Nav }) {
+  // Removed insets hook
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -397,9 +399,12 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     backgroundColor: '#F7FAFC',
+    // Added static bottom padding to replace dynamic insets
+    paddingBottom: 40,
   },
   headerContainer: {
-    paddingTop: 50,
+    // Added static top padding to clear status bar since we removed insets
+    paddingTop: 60,
     paddingHorizontal: 20,
     paddingBottom: 10,
   },

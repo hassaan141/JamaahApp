@@ -4,11 +4,6 @@ dotenv.config({ path: '.env' })
 
 const isDev = process.env.EAS_BUILD_PROFILE === 'development'
 
-const getIcon = () => {
-  if (isDev) return './assets/JamahProd.png'
-  return './assets/JamahProd.png'
-}
-
 const getBundleId = () => {
   return 'com.hassaan141.jamaahapp'
 }
@@ -16,10 +11,10 @@ const getBundleId = () => {
 export default () => ({
   expo: {
     name: 'Jamaah',
-    slug: 'jamaahapp-prod',
+    slug: 'jamaahapp',
     scheme: 'com.hassaan141.jamaahapp',
-    icon: getIcon(),
-    projectId: '738cfaa7-cbea-4042-b627-a2a351da154b',
+    icon: './assets/JamahProd.png',
+    projectId: '18f59a83-4081-4b80-b61b-67fc127f5577',
     version: '1.0.0',
     orientation: 'portrait',
     userInterfaceStyle: 'light',
@@ -96,9 +91,10 @@ export default () => ({
         'FOREGROUND_SERVICE_LOCATION',
       ],
       adaptiveIcon: {
-        foregroundImage: getIcon(),
-        backgroundColor: '#E1EBC5',
+        foregroundImage: './assets/JamahProdAndroidNoBG.png',
+        backgroundColor: '#FFFFFF',
       },
+      icon: './assets/JamahProd.png',
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
     },
@@ -114,7 +110,7 @@ export default () => ({
       EXPO_PUBLIC_TEST_EMAIL: process.env.EXPO_PUBLIC_TEST_EMAIL,
       EXPO_PUBLIC_TEST_PASSWORD: process.env.EXPO_PUBLIC_TEST_PASSWORD,
       eas: {
-        projectId: '738cfaa7-cbea-4042-b627-a2a351da154b',
+        projectId: '18f59a83-4081-4b80-b61b-67fc127f5577',
       },
     },
   },

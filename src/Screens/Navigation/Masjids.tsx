@@ -39,6 +39,7 @@ const Masjids: React.FC<NavProps> = ({ navigation, route }) => {
   const [masjids, setMasjids] = useState<MasjidItem[]>([])
   const [q, setQ] = useState('')
   const [loading, setLoading] = useState(true)
+  const [selectingId, setSelectingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -107,13 +108,12 @@ const Masjids: React.FC<NavProps> = ({ navigation, route }) => {
   }
 
   const onSelectMasjid = async (orgId: string) => {
+    setSelectingId(orgId)
     try {
       const userId = await getUserId()
 
-      // 1. Update DB
       await setPinned(userId, orgId)
 
-      // 2. 🚨 FIX: Update Push Notifications Subscription
       await syncPrayerSubscription(orgId)
 
       toast.success('Masjid selected', 'Success')
@@ -127,6 +127,8 @@ const Masjids: React.FC<NavProps> = ({ navigation, route }) => {
     } catch (e) {
       console.error(e)
       toast.error('Failed to select masjid', 'Error')
+    } finally {
+      setSelectingId(null)
     }
   }
 
@@ -201,10 +203,19 @@ const Masjids: React.FC<NavProps> = ({ navigation, route }) => {
           data={masjids}
           keyExtractor={(item) => String(item.id)}
           renderItem={({ item }) => (
-            <MasjidListItem
-              item={item}
-              onPress={() => onSelectMasjid(item.id)}
-            />
+            <View style={styles.itemWrapper}>
+              <MasjidListItem
+                item={item}
+                onPress={() => onSelectMasjid(item.id)}
+              />
+              {selectingId === item.id && (
+                <View style={styles.loadingOverlay}>
+                  <View style={styles.loadingScale}>
+                    <LoadingAnimation />
+                  </View>
+                </View>
+              )}
+            </View>
           )}
         />
       )}
@@ -251,6 +262,24 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   clearSearchText: { color: '#FFFFFF', fontSize: 14, fontWeight: '600' },
+  itemWrapper: {
+    position: 'relative',
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+    borderRadius: 8,
+  },
+  loadingScale: {
+    transform: [{ scale: 0.6 }],
+  },
 })
 
 export default Masjids

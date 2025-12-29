@@ -3,10 +3,10 @@ import MapView, { Marker, Circle, Callout } from 'react-native-maps'
 import {
   StyleSheet,
   View,
-  Image,
   Text,
   TouchableOpacity,
   Platform,
+  Image,
 } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { LeafletView } from 'react-native-leaflet-view'
@@ -18,6 +18,9 @@ import LoadingAnimation from '@/components/Loading/Loading'
 import mosqueIcon from '../../../assets/mosque_new.png'
 import type { MasjidItem } from '@/Hooks/useMasjidList'
 import type { OrgPost } from '@/types'
+
+const ANDROID_MOSQUE_ICON_URL =
+  'https://kjbutgbpddsadvnbgblg.supabase.co/storage/v1/object/public/masjidLogo/mosque_new.png'
 
 const getEventTypeIcon = (
   postType: string | null,
@@ -82,8 +85,6 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // STATE: Visual Center (Where the map looks)
-  // FIX: Removed unused 'mapCenter' state
   const [initialRegion, setInitialRegion] = useState<{
     lat: number
     lng: number
@@ -94,16 +95,13 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
 
   // --- Effects ---
 
-  // 1. Set Initial Map Center
   useEffect(() => {
     if (location && !initialRegion) {
       const start = { lat: location.latitude, lng: location.longitude }
       setInitialRegion(start)
-      // FIX: Removed setMapCenter(start) here
     }
   }, [location])
 
-  // 2. Initial Data Load (Loads ONCE when location is found)
   useEffect(() => {
     const loadData = async () => {
       if (!location) {
@@ -132,7 +130,6 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
     loadData()
   }, [location, mode])
 
-  // 3. Auto-zoom to fit markers
   useEffect(() => {
     if (!mapRef.current || !location || hasInitialZoomed.current) return
 
@@ -159,8 +156,8 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
   const markers = React.useMemo(() => {
     if (Platform.OS !== 'android') return []
 
-    const mosqueIconUri = Image.resolveAssetSource(mosqueIcon).uri
-
+    // For Android WebView, we use HTML markers.
+    // We use the HOSTED URL for the image to ensure it loads on all devices.
     const userLocationIcon = `
       <div style="width: 20px; height: 20px; background: #007AFF; border: 3px solid white; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>
     `
@@ -179,14 +176,34 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
       ...(mode === 'masjids'
         ? nearbyMasjids
             .filter((m) => m.latitude && m.longitude)
-            .map((m, index) => ({
-              id: `masjid-${index}`,
-              position: { lat: m.latitude!, lng: m.longitude! },
-              icon: mosqueIconUri,
-              size: [32, 32],
-              iconAnchor: [16, 16],
-              title: m.name,
-            }))
+            .map((m, index) => {
+              // CHANGE: We use an <img> tag with the hosted URL.
+              // This bypasses the local file path security issues on A34 etc.
+              const masjidIconHTML = `
+                <div style="
+                  width: 32px; 
+                  height: 32px; 
+                  display: flex; 
+                  align-items: center; 
+                  justify-content: center;
+                ">
+                  <img 
+                    src="${ANDROID_MOSQUE_ICON_URL}" 
+                    style="width: 100%; height: 100%; object-fit: contain;" 
+                    alt="Masjid"
+                  />
+                </div>
+              `
+
+              return {
+                id: `masjid-${index}`,
+                position: { lat: m.latitude!, lng: m.longitude! },
+                icon: masjidIconHTML,
+                size: [32, 32],
+                iconAnchor: [16, 16],
+                title: m.name,
+              }
+            })
         : events
             .filter((e) => e.lat && e.long)
             .map((e, index) => {
@@ -205,7 +222,7 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
                     border: 2px solid white;
                     box-shadow: 0 2px 4px rgba(0,0,0,0.3);
                   ">
-                    <svg width="16" height="16" fill="white" viewBox="0 0 24 24" stroke="white" stroke-width="2">
+                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       ${getFeatherIconSVG(iconName)}
                     </svg>
                   </div>
@@ -221,7 +238,7 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
               }
             })),
     ]
-  }, [mode, nearbyMasjids, events])
+  }, [mode, nearbyMasjids, events, location])
 
   if (loading || !location) {
     return <LoadingAnimation />
@@ -250,6 +267,8 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
     )
   }
 
+  // iOS (Platform.OS !== 'android') Logic
+  // This continues to use the local asset directly via React Native Maps, which works fine.
   return (
     <View style={styles.container}>
       <MapView
@@ -284,25 +303,14 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
                 }}
                 tracksViewChanges={false}
               >
-                <View
-                  style={{
-                    width: 30,
-                    height: 30,
-                    borderRadius: 15,
-                    backgroundColor: '#2F855A',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    borderWidth: 2,
-                    borderColor: 'white',
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.25,
-                    shadowRadius: 3.84,
-                    elevation: 5,
-                  }}
-                >
-                  <Feather name="home" size={16} color="white" />
-                </View>
+                {/* iOS / Google Maps: We can use the Image component directly here 
+                   because we are not inside a WebView.
+                */}
+                <Image
+                  source={mosqueIcon}
+                  style={{ width: 32, height: 32 }}
+                  resizeMode="contain"
+                />
 
                 <Callout>
                   <TouchableOpacity

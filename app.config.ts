@@ -11,10 +11,10 @@ const getBundleId = () => {
 export default () => ({
   expo: {
     name: 'Jamaah',
-    slug: 'jamaahapp',
+    slug: 'jamaahapp-prod',
     scheme: 'com.hassaan141.jamaahapp',
     icon: './assets/JamahProd.png',
-    projectId: '18f59a83-4081-4b80-b61b-67fc127f5577',
+    projectId: '738cfaa7-cbea-4042-b627-a2a351da154b',
     version: '1.0.0',
     orientation: 'portrait',
     userInterfaceStyle: 'light',
@@ -81,6 +81,7 @@ export default () => ({
 
     android: {
       package: getBundleId(),
+      userInterfaceStyle: 'light',
       versionCode: 3,
       googleServicesFile: './google-services.json',
       permissions: [
@@ -110,7 +111,7 @@ export default () => ({
       EXPO_PUBLIC_TEST_EMAIL: process.env.EXPO_PUBLIC_TEST_EMAIL,
       EXPO_PUBLIC_TEST_PASSWORD: process.env.EXPO_PUBLIC_TEST_PASSWORD,
       eas: {
-        projectId: '18f59a83-4081-4b80-b61b-67fc127f5577',
+        projectId: '738cfaa7-cbea-4042-b627-a2a351da154b',
       },
     },
   },

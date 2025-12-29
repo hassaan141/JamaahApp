@@ -11,7 +11,6 @@ import {
   Image,
 } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
-// Removed useSafeAreaInsets
 import { supabase } from '../../Supabase/supabaseClient'
 import { toast } from '@/components/Toast/toast'
 import {
@@ -20,13 +19,13 @@ import {
   isErrorWithCode,
 } from '@react-native-google-signin/google-signin'
 
-// FIX 1: Use ES6 import instead of require()
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import googleLogo from '../../../assets/google-logo.png'
 
 type Nav = { navigate: (route: string) => void; goBack: () => void }
 
 export default function SignUp({ navigation }: { navigation: Nav }) {
-  // Removed insets hook
+  const insets = useSafeAreaInsets()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -199,7 +198,10 @@ export default function SignUp({ navigation }: { navigation: Nav }) {
       style={styles.container}
     >
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: insets.bottom + 20 },
+        ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
@@ -216,7 +218,26 @@ export default function SignUp({ navigation }: { navigation: Nav }) {
           <Text style={styles.title}>Create Account</Text>
           <Text style={styles.subtitle}>Sign up to get started</Text>
 
-          {/* First Name */}
+          {/* Google Button */}
+          <TouchableOpacity
+            style={styles.googleButton}
+            onPress={handleGoogleSignUp}
+            disabled={loading}
+          >
+            <Image
+              source={googleLogo} // FIX 1 Usage
+              style={styles.googleIcon}
+              fadeDuration={0}
+            />
+            <Text style={styles.googleButtonText}>Sign up with Google</Text>
+          </TouchableOpacity>
+
+          <View style={styles.dividerContainer}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>OR</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
           <View style={styles.inputContainer}>
             <Feather
               name="user"
@@ -356,27 +377,6 @@ export default function SignUp({ navigation }: { navigation: Nav }) {
             ) : (
               <Text style={styles.buttonText}>Sign Up</Text>
             )}
-          </TouchableOpacity>
-
-          {/* Divider */}
-          <View style={styles.dividerContainer}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>OR</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          {/* Google Button */}
-          <TouchableOpacity
-            style={styles.googleButton}
-            onPress={handleGoogleSignUp}
-            disabled={loading}
-          >
-            <Image
-              source={googleLogo} // FIX 1 Usage
-              style={styles.googleIcon}
-              fadeDuration={0}
-            />
-            <Text style={styles.googleButtonText}>Sign up with Google</Text>
           </TouchableOpacity>
 
           <TouchableOpacity

@@ -5,6 +5,7 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
 import { getCoarseLocation } from '@/Utils/useLocation'
@@ -210,9 +211,7 @@ const Masjids: React.FC<NavProps> = ({ navigation, route }) => {
               />
               {selectingId === item.id && (
                 <View style={styles.loadingOverlay}>
-                  <View style={styles.loadingScale}>
-                    <LoadingAnimation />
-                  </View>
+                  <ActivityIndicator size="small" color="#228f2bff" />
                 </View>
               )}
             </View>

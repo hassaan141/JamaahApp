@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Platform,
   Image,
+  ActivityIndicator,
 } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { LeafletView } from 'react-native-leaflet-view'
@@ -14,13 +15,11 @@ import Feather from '@expo/vector-icons/Feather'
 import { fetchNearbyMasjids } from '@/Supabase/fetchMasjidList'
 import { fetchAnnouncements } from '@/Supabase/fetchAllAnnouncements'
 import { useLocation } from '@/Utils/useLocation'
-import LoadingAnimation from '@/components/Loading/Loading'
-import mosqueIcon from '../../../assets/mosque_new.png'
 import type { MasjidItem } from '@/Hooks/useMasjidList'
 import type { OrgPost } from '@/types'
 
-const ANDROID_MOSQUE_ICON_URL =
-  'https://kjbutgbpddsadvnbgblg.supabase.co/storage/v1/object/public/masjidLogo/mosque_new.png'
+// Local import for iOS only
+import mosqueIcon from '../../../assets/mosque_new.png'
 
 const getEventTypeIcon = (
   postType: string | null,
@@ -56,8 +55,11 @@ const getEventTypeColor = (postType: string | null) => {
   }
 }
 
+// Helper to generate SVG strings for Leaflet (Android)
 const getFeatherIconSVG = (iconName: string) => {
   switch (iconName) {
+    case 'masjid':
+      return '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>'
     case 'calendar':
       return '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line>'
     case 'book-open':
@@ -79,7 +81,6 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
   }
   const { location } = useLocation()
 
-  // Data States
   const [nearbyMasjids, setNearbyMasjids] = useState<MasjidItem[]>([])
   const [events, setEvents] = useState<OrgPost[]>([])
   const [loading, setLoading] = useState(true)
@@ -92,8 +93,6 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
 
   const mapRef = useRef<MapView>(null)
   const hasInitialZoomed = useRef(false)
-
-  // --- Effects ---
 
   useEffect(() => {
     if (location && !initialRegion) {
@@ -132,14 +131,10 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
 
   useEffect(() => {
     if (!mapRef.current || !location || hasInitialZoomed.current) return
-
     const dataToCheck = mode === 'masjids' ? nearbyMasjids : events
     if (dataToCheck.length === 0) return
-
     hasInitialZoomed.current = true
   }, [nearbyMasjids, events, mode, location])
-
-  // --- Render Preparation ---
 
   const mapLayers = React.useMemo(
     () => [
@@ -156,10 +151,18 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
   const markers = React.useMemo(() => {
     if (Platform.OS !== 'android') return []
 
-    // For Android WebView, we use HTML markers.
-    // We use the HOSTED URL for the image to ensure it loads on all devices.
+    // User Location Dot
     const userLocationIcon = `
       <div style="width: 20px; height: 20px; background: #007AFF; border: 3px solid white; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>
+    `
+    // Override Leaflet white box
+    const transparentStyleOverride = `
+      <style>
+        .leaflet-div-icon {
+          background: transparent !important;
+          border: none !important;
+        }
+      </style>
     `
 
     return [
@@ -177,21 +180,24 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
         ? nearbyMasjids
             .filter((m) => m.latitude && m.longitude)
             .map((m, index) => {
-              // CHANGE: We use an <img> tag with the hosted URL.
-              // This bypasses the local file path security issues on A34 etc.
+              // --- FIXED: USE SVG PIN FOR ANDROID ---
+              // Instead of an image, we use a Green Circle with a Home Icon
               const masjidIconHTML = `
+                ${transparentStyleOverride}
                 <div style="
                   width: 32px; 
                   height: 32px; 
+                  background: #2F855A; /* Masjid Green */
+                  border-radius: 50%; 
                   display: flex; 
                   align-items: center; 
-                  justify-content: center;
+                  justify-content: center; 
+                  border: 2px solid white;
+                  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
                 ">
-                  <img 
-                    src="${ANDROID_MOSQUE_ICON_URL}" 
-                    style="width: 100%; height: 100%; object-fit: contain;" 
-                    alt="Masjid"
-                  />
+                  <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    ${getFeatherIconSVG('masjid')}
+                  </svg>
                 </div>
               `
 
@@ -199,8 +205,8 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
                 id: `masjid-${index}`,
                 position: { lat: m.latitude!, lng: m.longitude! },
                 icon: masjidIconHTML,
-                size: [32, 32],
-                iconAnchor: [16, 16],
+                size: [32, 32], // Matches the div size above
+                iconAnchor: [16, 16], // Centered
                 title: m.name,
               }
             })
@@ -209,8 +215,8 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
             .map((e, index) => {
               const iconName = getEventTypeIcon(e.post_type)
               const iconColor = getEventTypeColor(e.post_type)
-
               const svgIcon = `
+                  ${transparentStyleOverride}
                   <div style="
                     width: 30px; 
                     height: 30px; 
@@ -227,7 +233,6 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
                     </svg>
                   </div>
                 `
-
               return {
                 id: `event-${index}`,
                 position: { lat: e.lat!, lng: e.long! },
@@ -241,7 +246,11 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
   }, [mode, nearbyMasjids, events, location])
 
   if (loading || !location) {
-    return <LoadingAnimation />
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#2F855A" />
+      </View>
+    )
   }
 
   if (error) {
@@ -252,6 +261,7 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
     )
   }
 
+  // --- ANDROID RENDER ---
   if (Platform.OS === 'android') {
     return (
       <View style={styles.container}>
@@ -261,14 +271,13 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
           mapCenterPosition={
             initialRegion || { lat: location.latitude, lng: location.longitude }
           }
-          zoom={13}
+          zoom={15}
         />
       </View>
     )
   }
 
-  // iOS (Platform.OS !== 'android') Logic
-  // This continues to use the local asset directly via React Native Maps, which works fine.
+  // --- iOS RENDER ---
   return (
     <View style={styles.container}>
       <MapView
@@ -303,15 +312,12 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
                 }}
                 tracksViewChanges={false}
               >
-                {/* iOS / Google Maps: We can use the Image component directly here 
-                   because we are not inside a WebView.
-                */}
+                {/* iOS uses the imported image directly */}
                 <Image
                   source={mosqueIcon}
                   style={{ width: 32, height: 32 }}
                   resizeMode="contain"
                 />
-
                 <Callout>
                   <TouchableOpacity
                     onPress={() => {

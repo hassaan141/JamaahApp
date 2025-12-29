@@ -22,11 +22,12 @@ import {
 } from '@react-native-google-signin/google-signin'
 import type { User } from '@supabase/supabase-js'
 import googleLogo from '../../../assets/google-logo.png'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 type Nav = { navigate: (route: string) => void; goBack: () => void }
 
 export default function SignIn({ navigation }: { navigation: Nav }) {
-  // Removed insets hook
+  const insets = useSafeAreaInsets()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [passwordVisible, setPasswordVisible] = useState(false)
@@ -198,7 +199,10 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
       style={styles.container}
     >
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: insets.bottom + 20 },
+        ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >

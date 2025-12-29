@@ -214,7 +214,7 @@ export default function MapScreen() {
             placeholder={
               isMasjidMode
                 ? 'Search for masjids nearby...'
-                : "Search events (e.g. 'Quran', 'Sisters')..."
+                : "Search events ('Quran', 'Sisters')..."
             }
           />
         </View>

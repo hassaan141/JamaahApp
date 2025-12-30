@@ -92,7 +92,7 @@ export default () => ({
         'FOREGROUND_SERVICE_LOCATION',
       ],
       adaptiveIcon: {
-        foregroundImage: './assets/JamahProdAndroidNoBG.png',
+        foregroundImage: './assets/AndroidBGRemover.png',
         backgroundColor: '#FFFFFF',
       },
       icon: './assets/JamahProd.png',

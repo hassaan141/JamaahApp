@@ -57,7 +57,7 @@ function TabNavigator() {
           elevation: 0,
           shadowOpacity: 0,
           paddingBottom: insets.bottom,
-          height: 60 + insets.bottom,
+          height: 45 + insets.bottom,
         },
         tabBarLabelStyle: {
           fontSize: 10,

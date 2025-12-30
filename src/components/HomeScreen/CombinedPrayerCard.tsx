@@ -28,34 +28,39 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
   const [nextEvent, setNextEvent] = useState<{
     name: string
     type: 'Adhan' | 'Iqamah'
-    time: string
-    displayTime: string
-  }>({ name: 'Loading...', type: 'Adhan', time: '', displayTime: '' })
+    targetTime: string
+    adhanTime: string
+    iqamahTime: string
+  }>({
+    name: 'Loading...',
+    type: 'Adhan',
+    targetTime: '',
+    adhanTime: '',
+    iqamahTime: '',
+  })
 
   const [timeRemaining, setTimeRemaining] = useState('')
 
+  // UPDATED: Now includes AM/PM
   const formatTime = (time?: string) => {
     if (!time) return ''
-    const [h, m] = time.split(':')
+    const [h, minutes] = time.split(':')
     const hours = parseInt(h, 10)
     if (isNaN(hours)) return ''
-    const minutes = m
     const ampm = hours >= 12 ? 'PM' : 'AM'
     const formattedHour = hours % 12 || 12
     return `${formattedHour}:${minutes} ${ampm}`
   }
 
-  // FIX: Added explicit return type here to satisfy TypeScript
-  const determineNextEvent = (
-    data: PrayerTimeRow | null,
-  ): {
-    name: string
-    type: 'Adhan' | 'Iqamah'
-    time: string
-    displayTime: string
-  } => {
+  const determineNextEvent = (data: PrayerTimeRow | null) => {
     if (!data)
-      return { name: 'Loading...', type: 'Adhan', time: '', displayTime: '' }
+      return {
+        name: 'Loading...',
+        type: 'Adhan' as const,
+        targetTime: '',
+        adhanTime: '',
+        iqamahTime: '',
+      }
 
     const now = new Date()
     const currentHHMM = now.toLocaleTimeString('en-GB', {
@@ -80,17 +85,16 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
     for (const p of schedule) {
       if (!p.adhan) continue
 
-      // 1. Check Adhan
       if (p.adhan.substring(0, 5) > currentHHMM) {
         return {
           name: p.name,
-          type: 'Adhan',
-          time: p.adhan,
-          displayTime: `${formatTime(p.adhan)} • Iqamah: ${formatTime(p.iqamah)}`,
+          type: 'Adhan' as const,
+          targetTime: p.adhan,
+          adhanTime: p.adhan,
+          iqamahTime: p.iqamah || '',
         }
       }
 
-      // 2. Check Iqamah (Only if valid string and differs from Adhan/Sunrise)
       if (
         p.iqamah &&
         p.iqamah.substring(0, 5) > currentHHMM &&
@@ -98,19 +102,20 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
       ) {
         return {
           name: p.name,
-          type: 'Iqamah',
-          time: p.iqamah,
-          displayTime: `${formatTime(p.adhan)} • Iqamah: ${formatTime(p.iqamah)}`,
+          type: 'Iqamah' as const,
+          targetTime: p.iqamah,
+          adhanTime: p.adhan,
+          iqamahTime: p.iqamah,
         }
       }
     }
 
-    // If passed everything, show Tomorrow's Fajr Adhan
     return {
       name: 'Fajr',
-      type: 'Adhan',
-      time: data.tmrw_fajr_azan,
-      displayTime: `${formatTime(data.tmrw_fajr_azan)} • Iqamah: ${formatTime(data.tmrw_fajr_iqamah)}`,
+      type: 'Adhan' as const,
+      targetTime: data.tmrw_fajr_azan,
+      adhanTime: data.tmrw_fajr_azan,
+      iqamahTime: data.tmrw_fajr_iqamah || '',
     }
   }
 
@@ -130,25 +135,23 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
     }
 
     const diffMs = targetDate.getTime() - now.getTime()
-
-    // Calculate hours, minutes, AND seconds
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
     const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
-    const diffSeconds = Math.floor((diffMs % (1000 * 60)) / 1000) // <--- New Line
+    const diffSeconds = Math.floor((diffMs % (1000 * 60)) / 1000)
 
-    // Update return strings to include seconds
-    if (diffHours > 0) return `${diffHours}h ${diffMinutes}m ${diffSeconds}s`
-    return `${diffMinutes}m ${diffSeconds}s`
+    const pad = (n: number) => n.toString().padStart(2, '0')
+    return `${pad(diffHours)}:${pad(diffMinutes)}:${pad(diffSeconds)}`
   }
 
   useEffect(() => {
     const update = () => {
       const next = determineNextEvent(prayerTimes)
-      // This line previously failed because 'next' was loosely typed
       setNextEvent((prev) =>
-        prev.time !== next.time || prev.type !== next.type ? next : prev,
+        prev.targetTime !== next.targetTime || prev.type !== next.type
+          ? next
+          : prev,
       )
-      setTimeRemaining(calculateTimeRemaining(next.time))
+      setTimeRemaining(calculateTimeRemaining(next.targetTime))
     }
 
     update()
@@ -158,13 +161,8 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
 
   if (!prayerTimes) {
     return (
-      <View style={styles.container}>
-        <View style={styles.headerRow}>
-          <Text style={styles.headerTitle}>Loading...</Text>
-        </View>
-        <View style={styles.infoBar}>
-          <Text style={styles.infoBarText}>Select a masjid to view times</Text>
-        </View>
+      <View style={[styles.container, styles.loadingContainer]}>
+        <Text style={styles.headerTitle}>Loading...</Text>
       </View>
     )
   }
@@ -176,35 +174,61 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
         activeOpacity={0.9}
         onPress={() => setModalVisible(true)}
       >
-        <View style={styles.headerRow}>
-          <Text style={styles.headerTitle}>
-            Next: {nextEvent.name}{' '}
-            {nextEvent.type === 'Iqamah' ? '(Iqamah)' : ''}
-          </Text>
-          <Feather
-            name="chevron-right"
-            size={24}
-            color="#FFFFFF"
-            style={{ opacity: 0.9 }}
-          />
-        </View>
+        <View style={styles.topSection}>
+          <View style={styles.headerRow}>
+            {/* LEFT: Title */}
+            <View>
+              <Text style={styles.nextLabel}>NEXT PRAYER</Text>
+              <Text style={styles.prayerTitle}>{nextEvent.name}</Text>
+            </View>
 
-        <View style={styles.infoBar}>
-          <View style={styles.infoContent}>
-            <Feather
-              name="clock"
-              size={16}
-              color="#FFFFFF"
-              style={styles.clockIcon}
-            />
-            <Text style={styles.infoBarText}>{nextEvent.displayTime}</Text>
+            {/* RIGHT: Timer + Chevron */}
+            <View style={styles.rightHeaderGroup}>
+              <View style={styles.timerWrapper}>
+                <Text style={styles.timerLabel}>
+                  {nextEvent.type === 'Iqamah' ? 'IQAMAH IN' : 'ADHAN IN'}
+                </Text>
+                <Text style={styles.timerText}>{timeRemaining}</Text>
+              </View>
+              {/* Chevron moved here */}
+              <Feather
+                name="chevron-right"
+                size={24}
+                color="#FFFFFF"
+                style={styles.headerChevron}
+              />
+            </View>
           </View>
 
-          <View style={styles.timerContainer}>
-            <Text style={styles.timerLabel}>
-              {nextEvent.type === 'Iqamah' ? 'Iqamah in' : 'Adhan in'}
-            </Text>
-            <Text style={styles.timerText}>{timeRemaining}</Text>
+          {/* Details Row: Adhan | Iqamah */}
+          <View style={styles.detailsRow}>
+            <View style={styles.detailItem}>
+              <Feather
+                name="volume-2"
+                size={14}
+                color="rgba(255,255,255,0.8)"
+              />
+              {/* Using formatTime to show AM/PM */}
+              <Text style={styles.detailText}>
+                Adhan: {formatTime(nextEvent.adhanTime)}
+              </Text>
+            </View>
+
+            {nextEvent.name !== 'Sunrise' && (
+              <>
+                <View style={styles.verticalDivider} />
+                <View style={styles.detailItem}>
+                  <Feather
+                    name="users"
+                    size={14}
+                    color="rgba(255,255,255,0.8)"
+                  />
+                  <Text style={styles.detailText}>
+                    Iqamah: {formatTime(nextEvent.iqamahTime)}
+                  </Text>
+                </View>
+              </>
+            )}
           </View>
         </View>
 
@@ -265,98 +289,130 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderRadius: 16,
     overflow: 'hidden',
-    paddingVertical: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
   },
+  loadingContainer: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  topSection: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 16,
+  },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    marginBottom: 10,
+    alignItems: 'center', // Aligns Title and Timer vertically
+    marginBottom: 12,
   },
-  headerTitle: {
-    fontSize: 18,
+  rightHeaderGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  headerChevron: {
+    opacity: 0.8,
+  },
+  nextLabel: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.8)',
     fontWeight: '700',
-    color: '#FFFFFF',
     letterSpacing: 0.5,
+    marginBottom: 2,
   },
-  infoBar: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    marginHorizontal: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 10,
-    marginBottom: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  infoContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexShrink: 1,
-    marginRight: 10,
-  },
-  clockIcon: {
-    marginRight: 8,
-    opacity: 0.9,
-  },
-  infoBarText: {
-    fontSize: 14,
+  prayerTitle: {
+    fontSize: 26,
+    fontWeight: '800',
     color: '#FFFFFF',
-    fontWeight: '600',
+    lineHeight: 30,
   },
-  timerContainer: {
+  timerWrapper: {
     alignItems: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 8,
   },
   timerLabel: {
     fontSize: 10,
-    color: 'rgba(255,255,255,0.8)',
+    color: 'rgba(255,255,255,0.9)',
+    fontWeight: '700',
+    marginBottom: 2,
     textTransform: 'uppercase',
-    fontWeight: '600',
-    marginBottom: -2,
   },
   timerText: {
-    fontSize: 15,
+    fontSize: 20,
     fontWeight: '700',
     color: '#FFFFFF',
     fontVariant: ['tabular-nums'],
+    letterSpacing: 0.5,
+  },
+  detailsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    // alignSelf: 'flex-start', // Keeps the box only as wide as content
+  },
+  detailItem: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  detailText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  verticalDivider: {
+    width: 1,
+    height: 14,
+    backgroundColor: 'rgba(255,255,255,0.4)',
+    marginHorizontal: 12,
   },
   prayerGrid: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: 'rgba(0, 0, 0, 0.08)',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginHorizontal: 12,
-    paddingHorizontal: 8,
+    paddingHorizontal: 16,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.1)',
   },
   prayerColumn: {
     flex: 1,
     alignItems: 'center',
   },
   prayerName: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: 'rgba(255,255,255,0.9)',
+    fontSize: 11,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.7)',
     marginBottom: 6,
     textTransform: 'uppercase',
   },
   adhanTime: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#FFFFFF',
-    fontWeight: '500',
+    fontWeight: '600',
     marginBottom: 2,
   },
   iqamahTime: {
-    fontSize: 11,
-    color: 'rgba(255, 255, 255, 0.85)',
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.9)',
     fontWeight: '400',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 })
 

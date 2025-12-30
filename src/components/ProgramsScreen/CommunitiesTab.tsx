@@ -7,6 +7,7 @@ import {
   RefreshControl,
   TouchableOpacity,
   Modal,
+  ActivityIndicator, // <--- Added this
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { searchOrganizations } from '@/Supabase/fetchOrganizations'
@@ -96,6 +97,8 @@ const FilterModal = ({
 )
 
 export default function CommunitiesTab() {
+  // 1. New State to track if it is the very first load
+  const [isFirstLoad, setIsFirstLoad] = useState(true)
   const [loading, setLoading] = useState(false)
   const [communities, setCommunities] = useState<
     (Organization & { is_following?: boolean })[]
@@ -123,6 +126,8 @@ export default function CommunitiesTab() {
       setCommunities([])
     } finally {
       setLoading(false)
+      // 2. Once the first request finishes, we turn off the big animation forever
+      setIsFirstLoad(false)
     }
   }, [])
 
@@ -148,8 +153,52 @@ export default function CommunitiesTab() {
     setActiveFilters([])
   }
 
-  if (loading && (!Array.isArray(communities) || communities.length === 0)) {
+  // 3. Only show the big animation on the FIRST load
+  if (isFirstLoad) {
     return <LoadingAnimation />
+  }
+
+  // Helper to decide what content to show
+  const renderContent = () => {
+    // If we are loading (but not first load), show a spinner
+    if (loading) {
+      return (
+        <View style={styles.centeredContainer}>
+          <ActivityIndicator size="small" color="#2D6A4F" />
+        </View>
+      )
+    }
+
+    // If no results
+    if (
+      !Array.isArray(filteredCommunities) ||
+      filteredCommunities.length === 0
+    ) {
+      return (
+        <View style={styles.noResultsContainer}>
+          <Text style={styles.noResultsText}>No communities found</Text>
+        </View>
+      )
+    }
+
+    // If we have results
+    return (
+      <ScrollView
+        style={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={loading}
+            onRefresh={() => loadCommunities(searchQuery)}
+          />
+        }
+      >
+        {filteredCommunities.map((c) => {
+          const id = String(c.id ?? '')
+          return <CommunityItem key={id} community={c} />
+        })}
+      </ScrollView>
+    )
   }
 
   return (
@@ -161,7 +210,7 @@ export default function CommunitiesTab() {
             onChangeText={setSearchQuery}
             onClear={() => setSearchQuery('')}
             placeholder="Search communities"
-            onSubmitEditing={() => loadCommunities(searchQuery)}
+            // Removed onSubmitEditing redundancy since debounce handles it
           />
         </View>
         <TouchableOpacity
@@ -178,28 +227,7 @@ export default function CommunitiesTab() {
         </TouchableOpacity>
       </View>
 
-      {!Array.isArray(filteredCommunities) ||
-      filteredCommunities.length === 0 ? (
-        <View style={styles.noResultsContainer}>
-          <Text style={styles.noResultsText}>No communities found</Text>
-        </View>
-      ) : (
-        <ScrollView
-          style={styles.scrollContainer}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={loading}
-              onRefresh={() => loadCommunities(searchQuery)}
-            />
-          }
-        >
-          {filteredCommunities.map((c) => {
-            const id = String(c.id ?? '')
-            return <CommunityItem key={id} community={c} />
-          })}
-        </ScrollView>
-      )}
+      {renderContent()}
 
       <FilterModal
         visible={filterVisible}
@@ -217,7 +245,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 20,
     paddingHorizontal: 20,
-    backgroundColor: '#ffffffff',
+    backgroundColor: '#F7FAFC',
   },
   scrollContainer: { flex: 1 },
   searchInput: {
@@ -235,7 +263,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
-    backgroundColor: '#F4FBF6',
+    // Removed background color to blend in
   },
   loadingText: { marginTop: 12, color: '#1D4732', fontSize: 15 },
   noResultsContainer: {

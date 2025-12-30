@@ -8,7 +8,6 @@ export default function EventList({
   onPress,
   onDirections,
 }: {
-  // 2. Update Props: Expect EventItem instead of OrgPost
   items: EventItem[]
   onPress: (item: EventItem) => void
   onDirections: (item: EventItem) => void

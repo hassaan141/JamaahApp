@@ -359,12 +359,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingVertical: 8,
     paddingHorizontal: 12,
-    // alignSelf: 'flex-start', // Keeps the box only as wide as content
   },
   detailItem: {
+    flex: 1,
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 6,
   },
   detailText: {
@@ -376,7 +377,6 @@ const styles = StyleSheet.create({
     width: 1,
     height: 14,
     backgroundColor: 'rgba(255,255,255,0.4)',
-    marginHorizontal: 12,
   },
   prayerGrid: {
     backgroundColor: 'rgba(0, 0, 0, 0.08)',

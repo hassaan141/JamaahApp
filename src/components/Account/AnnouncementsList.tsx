@@ -14,8 +14,7 @@ import { deleteOrgAnnouncement } from '@/Supabase/deleteOrgAnnouncement'
 import AnnouncementCard from '@/components/Shared/AnnouncementCard'
 import EditAnnouncementModal from './EditAnnouncementModal'
 import { toast } from '@/components/Toast/toast'
-// Import the custom loading component
-import LoadingAnimation from '@/components/Loading/Loading'
+import MiniLoading from '@/components/Loading/MiniLoading'
 
 const TABS = [
   { label: 'Classes', value: 'CLASSES' },
@@ -130,8 +129,7 @@ export default function AnnouncementsList({
     return (
       <View style={styles.sectionCard}>
         <View style={styles.loadingContainer}>
-          <LoadingAnimation />
-          <Text style={styles.loadingText}>Loading announcements...</Text>
+          <MiniLoading />
         </View>
       </View>
     )

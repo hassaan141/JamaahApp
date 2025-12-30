@@ -7,10 +7,13 @@ import {
   ScrollView,
 } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
+import { useSafeAreaInsets } from 'react-native-safe-area-context' // Added import
 
 type Nav = { navigate: (route: string) => void; goBack: () => void }
 
 export default function UserTypeSelection({ navigation }: { navigation: Nav }) {
+  const insets = useSafeAreaInsets() // Get safe area insets
+
   const handleUserSelection = (userType: 'user' | 'organization') => {
     if (userType === 'user') {
       navigation.navigate('SignUp')
@@ -21,7 +24,8 @@ export default function UserTypeSelection({ navigation }: { navigation: Nav }) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.headerContainer}>
+      {/* FIX: Header top padding based on safe area */}
+      <View style={[styles.headerContainer, { paddingTop: insets.top + 10 }]}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
@@ -32,7 +36,11 @@ export default function UserTypeSelection({ navigation }: { navigation: Nav }) {
 
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={styles.contentContainer}
+        contentContainerStyle={[
+          styles.contentContainer,
+          // FIX: Add dynamic bottom padding for navigation bar/home indicator
+          { paddingBottom: 20 + insets.bottom },
+        ]}
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.title}>Join Our Community</Text>
@@ -88,9 +96,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#F7FAFC',
   },
   headerContainer: {
-    paddingTop: 50,
     paddingHorizontal: 20,
     paddingBottom: 10,
+    // Removed fixed paddingTop: 50
   },
   backButton: {
     padding: 10,
@@ -102,7 +110,7 @@ const styles = StyleSheet.create({
   contentContainer: {
     paddingHorizontal: 20,
     paddingTop: 20,
-    paddingBottom: 30,
+    // Removed fixed paddingBottom: 30
   },
   title: {
     fontSize: 24,

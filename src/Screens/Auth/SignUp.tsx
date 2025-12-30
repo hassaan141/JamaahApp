@@ -19,12 +19,13 @@ import {
   isErrorWithCode,
 } from '@react-native-google-signin/google-signin'
 
-// FIX 1: Use ES6 import instead of require()
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import googleLogo from '../../../assets/google-logo.png'
 
 type Nav = { navigate: (route: string) => void; goBack: () => void }
 
 export default function SignUp({ navigation }: { navigation: Nav }) {
+  const insets = useSafeAreaInsets()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -197,7 +198,10 @@ export default function SignUp({ navigation }: { navigation: Nav }) {
       style={styles.container}
     >
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: insets.bottom + 20 },
+        ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
@@ -214,7 +218,26 @@ export default function SignUp({ navigation }: { navigation: Nav }) {
           <Text style={styles.title}>Create Account</Text>
           <Text style={styles.subtitle}>Sign up to get started</Text>
 
-          {/* First Name */}
+          {/* Google Button */}
+          <TouchableOpacity
+            style={styles.googleButton}
+            onPress={handleGoogleSignUp}
+            disabled={loading}
+          >
+            <Image
+              source={googleLogo} // FIX 1 Usage
+              style={styles.googleIcon}
+              fadeDuration={0}
+            />
+            <Text style={styles.googleButtonText}>Sign up with Google</Text>
+          </TouchableOpacity>
+
+          <View style={styles.dividerContainer}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>OR</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
           <View style={styles.inputContainer}>
             <Feather
               name="user"
@@ -356,27 +379,6 @@ export default function SignUp({ navigation }: { navigation: Nav }) {
             )}
           </TouchableOpacity>
 
-          {/* Divider */}
-          <View style={styles.dividerContainer}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>OR</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          {/* Google Button */}
-          <TouchableOpacity
-            style={styles.googleButton}
-            onPress={handleGoogleSignUp}
-            disabled={loading}
-          >
-            <Image
-              source={googleLogo} // FIX 1 Usage
-              style={styles.googleIcon}
-              fadeDuration={0}
-            />
-            <Text style={styles.googleButtonText}>Sign up with Google</Text>
-          </TouchableOpacity>
-
           <TouchableOpacity
             style={styles.switchContainer}
             onPress={() => navigation.navigate('SignIn')}
@@ -397,9 +399,12 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     backgroundColor: '#F7FAFC',
+    // Added static bottom padding to replace dynamic insets
+    paddingBottom: 40,
   },
   headerContainer: {
-    paddingTop: 50,
+    // Added static top padding to clear status bar since we removed insets
+    paddingTop: 60,
     paddingHorizontal: 20,
     paddingBottom: 10,
   },

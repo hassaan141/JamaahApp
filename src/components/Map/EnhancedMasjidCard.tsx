@@ -64,14 +64,17 @@ export default function EnhancedMasjidCard({
 const styles = StyleSheet.create({
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    // --- Changes Start Here ---
+    borderWidth: 1,
+    borderColor: '#E2E8F0', // Adds a very light gray border for a clean edge
+    shadowColor: '#4A5568', // Using a softer, less intense shadow color
+    shadowOffset: { width: 0, height: 4 }, // Increases the shadow's downward distance
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
   },
   header: {
     flexDirection: 'row',
@@ -129,6 +132,7 @@ const styles = StyleSheet.create({
   },
   actionButtons: {
     flexDirection: 'row',
+    paddingTop: 8,
   },
   actionButton: {
     flex: 1,
@@ -137,6 +141,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 8,
     borderRadius: 6,
+    marginHorizontal: 4,
   },
   directionsButton: {
     backgroundColor: '#48BB78',

@@ -63,7 +63,6 @@ export default function Notifications() {
     setLoading(true)
 
     try {
-      // 2. Update Database
       const { error } = await supabase
         .from('profiles')
         .update({ notification_preference: notificationType })
@@ -71,26 +70,24 @@ export default function Notifications() {
 
       if (error) throw error
 
-      // 3. Handle Prayer Topic Subscription Instantly
-      // We retrieve the currently active masjid ID from storage so we know WHICH topic to toggle
       const currentMasjidId = await AsyncStorage.getItem('prayer_sub_org_id')
 
       if (currentMasjidId) {
         const topicName = `org_${currentMasjidId}_prayers`
 
         if (notificationType === 'None') {
-          // If "None", physically unsubscribe from the topic
           console.log(`[Settings] Unsubscribing from ${topicName}`)
           await messaging().unsubscribeFromTopic(topicName)
         } else {
-          // If "Adhan" or "Event_Adhan", ensure we are subscribed
           console.log(`[Settings] Subscribing to ${topicName}`)
           await messaging().subscribeToTopic(topicName)
         }
       }
 
       toast.success('Notification settings updated!', 'Success')
-      if (refetch) refetch()
+      if (refetch) await refetch()
+
+      navigation.goBack()
     } catch (err) {
       console.error(err)
       toast.error('Failed to update settings', 'Error')

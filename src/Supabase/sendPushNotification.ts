@@ -16,7 +16,6 @@ export async function sendPushToFollowers(payload: NotificationPayload) {
       `[sendPushToFollowers] Starting notification process for org: ${payload.organizationId}`,
     )
 
-    // Step 1: Get ALL subscribers first (no joins)
     const allSubscribers = await fetchOrgSubscribers(payload.organizationId)
 
     if (!allSubscribers || allSubscribers.length === 0) {
@@ -24,38 +23,18 @@ export async function sendPushToFollowers(payload: NotificationPayload) {
       return { success: true, message: 'No subscribers to notify' }
     }
 
-    // Step 2: Get device information for all profiles
-    const profileIds = allSubscribers.map((sub) => sub.profile_id)
-    const devices = await fetchDevicesByProfileIds(profileIds)
-
-    // Step 3: Combine subscribers with their devices
-    const subscribersWithData = allSubscribers.map((sub) => {
-      const userDevices = devices.filter((d) => d.profile_id === sub.profile_id)
-
-      return {
-        ...sub,
-        devices: userDevices,
-      }
-    })
-
-    // Step 4: Filter for valid subscribers
     console.log(
       `[sendPushToFollowers] Filtering subscribers for valid notifications...`,
     )
-    const validSubscribers = subscribersWithData.filter((sub) => {
+
+    const validSubscribers = allSubscribers.filter((sub) => {
       const hasPushEnabled = sub.push_enabled === true
-      const hasDevices = sub.devices && sub.devices.length > 0
-      const hasValidTokens = sub.devices?.some((d) => d.fcm_token) || false
 
-      const isValid = hasPushEnabled && hasDevices && hasValidTokens
-
-      if (!isValid) {
-        console.log(
-          `  ❌ Filtered out ${sub.profile_id}: Push=${hasPushEnabled}, Devices=${hasDevices}, Tokens=${hasValidTokens}`,
-        )
+      if (!hasPushEnabled) {
+        console.log(`  ❌ Filtered out ${sub.profile_id}: Push disabled`)
       }
 
-      return isValid
+      return hasPushEnabled
     })
 
     if (validSubscribers.length === 0) {
@@ -65,15 +44,8 @@ export async function sendPushToFollowers(payload: NotificationPayload) {
       return { success: true, message: 'No valid subscribers' }
     }
 
-    // Step 5: Collect FCM tokens
-    const fcmTokens: string[] = []
-    validSubscribers.forEach((sub) => {
-      sub.devices.forEach((device) => {
-        if (device.fcm_token) {
-          fcmTokens.push(device.fcm_token)
-        }
-      })
-    })
+    const profileIds = validSubscribers.map((sub) => sub.profile_id)
+    const fcmTokens = await fetchDevicesByProfileIds(profileIds)
 
     if (fcmTokens.length === 0) {
       console.log('[sendPushToFollowers] No FCM tokens found')

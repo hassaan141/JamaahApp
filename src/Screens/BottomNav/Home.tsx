@@ -1,5 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { ScrollView, RefreshControl, View, StyleSheet } from 'react-native'
+import {
+  ScrollView,
+  RefreshControl,
+  View,
+  StyleSheet,
+  // ActivityIndicator,
+} from 'react-native'
 import { useFocusEffect, useRoute } from '@react-navigation/native'
 import CombinedPrayerCard from '@/components/HomeScreen/CombinedPrayerCard'
 import MasjidButton from '@/components/HomeScreen/MasjidButton'
@@ -7,6 +13,7 @@ import NotificationCard from '@/components/HomeScreen/NotificationButton'
 import NotificationList from '@/components/HomeScreen/NotificationList'
 import JummahCard from '@/components/HomeScreen/JummahCard'
 import { usePrayerTimes } from '@/Hooks/usePrayerTimes'
+import MiniLoading from '@/components/Loading/MiniLoading'
 
 type HomeRouteParams = { refreshPrayerTimes?: boolean }
 type NavigationLike = {
@@ -24,7 +31,8 @@ export default function Home({ navigation }: { navigation: NavigationLike }) {
     targetDate,
     nextDay,
     prevDay,
-    mode, // NEW: Get mode
+    mode,
+    loading,
   } = usePrayerTimes()
 
   const [refreshing, setRefreshing] = useState(false)
@@ -70,15 +78,19 @@ export default function Home({ navigation }: { navigation: NavigationLike }) {
       <View style={{ height: 56 }} />
       <View style={styles.topRow}>
         <View style={styles.masjidContainer}>
-          <MasjidButton
-            prayerTimes={{
-              org: org ?? undefined,
-              distance_m: distance_m ?? undefined,
-            }}
-            navigation={navigation}
-            onRefreshPrayerTimes={refetchPrayerTimes}
-            activeMode={mode} // NEW: Pass activeMode here!
-          />
+          {loading && !org ? (
+            <MiniLoading />
+          ) : (
+            <MasjidButton
+              prayerTimes={{
+                org: org ?? undefined,
+                distance_m: distance_m ?? undefined,
+              }}
+              navigation={navigation}
+              onRefreshPrayerTimes={refetchPrayerTimes}
+              activeMode={mode}
+            />
+          )}
         </View>
         <View style={styles.notificationWrapper}>
           <NotificationCard navigation={navigation} />

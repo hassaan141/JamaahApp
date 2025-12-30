@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { resolveOrgForTimes } from '@/Utils/organizationResolver'
 import { getUserId } from '@/Utils/getUserID'
 import { getPrayerTimesRange, type DailyPrayerTimes } from '@/Utils/prayerTimes'
+import { useLocation } from '@/Utils/useLocation'
 
 // 1. Define the State Type including 'mode'
 type UIState = {
@@ -23,6 +24,7 @@ function toYYYYMMDD(date: Date) {
 }
 
 export function usePrayerTimes() {
+  const { location, isLocationReady } = useLocation()
   const [loading, setLoading] = useState(true)
   const [targetDate, setTargetDate] = useState<Date>(new Date())
 
@@ -39,13 +41,25 @@ export function usePrayerTimes() {
   })
 
   const retrieve = useCallback(async () => {
+    // NEW Guard: Wait for location engine to initialize (prevents "Stale" fetch)
+    if (!isLocationReady) return
+
     setLoading(true)
     try {
       const userID = await getUserId()
       const todayStr = toYYYYMMDD(new Date())
 
+      // ✅ FIX: Map 'latitude/longitude' to 'lat/lon' for the resolver
+      const formattedLocation = location
+        ? { lat: location.latitude, lon: location.longitude }
+        : undefined
+
       // Fetch Org, Location, and Mode
-      const resolved = await resolveOrgForTimes(userID, todayStr)
+      const resolved = await resolveOrgForTimes(
+        userID,
+        todayStr,
+        formattedLocation, // Passing the correctly mapped object
+      )
 
       setState({
         org: resolved.org ?? null,
@@ -68,7 +82,7 @@ export function usePrayerTimes() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [isLocationReady, location])
 
   const prefetchRange = async (orgId: string) => {
     try {
@@ -113,7 +127,8 @@ export function usePrayerTimes() {
   const todayKey = toYYYYMMDD(new Date())
 
   return {
-    loading,
+    // UI considers itself loading if we are fetching OR waiting for GPS
+    loading: loading || !isLocationReady,
     org: state.org,
     distance_m: state.distance_m,
     mode: state.mode,

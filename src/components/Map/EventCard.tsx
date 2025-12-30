@@ -199,11 +199,15 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
+    // --- Changes Start Here ---
+    borderWidth: 1,
+    borderColor: '#E2E8F0', // Adds a very light gray border for a clean edge
+    shadowColor: '#4A5568', // Using a softer, less intense shadow color
+    shadowOffset: { width: 0, height: 4 }, // Increases the shadow's downward distance
+    shadowOpacity: 0.1, // Makes the shadow slightly more visible
+    shadowRadius: 10, // Blurs and spreads the shadow for a softer "lifted" look
+    elevation: 5, // Matches the shadow intensity for Android
+    // --- Changes End Here ---
   },
   header: {
     marginBottom: 8,

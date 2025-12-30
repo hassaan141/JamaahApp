@@ -18,7 +18,17 @@ TaskManager.defineTask(
   BACKGROUND_LOCATION_TASK,
   async ({ data, error }: LocationTaskPayload) => {
     if (error) {
-      console.error('[Background] Task Error:', error)
+      const isLocationUnknownError = error.message.includes(
+        'kCLErrorDomain Code=0',
+      )
+
+      if (isLocationUnknownError) {
+        console.log(
+          '[Background] Task: Could not determine location at this time. Will try again on the next run.',
+        )
+      } else {
+        console.error('[Background] Task Error:', error)
+      }
       return
     }
 

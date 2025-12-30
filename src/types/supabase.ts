@@ -471,6 +471,10 @@ export interface Database {
         }
         Returns: void
       }
+      delete_user_account: {
+        Args: Record<string, never>
+        Returns: void
+      }
     }
     Enums: Record<string, never>
     CompositeTypes: Record<string, never>

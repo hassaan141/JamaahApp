@@ -18,7 +18,7 @@ import MasjidList from '@/components/Map/MasjidList'
 import EventList from '@/components/Map/EventList'
 import NoResults from '@/components/Map/NoResults'
 import { useLocation } from '@/Utils/useLocation'
-import LoadingAnimation from '@/components/Loading/Loading'
+import MiniLoading from '@/components/Loading/MiniLoading'
 import { openDirections, openCall } from '@/Utils/links'
 
 // 1. Import your new hooks and types
@@ -214,7 +214,7 @@ export default function MapScreen() {
             placeholder={
               isMasjidMode
                 ? 'Search for masjids nearby...'
-                : "Search events (e.g. 'Quran', 'Sisters')..."
+                : "Search events ('Quran', 'Sisters')..."
             }
           />
         </View>
@@ -230,7 +230,7 @@ export default function MapScreen() {
 
         {currentLoading && (
           <View style={styles.loadingContainer}>
-            <LoadingAnimation />
+            <MiniLoading />
             <Text style={styles.loadingText}>
               {isMasjidMode ? 'Loading masjids...' : 'Loading events...'}
             </Text>

@@ -4,27 +4,16 @@ dotenv.config({ path: '.env' })
 
 const isDev = process.env.EAS_BUILD_PROFILE === 'development'
 
-const getIcon = () => {
-  if (isDev) return './assets/jamahDev.png'
-  return './assets/JamahProd.png'
-}
-
-const getDisplayName = () => {
-  if (isDev) return 'Jamaah (Dev)'
-  return 'Jamaah'
-}
-
 const getBundleId = () => {
-  if (isDev) return 'com.hassaan141.jamaahapp'
   return 'com.hassaan141.jamaahapp'
 }
 
 export default () => ({
   expo: {
-    name: 'jamaahapp-prod',
+    name: 'Jamaah',
     slug: 'jamaahapp-prod',
     scheme: 'com.hassaan141.jamaahapp',
-    icon: getIcon(),
+    icon: './assets/JamahProd.png',
     projectId: '738cfaa7-cbea-4042-b627-a2a351da154b',
     version: '1.0.0',
     orientation: 'portrait',
@@ -32,10 +21,12 @@ export default () => ({
     newArchEnabled: false,
 
     plugins: [
+      'expo-splash-screen',
       'expo-font',
       'expo-asset',
       '@react-native-firebase/app',
       '@react-native-firebase/messaging',
+      'expo-secure-store',
       [
         'expo-build-properties',
         {
@@ -49,14 +40,15 @@ export default () => ({
         {
           locationAlwaysAndWhenInUsePermission:
             'Allow Jamaah to use your location to update prayer times as you travel.',
+          isAndroidBackgroundLocationEnabled: true,
         },
       ],
     ],
 
     splash: {
-      image: './assets/splash-icon.png',
+      image: './assets/JamahProdNoBG.png',
       resizeMode: 'contain',
-      backgroundColor: '#ffffff',
+      backgroundColor: '#48BB78',
     },
 
     ios: {
@@ -68,7 +60,7 @@ export default () => ({
         'aps-environment': isDev ? 'development' : 'production',
       },
       infoPlist: {
-        CFBundleDisplayName: getDisplayName(),
+        CFBundleDisplayName: 'Jamaah',
         UIBackgroundModes: ['location', 'fetch'],
         NSLocationAlwaysAndWhenInUseUsageDescription:
           'We need your location to update prayer times automatically as you travel, even when the app is closed.',
@@ -89,6 +81,7 @@ export default () => ({
 
     android: {
       package: getBundleId(),
+      userInterfaceStyle: 'light',
       versionCode: 3,
       googleServicesFile: './google-services.json',
       permissions: [
@@ -96,18 +89,19 @@ export default () => ({
         'ACCESS_FINE_LOCATION',
         'ACCESS_BACKGROUND_LOCATION',
         'FOREGROUND_SERVICE',
-        //'FOREGROUND_SERVICE_LOCATION'
+        'FOREGROUND_SERVICE_LOCATION',
       ],
       adaptiveIcon: {
-        foregroundImage: getIcon(),
-        backgroundColor: '#ffffff',
+        foregroundImage: './assets/AndroidBGRemover.png',
+        backgroundColor: '#FFFFFF',
       },
+      icon: './assets/JamahProd.png',
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
     },
 
     web: {
-      favicon: './assets/favicon.png',
+      favicon: './assets/JamahProd.png',
     },
 
     extra: {

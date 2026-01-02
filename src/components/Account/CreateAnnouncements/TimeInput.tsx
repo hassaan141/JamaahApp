@@ -1,6 +1,9 @@
 import React from 'react'
 import { View, Text, TouchableOpacity, Platform } from 'react-native'
 import { Feather } from '@expo/vector-icons'
+import type {
+  DateTimePickerEvent,
+} from '@react-native-community/datetimepicker';
 import DateTimePicker from '@react-native-community/datetimepicker'
 
 interface TimeInputProps {
@@ -18,22 +21,44 @@ export default function TimeInput({
   isOpen,
   onToggle,
 }: TimeInputProps) {
+  // Helper to create a valid Date object from various time string formats (HH:mm or HH:mm:ss)
+  const getDateFromTimeString = (timeString: string | null): Date => {
+    if (!timeString) {
+      return new Date() // Default to now if time is null
+    }
+    // Take the first 5 characters ("HH:mm") to handle formats like "14:30:00"
+    const formattedTime = timeString.substring(0, 5)
+    const date = new Date(`2000-01-01T${formattedTime}:00`)
+
+    // Fallback to current date if parsing still results in an invalid date
+    if (isNaN(date.getTime())) {
+      console.warn(`Invalid time string received: ${timeString}`)
+      return new Date()
+    }
+    return date
+  }
+
+  const dateValue = getDateFromTimeString(time)
+
   const displayTime = time
-    ? new Date(`2000-01-01T${time}:00`).toLocaleTimeString(undefined, {
+    ? dateValue.toLocaleTimeString(undefined, {
         hour: 'numeric',
         minute: '2-digit',
         hour12: true,
       })
     : 'Select Time'
 
-  const handleChange = (event: unknown, selectedTime?: Date) => {
+  const handleChange = (event: DateTimePickerEvent, selectedTime?: Date) => {
     if (Platform.OS === 'android') {
       onToggle()
     }
-    if (selectedTime) {
-      const hours = selectedTime.getHours().toString().padStart(2, '0')
-      const minutes = selectedTime.getMinutes().toString().padStart(2, '0')
-      setTime(`${hours}:${minutes}`)
+
+    if (event.type === 'set' || Platform.OS === 'ios') {
+      if (selectedTime) {
+        const hours = selectedTime.getHours().toString().padStart(2, '0')
+        const minutes = selectedTime.getMinutes().toString().padStart(2, '0')
+        setTime(`${hours}:${minutes}`)
+      }
     }
   }
 
@@ -107,7 +132,7 @@ export default function TimeInput({
           }}
         >
           <DateTimePicker
-            value={time ? new Date(`2000-01-01T${time}:00`) : new Date()}
+            value={dateValue}
             mode="time"
             display={Platform.OS === 'ios' ? 'spinner' : 'default'}
             onChange={handleChange}

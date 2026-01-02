@@ -295,6 +295,7 @@ export default function EditAnnouncementModal({
               justifyContent: 'space-between',
               paddingHorizontal: 20,
               paddingBottom: 16,
+              marginTop: 10,
             }}
           >
             <TouchableOpacity

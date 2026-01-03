@@ -12,7 +12,7 @@ Key changes
 
 ## Screenshots / Video
 
-(if UI)
+(UI)
 
 ## Checklist
 

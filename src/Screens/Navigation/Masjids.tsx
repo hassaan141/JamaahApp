@@ -3,9 +3,10 @@ import {
   View,
   Text,
   StyleSheet,
-  FlatList,
   TouchableOpacity,
   ActivityIndicator,
+  ScrollView,
+  RefreshControl,
 } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
 import { getCoarseLocation } from '@/Utils/useLocation'
@@ -40,6 +41,7 @@ const Masjids: React.FC<NavProps> = ({ navigation, route }) => {
   const [masjids, setMasjids] = useState<MasjidItem[]>([])
   const [q, setQ] = useState('')
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [selectingId, setSelectingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -108,6 +110,23 @@ const Masjids: React.FC<NavProps> = ({ navigation, route }) => {
     }
   }
 
+  const onRefresh = async () => {
+    if (!location) return
+    setRefreshing(true)
+    try {
+      const list = await fetchNearbyMasjids(
+        location.latitude,
+        location.longitude,
+        { q, limit: 15 },
+      )
+      setMasjids(list)
+    } catch (e) {
+      console.error('Refresh failed:', e)
+    } finally {
+      setRefreshing(false)
+    }
+  }
+
   const onSelectMasjid = async (orgId: string) => {
     setSelectingId(orgId)
     try {
@@ -153,7 +172,7 @@ const Masjids: React.FC<NavProps> = ({ navigation, route }) => {
               onPress={() => navigation.goBack()}
               style={styles.backButton}
             >
-              <Feather name="arrow-left" size={24} color="#228f2bff" />
+              <Feather name="arrow-left" size={24} color="#1D4732" />
             </TouchableOpacity>
           )}
           <Text
@@ -175,48 +194,67 @@ const Masjids: React.FC<NavProps> = ({ navigation, route }) => {
         </Text>
       )}
 
-      <SearchBar
-        value={q}
-        onChangeText={onChangeSearch}
-        onClear={clearSearch}
-      />
-
       {hasNoResults ? (
-        <View style={styles.emptyWrap}>
-          <Feather name="search" size={48} color="#CBD5E0" />
-          <Text style={styles.emptyText}>
-            {q.trim()
-              ? `No masjids found for "${q}"`
-              : 'No masjids found in your area'}
-          </Text>
-          {!!q.trim() && (
-            <TouchableOpacity
-              onPress={clearSearch}
-              style={styles.clearSearchButton}
-            >
-              <Text style={styles.clearSearchText}>Clear search</Text>
-            </TouchableOpacity>
-          )}
-        </View>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
+          <View style={styles.searchContainer}>
+            <SearchBar
+              value={q}
+              onChangeText={onChangeSearch}
+              onClear={clearSearch}
+            />
+          </View>
+          <View style={styles.emptyWrap}>
+            <Feather name="search" size={48} color="#CBD5E0" />
+            <Text style={styles.emptyText}>
+              {q.trim()
+                ? `No masjids found for "${q}"`
+                : 'No masjids found in your area'}
+            </Text>
+            {!!q.trim() && (
+              <TouchableOpacity
+                onPress={clearSearch}
+                style={styles.clearSearchButton}
+              >
+                <Text style={styles.clearSearchText}>Clear search</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </ScrollView>
       ) : (
-        <FlatList
-          contentContainerStyle={styles.list}
-          data={masjids}
-          keyExtractor={(item) => String(item.id)}
-          renderItem={({ item }) => (
-            <View style={styles.itemWrapper}>
-              <MasjidListItem
-                item={item}
-                onPress={() => onSelectMasjid(item.id)}
-              />
-              {selectingId === item.id && (
-                <View style={styles.loadingOverlay}>
-                  <ActivityIndicator size="small" color="#228f2bff" />
-                </View>
-              )}
-            </View>
-          )}
-        />
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
+          <View style={styles.searchContainer}>
+            <SearchBar
+              value={q}
+              onChangeText={onChangeSearch}
+              onClear={clearSearch}
+            />
+          </View>
+          <View style={styles.list}>
+            {masjids.map((item) => (
+              <View key={item.id} style={styles.itemWrapper}>
+                <MasjidListItem
+                  item={item}
+                  onPress={() => onSelectMasjid(item.id)}
+                />
+                {selectingId === item.id && (
+                  <View style={styles.loadingOverlay}>
+                    <ActivityIndicator size="small" color="#228f2bff" />
+                  </View>
+                )}
+              </View>
+            ))}
+          </View>
+        </ScrollView>
       )}
     </View>
   )
@@ -241,7 +279,9 @@ const styles = StyleSheet.create({
     color: '#1D4732',
   },
   headerTitleWithBack: { textAlign: 'left', flex: 1 },
-  list: { paddingHorizontal: 6, paddingVertical: 16 },
+  scrollContent: { flexGrow: 1 },
+  searchContainer: { paddingHorizontal: 10, paddingBottom: 5 },
+  list: { paddingHorizontal: 6, paddingTop: 5, paddingBottom: 16 },
   emptyWrap: {
     flex: 1,
     justifyContent: 'center',

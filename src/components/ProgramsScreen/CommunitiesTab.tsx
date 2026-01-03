@@ -7,7 +7,6 @@ import {
   RefreshControl,
   TouchableOpacity,
   Modal,
-  ActivityIndicator, // <--- Added this
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { searchOrganizations } from '@/Supabase/fetchOrganizations'
@@ -160,24 +159,48 @@ export default function CommunitiesTab() {
 
   // Helper to decide what content to show
   const renderContent = () => {
-    // If we are loading (but not first load), show a spinner
-    if (loading) {
-      return (
-        <View style={styles.centeredContainer}>
-          <ActivityIndicator size="small" color="#2D6A4F" />
-        </View>
-      )
-    }
-
     // If no results
     if (
       !Array.isArray(filteredCommunities) ||
       filteredCommunities.length === 0
     ) {
       return (
-        <View style={styles.noResultsContainer}>
-          <Text style={styles.noResultsText}>No communities found</Text>
-        </View>
+        <ScrollView
+          style={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={loading}
+              onRefresh={() => loadCommunities(searchQuery)}
+            />
+          }
+        >
+          <View style={styles.searchRow}>
+            <View style={styles.searchBarWrapper}>
+              <SearchBar
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                onClear={() => setSearchQuery('')}
+                placeholder="Search communities"
+              />
+            </View>
+            <TouchableOpacity
+              style={styles.filterButton}
+              onPress={() => setFilterVisible(true)}
+              activeOpacity={0.7}
+            >
+              <Feather name="sliders" size={20} color="#2D3748" />
+              {activeFilters.length > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{activeFilters.length}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
+          <View style={styles.noResultsContainer}>
+            <Text style={styles.noResultsText}>No communities found</Text>
+          </View>
+        </ScrollView>
       )
     }
 
@@ -193,40 +216,40 @@ export default function CommunitiesTab() {
           />
         }
       >
-        {filteredCommunities.map((c) => {
-          const id = String(c.id ?? '')
-          return <CommunityItem key={id} community={c} />
-        })}
+        <View style={styles.searchRow}>
+          <View style={styles.searchBarWrapper}>
+            <SearchBar
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              onClear={() => setSearchQuery('')}
+              placeholder="Search communities"
+            />
+          </View>
+          <TouchableOpacity
+            style={styles.filterButton}
+            onPress={() => setFilterVisible(true)}
+            activeOpacity={0.7}
+          >
+            <Feather name="sliders" size={20} color="#2D3748" />
+            {activeFilters.length > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{activeFilters.length}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
+        <View style={styles.communityList}>
+          {filteredCommunities.map((c) => {
+            const id = String(c.id ?? '')
+            return <CommunityItem key={id} community={c} />
+          })}
+        </View>
       </ScrollView>
     )
   }
 
   return (
     <View style={styles.container}>
-      <View style={styles.searchRow}>
-        <View style={styles.searchBarWrapper}>
-          <SearchBar
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            onClear={() => setSearchQuery('')}
-            placeholder="Search communities"
-            // Removed onSubmitEditing redundancy since debounce handles it
-          />
-        </View>
-        <TouchableOpacity
-          style={styles.filterButton}
-          onPress={() => setFilterVisible(true)}
-          activeOpacity={0.7}
-        >
-          <Feather name="sliders" size={20} color="#2D3748" />
-          {activeFilters.length > 0 && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{activeFilters.length}</Text>
-            </View>
-          )}
-        </TouchableOpacity>
-      </View>
-
       {renderContent()}
 
       <FilterModal
@@ -243,8 +266,6 @@ export default function CommunitiesTab() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 20,
-    paddingHorizontal: 20,
     backgroundColor: '#F7FAFC',
   },
   scrollContainer: { flex: 1 },
@@ -283,6 +304,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     marginBottom: 10,
+    paddingTop: 20,
+    paddingHorizontal: 20,
   },
   searchBarWrapper: {
     flex: 1,
@@ -394,5 +417,9 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+  communityList: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
   },
 })

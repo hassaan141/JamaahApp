@@ -12,11 +12,12 @@ import Masjids from '@/Screens/Navigation/Masjids'
 import OrganizationDetail from '@/Screens/Navigation/OrganizationDetail'
 import Settings from '@/Screens/Navigation/Settings'
 import Notifications from '@/Screens/Navigation/Notifications'
+import type { Organization } from '@/types'
 
 export type RootStackParamList = {
   Tabs: undefined
   Masjids: undefined
-  OrganizationDetail: { id: string }
+  OrganizationDetail: { org: Organization & { is_following?: boolean } }
   Settings: undefined
   Notifications: undefined
   SignIn: undefined

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigation } from '@react-navigation/native'
 import {
   View,
@@ -10,11 +10,14 @@ import {
 import { Feather } from '@expo/vector-icons'
 import * as OrgFollow from '@/Supabase/organizationFollow'
 import type { Organization } from '@/types'
+import { followEventEmitter } from '@/Utils/followEventEmitter'
+import type { NavigationProp } from '@react-navigation/native'
+import type { RootStackParamList } from '@/Screens/Navigation/RootNavigator'
 
 type Props = { community: Organization & { is_following?: boolean } }
 
 export default function CommunityItem({ community }: Props) {
-  const navigation = useNavigation()
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>()
   const [following, setFollowing] = useState(!!community.is_following)
   const [loading, setLoading] = useState(false)
   const [expanded, setExpanded] = useState(false)
@@ -22,20 +25,42 @@ export default function CommunityItem({ community }: Props) {
   const followFn = OrgFollow.followOrganization
   const unfollowFn = OrgFollow.unfollowOrganization
 
+  // Listen for follow status changes from other screens
+  useEffect(() => {
+    const orgId = String(community.id)
+    const unsubscribe = followEventEmitter.subscribe(orgId, (isFollowing) => {
+      setFollowing(isFollowing)
+    })
+    return unsubscribe
+  }, [community.id])
+
   const handleFollowToggle = async () => {
     if (loading) return
+    const previousState = following
     setLoading(true)
+
+    // Optimistic update
+    setFollowing(!following)
+
     try {
+      let success = false
       if (following) {
-        setFollowing(false)
-        await unfollowFn(String(community.id))
+        success = await unfollowFn(String(community.id))
       } else {
-        setFollowing(true)
-        await followFn(String(community.id))
+        success = await followFn(String(community.id))
+      }
+
+      if (success) {
+        // Emit event to sync other components
+        followEventEmitter.emit(String(community.id), !previousState)
+      } else {
+        // Revert on API failure
+        setFollowing(previousState)
+        console.error('Follow/unfollow API call failed')
       }
     } catch (_err) {
       // Revert optimistic update on error
-      setFollowing(following)
+      setFollowing(previousState)
       console.error('follow/unfollow error', _err)
     } finally {
       setLoading(false)
@@ -43,8 +68,11 @@ export default function CommunityItem({ community }: Props) {
   }
 
   const handlePress = () => {
-    // @ts-expect-error navigation param typing
-    navigation.navigate('OrganizationDetail', { org: community })
+    const orgWithCurrentState = {
+      ...community,
+      is_following: following,
+    }
+    navigation.navigate('OrganizationDetail', { org: orgWithCurrentState })
   }
 
   const name = community.name

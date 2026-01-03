@@ -19,6 +19,7 @@ import { fetchOrgFollowerCount } from '@/Supabase/fetchOrgFollowerCount'
 import AnnouncementCard from '@/components/Shared/AnnouncementCard'
 import { useOrgPrayerTimes } from '@/Hooks/useOrgPrayerTimes'
 import CombinedPrayerCard from '@/components/HomeScreen/CombinedPrayerCard'
+import { followEventEmitter } from '@/Utils/followEventEmitter'
 
 type OrgParam = {
   id?: string | number
@@ -575,8 +576,10 @@ export default function OrganizationDetail() {
     let isMounted = true
     const fetchFollowStatus = async () => {
       try {
-        const status = await OrgFollow.isFollowingOrganization(orgId)
-        if (isMounted) setFollowing(!!status)
+        const result = await OrgFollow.isFollowingOrganization(orgId)
+        if (isMounted) {
+          setFollowing(result.following) // Fix: Use .following property
+        }
       } catch (err) {
         console.error('Error fetching follow status:', err)
         if (isMounted) setFollowing(false)
@@ -588,6 +591,17 @@ export default function OrganizationDetail() {
       isMounted = false
     }
   }, [orgId, org?.is_following])
+
+  // Listen for follow status changes from other components
+  useEffect(() => {
+    if (!orgId) return
+
+    const unsubscribe = followEventEmitter.subscribe(orgId, (isFollowing) => {
+      setFollowing(isFollowing)
+    })
+
+    return unsubscribe
+  }, [orgId])
 
   // Fetch follower count
   useEffect(() => {
@@ -638,13 +652,23 @@ export default function OrganizationDetail() {
     setFollowLoading(true)
     setFollowing(!following)
     try {
+      let success = false
       if (previousFollowState) {
-        await OrgFollow.unfollowOrganization(orgId)
+        success = await OrgFollow.unfollowOrganization(orgId)
       } else {
-        await OrgFollow.followOrganization(orgId)
+        success = await OrgFollow.followOrganization(orgId)
       }
-      const c = await fetchOrgFollowerCount(orgId)
-      setFollowerCount(c)
+
+      if (success) {
+        // Emit event to sync other components
+        followEventEmitter.emit(orgId, !previousFollowState)
+        const c = await fetchOrgFollowerCount(orgId)
+        setFollowerCount(c)
+      } else {
+        // Revert on API failure
+        setFollowing(previousFollowState)
+        console.error('Follow/unfollow API call failed')
+      }
     } catch (err) {
       console.error('Error toggling follow:', err)
       setFollowing(previousFollowState)

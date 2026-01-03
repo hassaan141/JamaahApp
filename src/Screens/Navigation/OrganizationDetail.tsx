@@ -570,8 +570,6 @@ export default function OrganizationDetail() {
   // Fetch follow status if not provided
   useEffect(() => {
     if (!orgId) return
-    if (typeof org?.is_following === 'boolean') return
-
     let isMounted = true
     const fetchFollowStatus = async () => {
       try {
@@ -579,15 +577,13 @@ export default function OrganizationDetail() {
         if (isMounted) setFollowing(!!status)
       } catch (err) {
         console.error('Error fetching follow status:', err)
-        if (isMounted) setFollowing(false)
       }
     }
-
     fetchFollowStatus()
     return () => {
       isMounted = false
     }
-  }, [orgId, org?.is_following])
+  }, [orgId])
 
   // Fetch follower count
   useEffect(() => {

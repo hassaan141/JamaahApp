@@ -7,9 +7,11 @@ import {
   RefreshControl,
   TouchableOpacity,
   Modal,
-  ActivityIndicator, // <--- Added this
+  ActivityIndicator,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
+// 1. Import useFocusEffect
+import { useFocusEffect } from '@react-navigation/native'
 import { searchOrganizations } from '@/Supabase/fetchOrganizations'
 import type { Organization } from '@/types'
 import CommunityItem from './CommunityItem'
@@ -97,7 +99,6 @@ const FilterModal = ({
 )
 
 export default function CommunitiesTab() {
-  // 1. New State to track if it is the very first load
   const [isFirstLoad, setIsFirstLoad] = useState(true)
   const [loading, setLoading] = useState(false)
   const [communities, setCommunities] = useState<
@@ -109,6 +110,7 @@ export default function CommunitiesTab() {
   const [filterVisible, setFilterVisible] = useState(false)
   const [activeFilters, setActiveFilters] = useState<string[]>([])
 
+  // Debounce logic remains the same
   useEffect(() => {
     const timeout = setTimeout(() => {
       setDebouncedQuery(searchQuery)
@@ -116,8 +118,9 @@ export default function CommunitiesTab() {
     return () => clearTimeout(timeout)
   }, [searchQuery])
 
-  const loadCommunities = useCallback(async (q?: string) => {
-    setLoading(true)
+  const loadCommunities = useCallback(async (q?: string, silent = false) => {
+    if (!silent) setLoading(true) // Only show spinner if NOT silent
+
     try {
       const data = await searchOrganizations({ query: q || '' })
       setCommunities(Array.isArray(data) ? data : [])
@@ -126,14 +129,15 @@ export default function CommunitiesTab() {
       setCommunities([])
     } finally {
       setLoading(false)
-      // 2. Once the first request finishes, we turn off the big animation forever
       setIsFirstLoad(false)
     }
   }, [])
 
-  useEffect(() => {
-    loadCommunities(debouncedQuery)
-  }, [debouncedQuery, loadCommunities])
+  useFocusEffect(
+    useCallback(() => {
+      loadCommunities(debouncedQuery, true) // true = silent refresh
+    }, [debouncedQuery, loadCommunities]),
+  )
 
   const filteredCommunities = useMemo(() => {
     if (activeFilters.length === 0) return communities
@@ -153,14 +157,11 @@ export default function CommunitiesTab() {
     setActiveFilters([])
   }
 
-  // 3. Only show the big animation on the FIRST load
   if (isFirstLoad) {
     return <LoadingAnimation />
   }
 
-  // Helper to decide what content to show
   const renderContent = () => {
-    // If we are loading (but not first load), show a spinner
     if (loading) {
       return (
         <View style={styles.centeredContainer}>
@@ -169,7 +170,6 @@ export default function CommunitiesTab() {
       )
     }
 
-    // If no results
     if (
       !Array.isArray(filteredCommunities) ||
       filteredCommunities.length === 0
@@ -181,7 +181,6 @@ export default function CommunitiesTab() {
       )
     }
 
-    // If we have results
     return (
       <ScrollView
         style={styles.scrollContainer}
@@ -210,7 +209,6 @@ export default function CommunitiesTab() {
             onChangeText={setSearchQuery}
             onClear={() => setSearchQuery('')}
             placeholder="Search communities"
-            // Removed onSubmitEditing redundancy since debounce handles it
           />
         </View>
         <TouchableOpacity
@@ -263,7 +261,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
-    // Removed background color to blend in
   },
   loadingText: { marginTop: 12, color: '#1D4732', fontSize: 15 },
   noResultsContainer: {

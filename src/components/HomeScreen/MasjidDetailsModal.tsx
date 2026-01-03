@@ -1,11 +1,11 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react' // <--- 1. Added useEffect
 import {
   Modal,
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
-  ActivityIndicator, // <--- 1. Import ActivityIndicator
+  ActivityIndicator,
 } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
 import { getUserId } from '@/Utils/getUserID'
@@ -31,8 +31,13 @@ const MasjidDetailsModal: React.FC<Props> = ({
   onRefreshPrayerTimes,
   activeMode = 'pinned',
 }) => {
-  // 2. Add loading state
   const [loading, setLoading] = useState(false)
+
+  // <--- 2. Reset loading state whenever modal opens or closes
+  // This fixes the "stuck infinite loading" bug if the user re-opens the modal.
+  useEffect(() => {
+    setLoading(false)
+  }, [visible])
 
   const handleChooseSpecificMasjid = () => {
     onClose()
@@ -40,7 +45,7 @@ const MasjidDetailsModal: React.FC<Props> = ({
   }
 
   const handleUseNearestMasjid = async () => {
-    setLoading(true) // Start loading
+    setLoading(true)
     try {
       const userID = await getUserId()
       await setAuto(userID)
@@ -48,7 +53,7 @@ const MasjidDetailsModal: React.FC<Props> = ({
       onRefreshPrayerTimes?.()
     } catch (e) {
       console.log('Use nearest failed:', e)
-      setLoading(false) // Stop loading only if it failed (otherwise modal closes)
+      setLoading(false)
     }
   }
 
@@ -82,7 +87,7 @@ const MasjidDetailsModal: React.FC<Props> = ({
               isPinnedActive && styles.activeOptionPinned,
             ]}
             onPress={handleChooseSpecificMasjid}
-            disabled={loading} // Prevent clicks while loading
+            disabled={loading}
           >
             <View style={styles.optionIcon}>
               <Feather name="map-pin" size={20} color="#48BB78" />
@@ -107,7 +112,8 @@ const MasjidDetailsModal: React.FC<Props> = ({
               isAutoActive && styles.activeOptionAuto,
             ]}
             onPress={handleUseNearestMasjid}
-            disabled={loading} // Prevent double clicks
+            // <--- 3. Disable if loading OR if already active
+            disabled={loading || isAutoActive}
           >
             <View style={styles.optionIcon}>
               <Feather name="navigation" size={20} color="#F6AD55" />
@@ -119,12 +125,11 @@ const MasjidDetailsModal: React.FC<Props> = ({
               </Text>
             </View>
 
-            {/* 3. Conditional Rendering for Loading Indicator */}
             {loading ? (
               <ActivityIndicator size="small" color="#F6AD55" />
             ) : (
               <Feather
-                name="chevron-right"
+                name={isAutoActive ? 'check' : 'chevron-right'} // Changed icon to check if active
                 size={20}
                 color={isAutoActive ? '#F6AD55' : '#CBD5E0'}
               />

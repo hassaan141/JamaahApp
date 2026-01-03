@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react' // <--- 1. Import useEffect
 import { useNavigation } from '@react-navigation/native'
 import {
   View,
@@ -10,14 +10,20 @@ import {
 import { Feather } from '@expo/vector-icons'
 import * as OrgFollow from '@/Supabase/organizationFollow'
 import type { Organization } from '@/types'
+import type { RootStackParamList } from '@/Screens/Navigation/RootNavigator'
+import type { StackNavigationProp } from '@react-navigation/stack'
 
 type Props = { community: Organization & { is_following?: boolean } }
 
 export default function CommunityItem({ community }: Props) {
-  const navigation = useNavigation()
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>()
   const [following, setFollowing] = useState(!!community.is_following)
   const [loading, setLoading] = useState(false)
   const [expanded, setExpanded] = useState(false)
+
+  useEffect(() => {
+    setFollowing(!!community.is_following)
+  }, [community.is_following])
 
   const followFn = OrgFollow.followOrganization
   const unfollowFn = OrgFollow.unfollowOrganization
@@ -35,7 +41,8 @@ export default function CommunityItem({ community }: Props) {
       }
     } catch (_err) {
       // Revert optimistic update on error
-      setFollowing(following)
+      // Use function form to revert to PREVIOUS state safely
+      setFollowing((prev) => !prev)
       console.error('follow/unfollow error', _err)
     } finally {
       setLoading(false)
@@ -43,8 +50,9 @@ export default function CommunityItem({ community }: Props) {
   }
 
   const handlePress = () => {
-    // @ts-expect-error navigation param typing
-    navigation.navigate('OrganizationDetail', { org: community })
+    navigation.navigate('OrganizationDetail', {
+      org: { ...community, is_following: following },
+    })
   }
 
   const name = community.name

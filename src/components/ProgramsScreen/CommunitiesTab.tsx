@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
   },
   searchBarWrapper: {
     flex: 1,
-    paddingTop: 12,
+    paddingTop: 14,
   },
   filterButton: {
     backgroundColor: '#F7FAFC',

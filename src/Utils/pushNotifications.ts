@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import messaging from '@react-native-firebase/messaging'
+import { Platform, PermissionsAndroid } from 'react-native'
 import { registerDeviceToken } from '@/Supabase/registerDevice'
 import { toast } from '@/components/Toast/toast'
 
@@ -17,10 +18,32 @@ export class PushNotificationManager {
     return PushNotificationManager.instance
   }
 
+  private async requestAndroidPermission(): Promise<boolean> {
+    if (Platform.OS !== 'android') return true
+    if (Platform.Version < 33) return true
+
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+      )
+      return granted === PermissionsAndroid.RESULTS.GRANTED
+    } catch (error) {
+      console.error('Error requesting Android notification permission:', error)
+      return false
+    }
+  }
+
   async initialize(userId: string) {
     if (this.initialized && this.currentUserId === userId) return
 
     try {
+      const hasPermission = await this.requestAndroidPermission()
+      if (!hasPermission) {
+        console.warn(
+          '[PushNotificationManager] Android notification permission denied',
+        )
+      }
+
       this.currentUserId = userId
       console.log(
         '[PushNotificationManager] Registering token for user:',

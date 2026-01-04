@@ -39,8 +39,26 @@ export class PushNotificationManager {
         console.log('FCM Token refreshed:', token)
         if (this.currentUserId) {
           await registerDeviceToken(this.currentUserId)
+          // Force resubscribe on token refresh (iOS loses subscriptions)
+          const currentTopic = await AsyncStorage.getItem(STORAGE_KEY_TOPIC)
+          if (currentTopic) {
+            const topic = `org_${currentTopic}_prayers`
+            console.log(
+              '[PushNotificationManager] Resubscribing after token refresh:',
+              topic,
+            )
+            await messaging().subscribeToTopic(topic)
+          }
         }
       })
+
+      // Resubscribe to current topic on init (handles iOS cold start)
+      const currentTopic = await AsyncStorage.getItem(STORAGE_KEY_TOPIC)
+      if (currentTopic) {
+        const topic = `org_${currentTopic}_prayers`
+        console.log('[PushNotificationManager] Resubscribing on init:', topic)
+        await messaging().subscribeToTopic(topic)
+      }
 
       if (!this.initialized) {
         messaging().onMessage(async (remoteMessage) => {

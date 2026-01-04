@@ -90,6 +90,7 @@ export default () => ({
         'ACCESS_BACKGROUND_LOCATION',
         'FOREGROUND_SERVICE',
         'FOREGROUND_SERVICE_LOCATION',
+        'POST_NOTIFICATIONS',
       ],
       adaptiveIcon: {
         foregroundImage: './assets/JamahProdAndroidNoBG.png',

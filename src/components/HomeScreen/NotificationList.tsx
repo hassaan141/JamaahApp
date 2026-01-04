@@ -177,6 +177,7 @@ const NotificationList: React.FC<{ refreshKey?: boolean }> = ({
             />
             <Text style={styles.emptyText}>
               Please start following an organization to get events and classes
+              notifications
             </Text>
           </TouchableOpacity>
         ) : filteredAnnouncements.length === 0 ? (

@@ -18,6 +18,7 @@ type Organization = Database['public']['Tables']['organizations']['Row']
 import UserProfileSection from '@/components/Account/UserProfileSection'
 import CreateAnnouncementSection from '@/components/Account/CreateAnnouncementSection'
 import AnnouncementsList from '@/components/Account/AnnouncementsList'
+import FollowedOrgsList from '@/components/Account/FollowedOrgsList'
 import SignOutButton from '@/components/Account/SignOutButton'
 // import VersionFooter from '@/components/Account/VersionFooter'
 
@@ -128,6 +129,8 @@ export default function Account() {
             />
           </>
         )}
+
+        <FollowedOrgsList refreshKey={refreshing} />
 
         <SignOutButton onLogout={logout} />
       </ScrollView>

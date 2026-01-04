@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Modal,
   View,
@@ -34,6 +34,13 @@ const MasjidDetailsModal: React.FC<Props> = ({
   // 2. Add loading state
   const [loading, setLoading] = useState(false)
 
+  // Reset loading state when modal closes
+  useEffect(() => {
+    if (!visible) {
+      setLoading(false)
+    }
+  }, [visible])
+
   const handleChooseSpecificMasjid = () => {
     onClose()
     navigation.navigate('Masjids', { showBackButton: true })
@@ -48,7 +55,8 @@ const MasjidDetailsModal: React.FC<Props> = ({
       onRefreshPrayerTimes?.()
     } catch (e) {
       console.log('Use nearest failed:', e)
-      setLoading(false) // Stop loading only if it failed (otherwise modal closes)
+    } finally {
+      setLoading(false) // Always reset loading state
     }
   }
 

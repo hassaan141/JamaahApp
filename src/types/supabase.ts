@@ -188,6 +188,24 @@ export interface Database {
           },
         ]
       }
+      app_config: {
+        Row: {
+          key: string
+          value: string
+          updated_at: string
+        }
+        Insert: {
+          key: string
+          value: string
+          updated_at?: string
+        }
+        Update: {
+          key?: string
+          value?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       org_posts: {
         Row: {
           id: string

@@ -1,5 +1,11 @@
-import React, { useEffect, useCallback } from 'react'
-import { View, StyleSheet, Text, TouchableOpacity } from 'react-native'
+import React, { useEffect, useCallback, useState } from 'react'
+import {
+  View,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native'
 import { NavigationContainer } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
@@ -17,6 +23,8 @@ import { AuthProvider, useAuth } from './src/Auth/AuthProvider'
 import { supabase } from './src/Supabase/supabaseClient'
 import { ENV } from './src/core/env'
 import ToastHost from './src/components/Toast/ToastHost'
+import ForceUpdateScreen from './src/Screens/Navigation/ForceUpdateScreen'
+import { checkForForcedUpdate } from './src/Utils/checkForForcedUpdate'
 
 SplashScreen.preventAutoHideAsync().catch(() => {})
 
@@ -92,6 +100,46 @@ function AppNavigator() {
 }
 
 export default function App() {
+  const [checkingUpdate, setCheckingUpdate] = useState(true)
+  const [forceUpdate, setForceUpdate] = useState(false)
+
+  useEffect(() => {
+    let didTimeout = false
+    const timeoutId = setTimeout(() => {
+      didTimeout = true
+      setCheckingUpdate(false)
+    }, 3000)
+
+    checkForForcedUpdate()
+      .then((mustUpdate) => {
+        if (!didTimeout) {
+          clearTimeout(timeoutId)
+          setForceUpdate(mustUpdate)
+          setCheckingUpdate(false)
+        }
+      })
+      .catch(() => {
+        if (!didTimeout) {
+          clearTimeout(timeoutId)
+          setCheckingUpdate(false)
+        }
+      })
+
+    return () => clearTimeout(timeoutId)
+  }, [])
+
+  if (checkingUpdate) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" />
+      </View>
+    )
+  }
+
+  if (forceUpdate) {
+    return <ForceUpdateScreen />
+  }
+
   return (
     <SafeAreaProvider>
       <ErrorBoundary FallbackComponent={CustomFallback}>

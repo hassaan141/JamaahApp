@@ -238,20 +238,20 @@ export default function OrganizationSignUp({
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
+      <View style={styles.headerContainer}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Feather name="arrow-left" size={24} color="#2D3748" />
+        </TouchableOpacity>
+      </View>
+
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.headerContainer}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Feather name="arrow-left" size={24} color="#2D3748" />
-          </TouchableOpacity>
-        </View>
-
         <View style={styles.formContainer}>
           <Text style={styles.title}>Register Organization</Text>
           <Text style={styles.subtitle}>
@@ -736,10 +736,11 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   headerContainer: {
-    // Increased top padding to clear status bar status static spacer
+    // Fixed header at top
     paddingTop: 60,
     paddingHorizontal: 20,
     paddingBottom: 10,
+    backgroundColor: '#F7FAFC',
   },
   backButton: {
     padding: 10,

@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react'
+import React, { useEffect, useCallback, useState } from 'react'
 import { View, StyleSheet, Text, TouchableOpacity } from 'react-native'
 import { NavigationContainer } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
@@ -17,6 +17,9 @@ import { AuthProvider, useAuth } from './src/Auth/AuthProvider'
 import { supabase } from './src/Supabase/supabaseClient'
 import { ENV } from './src/core/env'
 import ToastHost from './src/components/Toast/ToastHost'
+import ForceUpdateScreen from './src/Screens/Navigation/ForceUpdateScreen'
+import LoadingScreen from './src/Screens/Navigation/LoadingScreen'
+import { checkForForcedUpdate } from './src/Utils/checkForForcedUpdate'
 
 SplashScreen.preventAutoHideAsync().catch(() => {})
 
@@ -92,6 +95,25 @@ function AppNavigator() {
 }
 
 export default function App() {
+  const [checkingUpdate, setCheckingUpdate] = useState(true)
+  const [forceUpdate, setForceUpdate] = useState(false)
+
+  useEffect(() => {
+    ;(async () => {
+      const mustUpdate = await checkForForcedUpdate()
+      setForceUpdate(mustUpdate)
+      setCheckingUpdate(false)
+    })()
+  }, [])
+
+  if (checkingUpdate) {
+    return <LoadingScreen />
+  }
+
+  if (forceUpdate) {
+    return <ForceUpdateScreen />
+  }
+
   return (
     <SafeAreaProvider>
       <ErrorBoundary FallbackComponent={CustomFallback}>

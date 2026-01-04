@@ -12,6 +12,10 @@ import Masjids from '@/Screens/Navigation/Masjids'
 import OrganizationDetail from '@/Screens/Navigation/OrganizationDetail'
 import Settings from '@/Screens/Navigation/Settings'
 import Notifications from '@/Screens/Navigation/Notifications'
+import ProfileSettings from './Settings/ProfileSettings'
+import AccountSettings from './Settings/AccountSettings'
+import OurMission from './Settings/OurMission'
+import HelpSupport from './Settings/HelpSupport'
 import type { Organization } from '@/types'
 
 export type RootStackParamList = {
@@ -19,6 +23,10 @@ export type RootStackParamList = {
   Masjids: undefined
   OrganizationDetail: { org: Organization & { is_following?: boolean } }
   Settings: undefined
+  ProfileSettings: undefined
+  AccountSettings: undefined
+  OurMission: undefined
+  HelpSupport: undefined
   Notifications: undefined
   SignIn: undefined
 }
@@ -86,6 +94,10 @@ export default function RootNavigator() {
       <Stack.Screen name="Masjids" component={Masjids} />
       <Stack.Screen name="OrganizationDetail" component={OrganizationDetail} />
       <Stack.Screen name="Settings" component={Settings} />
+      <Stack.Screen name="ProfileSettings" component={ProfileSettings} />
+      <Stack.Screen name="AccountSettings" component={AccountSettings} />
+      <Stack.Screen name="OurMission" component={OurMission} />
+      <Stack.Screen name="HelpSupport" component={HelpSupport} />
       <Stack.Screen name="Notifications" component={Notifications} />
     </Stack.Navigator>
   )

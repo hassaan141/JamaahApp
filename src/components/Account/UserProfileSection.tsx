@@ -194,12 +194,14 @@ export default function UserProfileSection({
           <TouchableOpacity
             onPress={handleOpenSettings}
             style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
+              width: 44,
+              height: 44,
+              borderRadius: 8,
               backgroundColor: '#F8F9FA',
               justifyContent: 'center',
               alignItems: 'center',
+              marginLeft: 12,
+              alignSelf: 'flex-start',
             }}
           >
             <Feather name="settings" size={20} color="#1D4732" />

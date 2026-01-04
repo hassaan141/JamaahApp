@@ -1,7 +1,9 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
 import type { EventItem } from '@/Supabase/fetchEventsFromRPC'
+import type { OrgPost } from '@/types'
+import AnnouncementModal from '@/components/Shared/AnnouncementModal'
 
 /**
  * Extended type to handle recurring days and organization name
@@ -82,13 +84,13 @@ const getEventTypeColor = (postType: string | null) => {
 
 export default function EventCard({
   event,
-  onPress,
   onDirections,
 }: {
   event: EventItem
   onPress?: () => void
   onDirections?: (event: EventItem) => void
 }) {
+  const [modalVisible, setModalVisible] = useState(false)
   const iconName = getEventTypeIcon(event.post_type)
   const iconColor = getEventTypeColor(event.post_type)
   const isRepeating = event.post_type === 'Repeating_classes'
@@ -116,80 +118,117 @@ export default function EventCard({
     return names.join(', ')
   })()
 
+  const announcementData: OrgPost & {
+    organizations?: { name?: string } | null
+  } = {
+    id: event.id,
+    organization_id: event.organization_id,
+    author_profile_id: null,
+    title: event.title,
+    body: event.body,
+    post_type: event.post_type,
+    demographic: event.demographic,
+    recurs_on_days:
+      ((event as EventWithExtras).recurs_on_days?.map((d) =>
+        typeof d === 'string' ? parseInt(d, 10) : d,
+      ) as number[] | null) ?? null,
+    start_time: event.start_time,
+    end_time: event.end_time,
+    date: event.date,
+    send_push: false,
+    created_at: '',
+    location: event.location,
+    lat: event.lat,
+    long: event.long,
+    organizations: { name: (event as EventWithExtras).organization_name ?? '' },
+  }
+
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress}>
-      {/* Title Header */}
-      <View style={styles.header}>
-        <View style={styles.titleRow}>
-          <View style={[styles.typeIcon, { backgroundColor: iconColor }]}>
-            <Feather name={iconName} size={12} color="white" />
+    <>
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() => setModalVisible(true)}
+      >
+        {/* Title Header */}
+        <View style={styles.header}>
+          <View style={styles.titleRow}>
+            <View style={[styles.typeIcon, { backgroundColor: iconColor }]}>
+              <Feather name={iconName} size={12} color="white" />
+            </View>
+            <Text style={styles.title} numberOfLines={2}>
+              {event.title}
+            </Text>
           </View>
-          <Text style={styles.title} numberOfLines={2}>
-            {event.title}
-          </Text>
         </View>
-      </View>
 
-      {/* 1. Organization Row (Moved before Address) */}
-      {(event as EventWithExtras).organization_name && (
-        <View style={styles.organizationRow}>
-          <Feather name="users" size={12} color="#718096" />
-          <Text style={styles.organizationText}>
-            {(event as EventWithExtras).organization_name}
-          </Text>
-        </View>
-      )}
-
-      {/* 2. Location Row: Address (Left) and Distance (Right) */}
-      <View style={styles.splitInfoRow}>
-        <View style={styles.leftContainer}>
-          <Feather name="map-pin" size={12} color="#718096" />
-          <Text style={styles.infoText} numberOfLines={1}>
-            {event.location || 'Location TBD'}
-          </Text>
-        </View>
-        {event.dist_km != null && (
-          <Text style={styles.rightHighlightText}>
-            {event.dist_km.toFixed(1)} km
-          </Text>
+        {/* 1. Organization Row (Moved before Address) */}
+        {(event as EventWithExtras).organization_name && (
+          <View style={styles.organizationRow}>
+            <Feather name="users" size={12} color="#718096" />
+            <Text style={styles.organizationText}>
+              {(event as EventWithExtras).organization_name}
+            </Text>
+          </View>
         )}
-      </View>
 
-      {/* 3. Date & Time Row: Time (Left) and Formatted Date (Right) */}
-      {(event.date || recurringDisplay || event.start_time) && (
+        {/* 2. Location Row: Address (Left) and Distance (Right) */}
         <View style={styles.splitInfoRow}>
           <View style={styles.leftContainer}>
-            <Feather name="clock" size={12} color="#718096" />
-            {event.start_time ? (
-              <Text style={styles.infoText}>
-                {formatTime(event.start_time)}
-                {event.end_time ? ` - ${formatTime(event.end_time)}` : ''}
-              </Text>
-            ) : (
-              <Text style={styles.infoText}>Time TBD</Text>
-            )}
+            <Feather name="map-pin" size={12} color="#718096" />
+            <Text style={styles.infoText} numberOfLines={1}>
+              {event.location || 'Location TBD'}
+            </Text>
           </View>
-          {(recurringDisplay || event.date) && (
-            <Text style={styles.rightNormalText}>
-              {recurringDisplay || formatLegibleDate(event.date)}
+          {event.dist_km != null && (
+            <Text style={styles.rightHighlightText}>
+              {event.dist_km.toFixed(1)} km
             </Text>
           )}
         </View>
-      )}
 
-      <View style={styles.actionButtons}>
-        <TouchableOpacity
-          style={[styles.actionButton, styles.directionsButton]}
-          onPress={(e) => {
-            e.stopPropagation()
-            onDirections?.(event)
-          }}
-        >
-          <Feather name="navigation" size={14} color="#FFFFFF" />
-          <Text style={styles.directionsText}>Directions</Text>
-        </TouchableOpacity>
-      </View>
-    </TouchableOpacity>
+        {/* 3. Date & Time Row: Time (Left) and Formatted Date (Right) */}
+        {(event.date || recurringDisplay || event.start_time) && (
+          <View style={styles.splitInfoRow}>
+            <View style={styles.leftContainer}>
+              <Feather name="clock" size={12} color="#718096" />
+              {event.start_time ? (
+                <Text style={styles.infoText}>
+                  {formatTime(event.start_time)}
+                  {event.end_time ? ` - ${formatTime(event.end_time)}` : ''}
+                </Text>
+              ) : (
+                <Text style={styles.infoText}>Time TBD</Text>
+              )}
+            </View>
+            {(recurringDisplay || event.date) && (
+              <Text style={styles.rightNormalText}>
+                {recurringDisplay || formatLegibleDate(event.date)}
+              </Text>
+            )}
+          </View>
+        )}
+
+        <View style={styles.actionButtons}>
+          <TouchableOpacity
+            style={[styles.actionButton, styles.directionsButton]}
+            onPress={(e) => {
+              e.stopPropagation()
+              onDirections?.(event)
+            }}
+          >
+            <Feather name="navigation" size={14} color="#FFFFFF" />
+            <Text style={styles.directionsText}>Directions</Text>
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+
+      <AnnouncementModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        announcement={announcementData}
+        showPublishedDate={false}
+      />
+    </>
   )
 }
 
@@ -199,15 +238,13 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
-    // --- Changes Start Here ---
     borderWidth: 1,
-    borderColor: '#E2E8F0', // Adds a very light gray border for a clean edge
-    shadowColor: '#4A5568', // Using a softer, less intense shadow color
-    shadowOffset: { width: 0, height: 4 }, // Increases the shadow's downward distance
-    shadowOpacity: 0.1, // Makes the shadow slightly more visible
-    shadowRadius: 10, // Blurs and spreads the shadow for a softer "lifted" look
-    elevation: 5, // Matches the shadow intensity for Android
-    // --- Changes End Here ---
+    borderColor: '#E2E8F0',
+    shadowColor: '#4A5568',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
   },
   header: {
     marginBottom: 8,

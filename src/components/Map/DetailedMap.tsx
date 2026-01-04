@@ -293,14 +293,14 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
         showsMyLocationButton={true}
         followsUserLocation={false}
       >
-        <Marker
+        {/* <Marker
           coordinate={{
             latitude: location.latitude,
             longitude: location.longitude,
           }}
           title="Your Location"
           pinColor="blue"
-        />
+        /> */}
 
         {mode === 'masjids' &&
           nearbyMasjids.map((marker, index) => (

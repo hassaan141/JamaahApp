@@ -1,5 +1,11 @@
 import React, { useEffect, useCallback, useState } from 'react'
-import { View, StyleSheet, Text, TouchableOpacity } from 'react-native'
+import {
+  View,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native'
 import { NavigationContainer } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
@@ -18,7 +24,6 @@ import { supabase } from './src/Supabase/supabaseClient'
 import { ENV } from './src/core/env'
 import ToastHost from './src/components/Toast/ToastHost'
 import ForceUpdateScreen from './src/Screens/Navigation/ForceUpdateScreen'
-import LoadingScreen from './src/Screens/Navigation/LoadingScreen'
 import { checkForForcedUpdate } from './src/Utils/checkForForcedUpdate'
 
 SplashScreen.preventAutoHideAsync().catch(() => {})
@@ -99,15 +104,36 @@ export default function App() {
   const [forceUpdate, setForceUpdate] = useState(false)
 
   useEffect(() => {
-    ;(async () => {
-      const mustUpdate = await checkForForcedUpdate()
-      setForceUpdate(mustUpdate)
+    let didTimeout = false
+    const timeoutId = setTimeout(() => {
+      didTimeout = true
       setCheckingUpdate(false)
-    })()
+    }, 3000)
+
+    checkForForcedUpdate()
+      .then((mustUpdate) => {
+        if (!didTimeout) {
+          clearTimeout(timeoutId)
+          setForceUpdate(mustUpdate)
+          setCheckingUpdate(false)
+        }
+      })
+      .catch(() => {
+        if (!didTimeout) {
+          clearTimeout(timeoutId)
+          setCheckingUpdate(false)
+        }
+      })
+
+    return () => clearTimeout(timeoutId)
   }, [])
 
   if (checkingUpdate) {
-    return <LoadingScreen />
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" />
+      </View>
+    )
   }
 
   if (forceUpdate) {

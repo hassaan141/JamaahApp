@@ -87,7 +87,17 @@ export default function UserProfileSection({
 
   const displayName = isOrganization
     ? organizationName || 'Organization'
-    : profile?.first_name || 'User'
+    : profile?.first_name && profile?.last_name
+      ? `${profile.first_name} ${profile.last_name}`
+      : profile?.first_name || 'User'
+
+  // Format member since date
+  const memberSince = profile?.created_at
+    ? new Date(profile.created_at).toLocaleDateString('en-US', {
+        month: 'short',
+        year: 'numeric',
+      })
+    : null
 
   const styles = StyleSheet.create({
     container: {
@@ -164,6 +174,16 @@ export default function UserProfileSection({
               </View>
             )}
 
+            {/* Show email for individuals */}
+            {!isOrganization && profile?.email && (
+              <Text
+                style={{ fontSize: 13, color: '#6C757D', marginBottom: 4 }}
+                numberOfLines={1}
+              >
+                {profile.email}
+              </Text>
+            )}
+
             {isOrganization && (
               <View
                 style={{
@@ -189,6 +209,33 @@ export default function UserProfileSection({
                 </Text>
               </View>
             )}
+
+            {/* Show member badge for individuals */}
+            {!isOrganization && (
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  backgroundColor: '#EBF8FF',
+                  paddingHorizontal: 8,
+                  paddingVertical: 4,
+                  borderRadius: 4,
+                  alignSelf: 'flex-start',
+                }}
+              >
+                <Feather name="user" size={12} color="#3182CE" />
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: '#3182CE',
+                    marginLeft: 4,
+                    fontWeight: '500',
+                  }}
+                >
+                  Member
+                </Text>
+              </View>
+            )}
           </View>
 
           <TouchableOpacity
@@ -209,17 +256,26 @@ export default function UserProfileSection({
         </View>
 
         <View>
-          {!isOrganization && profile?.first_name && profile?.last_name && (
-            <Text
+          {/* Show member since for individuals */}
+          {!isOrganization && memberSince && (
+            <View
               style={{
-                fontSize: 15,
-                fontWeight: '600',
-                color: '#1D4732',
-                marginBottom: 4,
+                flexDirection: 'row',
+                alignItems: 'center',
+                marginTop: 4,
               }}
             >
-              {profile.first_name} {profile.last_name}
-            </Text>
+              <Feather name="calendar" size={14} color="#6C757D" />
+              <Text
+                style={{
+                  fontSize: 13,
+                  color: '#6C757D',
+                  marginLeft: 6,
+                }}
+              >
+                Member since {memberSince}
+              </Text>
+            </View>
           )}
 
           {isOrganization && organizationDescription && (

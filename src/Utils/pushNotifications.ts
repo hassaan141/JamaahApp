@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import messaging from '@react-native-firebase/messaging'
-import { Platform, PermissionsAndroid } from 'react-native'
+import { AppState, PermissionsAndroid, Platform } from 'react-native'
 import { registerDeviceToken } from '@/Supabase/registerDevice'
 import { toast } from '@/components/Toast/toast'
 
@@ -11,6 +11,9 @@ export class PushNotificationManager {
   private initialized = false
   private currentUserId: string | null = null
 
+  private initInFlight: Promise<void> | null = null
+  private androidPermissionInFlight: Promise<boolean> | null = null
+
   static getInstance(): PushNotificationManager {
     if (!PushNotificationManager.instance) {
       PushNotificationManager.instance = new PushNotificationManager()
@@ -18,88 +21,127 @@ export class PushNotificationManager {
     return PushNotificationManager.instance
   }
 
+  private async waitForAppToBeActive(): Promise<void> {
+    if (Platform.OS !== 'android') return
+    if (AppState.currentState === 'active') return
+
+    await new Promise<void>((resolve) => {
+      const subscription = AppState.addEventListener('change', (state) => {
+        if (state === 'active') {
+          subscription.remove()
+          resolve()
+        }
+      })
+    })
+  }
+
   private async requestAndroidPermission(): Promise<boolean> {
     if (Platform.OS !== 'android') return true
     if (Platform.Version < 33) return true
 
-    try {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
-      )
-      return granted === PermissionsAndroid.RESULTS.GRANTED
-    } catch (error) {
-      console.error('Error requesting Android notification permission:', error)
-      return false
-    }
+    if (this.androidPermissionInFlight) return this.androidPermissionInFlight
+
+    this.androidPermissionInFlight = (async () => {
+      try {
+        // On cold start Android may not show the dialog until the Activity is active.
+        await this.waitForAppToBeActive()
+
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+        )
+        return granted === PermissionsAndroid.RESULTS.GRANTED
+      } catch (error) {
+        console.error(
+          'Error requesting Android notification permission:',
+          error,
+        )
+        return false
+      }
+    })()
+
+    return this.androidPermissionInFlight
   }
 
   async initialize(userId: string) {
     if (this.initialized && this.currentUserId === userId) return
 
-    try {
-      const hasPermission = await this.requestAndroidPermission()
-      if (!hasPermission) {
-        console.warn(
-          '[PushNotificationManager] Android notification permission denied',
-        )
-      }
+    // Important: do not block app startup on OS permission UI.
+    this.currentUserId = userId
+    const initUserId = userId
 
-      this.currentUserId = userId
-      console.log(
-        '[PushNotificationManager] Registering token for user:',
-        userId,
-      )
+    // Fire-and-forget: callers can `await initialize()` safely without getting stuck.
+    if (!this.initInFlight) {
+      this.initInFlight = (async () => {
+        try {
+          const hasPermission = await this.requestAndroidPermission()
+          if (!hasPermission) {
+            console.warn(
+              '[PushNotificationManager] Android notification permission denied',
+            )
+          }
 
-      const result = await registerDeviceToken(userId)
-      if (!result.success) {
-        console.warn(
-          '[PushNotificationManager] Registration failed:',
-          result.error,
-        )
-      }
+          console.log(
+            '[PushNotificationManager] Registering token for user:',
+            initUserId,
+          )
 
-      messaging().onTokenRefresh(async (token) => {
-        console.log('FCM Token refreshed:', token)
-        if (this.currentUserId) {
-          await registerDeviceToken(this.currentUserId)
-          // Force resubscribe on token refresh (iOS loses subscriptions)
+          const result = await registerDeviceToken(initUserId)
+          if (!result.success) {
+            console.warn(
+              '[PushNotificationManager] Registration failed:',
+              result.error,
+            )
+          }
+
+          messaging().onTokenRefresh(async (token) => {
+            console.log('FCM Token refreshed:', token)
+            if (this.currentUserId) {
+              await registerDeviceToken(this.currentUserId)
+              // Force resubscribe on token refresh (iOS loses subscriptions)
+              const currentTopic = await AsyncStorage.getItem(STORAGE_KEY_TOPIC)
+              if (currentTopic) {
+                const topic = `org_${currentTopic}_prayers`
+                console.log(
+                  '[PushNotificationManager] Resubscribing after token refresh:',
+                  topic,
+                )
+                await messaging().subscribeToTopic(topic)
+              }
+            }
+          })
+
+          // Resubscribe to current topic on init (handles iOS cold start)
           const currentTopic = await AsyncStorage.getItem(STORAGE_KEY_TOPIC)
           if (currentTopic) {
             const topic = `org_${currentTopic}_prayers`
             console.log(
-              '[PushNotificationManager] Resubscribing after token refresh:',
+              '[PushNotificationManager] Resubscribing on init:',
               topic,
             )
             await messaging().subscribeToTopic(topic)
           }
+
+          if (!this.initialized) {
+            messaging().onMessage(async (remoteMessage) => {
+              console.log('[Foreground Message]', remoteMessage)
+              const title = remoteMessage.notification?.title || 'Notification'
+              const body = remoteMessage.notification?.body || ''
+              toast.info(body, title)
+            })
+
+            messaging().setBackgroundMessageHandler(async (remoteMessage) => {
+              console.log('[Background Message]', remoteMessage)
+            })
+          }
+
+          this.initialized = true
+          console.log('Push notifications initialized for user:', initUserId)
+        } catch (error) {
+          console.error('Error initializing push notifications:', error)
         }
+      })().finally(() => {
+        this.initInFlight = null
       })
-
-      // Resubscribe to current topic on init (handles iOS cold start)
-      const currentTopic = await AsyncStorage.getItem(STORAGE_KEY_TOPIC)
-      if (currentTopic) {
-        const topic = `org_${currentTopic}_prayers`
-        console.log('[PushNotificationManager] Resubscribing on init:', topic)
-        await messaging().subscribeToTopic(topic)
-      }
-
-      if (!this.initialized) {
-        messaging().onMessage(async (remoteMessage) => {
-          console.log('[Foreground Message]', remoteMessage)
-          const title = remoteMessage.notification?.title || 'Notification'
-          const body = remoteMessage.notification?.body || ''
-          toast.info(body, title)
-        })
-
-        messaging().setBackgroundMessageHandler(async (remoteMessage) => {
-          console.log('[Background Message]', remoteMessage)
-        })
-      }
-
-      this.initialized = true
-      console.log('Push notifications initialized for user:', userId)
-    } catch (error) {
-      console.error('Error initializing push notifications:', error)
     }
   }
 

@@ -18,6 +18,7 @@ import {
   statusCodes,
   isErrorWithCode,
 } from '@react-native-google-signin/google-signin'
+import * as AppleAuthentication from 'expo-apple-authentication'
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import googleLogo from '../../../assets/google-logo.png'
@@ -44,6 +45,70 @@ export default function SignUp({ navigation }: { navigation: Nav }) {
       iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
     })
   }, [])
+
+  const handleAppleSignUp = async () => {
+    setLoading(true)
+    console.log('[AppleSignUp] Starting Apple Sign-Up flow...')
+
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      })
+
+      console.log(
+        '[AppleSignUp] Apple Native Success. Credential:',
+        JSON.stringify(credential, null, 2),
+      )
+
+      if (credential.identityToken) {
+        console.log(
+          '[AppleSignUp] Identity Token found. Authenticating with Supabase...',
+        )
+
+        const { data, error } = await supabase.auth.signInWithIdToken({
+          provider: 'apple',
+          token: credential.identityToken,
+        })
+
+        if (error) {
+          console.error(
+            '[AppleSignUp] Supabase Auth Error:',
+            JSON.stringify(error, null, 2),
+          )
+          throw error
+        }
+
+        console.log(
+          '[AppleSignUp] Supabase Success! User ID:',
+          data.session?.user?.id,
+        )
+        toast.success('Account created successfully!', 'Success')
+      } else {
+        console.error('[AppleSignUp] Critical: No Identity Token in credential')
+        throw new Error('No identity token present')
+      }
+    } catch (error: unknown) {
+      console.error('[AppleSignUp] CATCH BLOCK TRIGGERED')
+      console.error('[AppleSignUp] Raw Error:', error)
+      console.error('[AppleSignUp] JSON Error:', JSON.stringify(error, null, 2))
+
+      if (error instanceof Error) {
+        if (
+          error.message ===
+          "The operation couldn't be completed. (ASAuthorizationError error 1001.)"
+        )
+          return // User cancelled
+        toast.error(error.message, 'Error')
+      } else {
+        toast.error('Apple Sign-Up failed', 'Error')
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // 2. Google Sign-Up Handler
   // Note: signInWithIdToken acts as a Sign Up if the user doesn't exist.
@@ -217,6 +282,17 @@ export default function SignUp({ navigation }: { navigation: Nav }) {
         <View style={styles.formContainer}>
           <Text style={styles.title}>Create Account</Text>
           <Text style={styles.subtitle}>Sign up to get started</Text>
+
+          {/* Apple Button */}
+          {Platform.OS === 'ios' && (
+            <TouchableOpacity
+              style={styles.appleButton}
+              onPress={handleAppleSignUp}
+              disabled={loading}
+            >
+              <Text style={styles.appleButtonText}>Sign up with Apple</Text>
+            </TouchableOpacity>
+          )}
 
           {/* Google Button */}
           <TouchableOpacity
@@ -476,6 +552,24 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
     color: '#A0AEC0',
     fontSize: 14,
+  },
+  appleButton: {
+    backgroundColor: '#000000',
+    height: 55,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  appleButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
   googleButton: {
     backgroundColor: '#FFFFFF',

@@ -20,6 +20,7 @@ import {
   statusCodes,
   isErrorWithCode,
 } from '@react-native-google-signin/google-signin'
+import * as AppleAuthentication from 'expo-apple-authentication'
 import type { User } from '@supabase/supabase-js'
 import googleLogo from '../../../assets/google-logo.png'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -41,7 +42,11 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
     })
   }, [])
 
-  const ensureUserMetadata = async (user: User, isGoogle: boolean = false) => {
+  const ensureUserMetadata = async (
+    user: User,
+    isGoogle: boolean = false,
+    isApple: boolean = false,
+  ) => {
     let needsAuthUpdate = false
     const updateData: Record<string, string | null> = {}
 
@@ -60,7 +65,7 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
       }
     }
 
-    if (isGoogle) {
+    if (isGoogle || isApple) {
       if (user.user_metadata?.user_type !== 'individual') {
         needsAuthUpdate = true
         updateData.user_type = 'individual'
@@ -136,7 +141,7 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
         if (error) throw error
 
         if (data.user) {
-          await ensureUserMetadata(data.user, true)
+          await ensureUserMetadata(data.user, true, false)
         }
       } else {
         throw new Error('No ID token present')
@@ -161,6 +166,46 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
             ? error.message
             : 'An unexpected error occurred'
         toast.error(message, 'Error')
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleAppleSignIn = async () => {
+    setLoading(true)
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      })
+
+      if (credential.identityToken) {
+        const { data, error } = await supabase.auth.signInWithIdToken({
+          provider: 'apple',
+          token: credential.identityToken,
+        })
+
+        if (error) throw error
+
+        if (data.user) {
+          await ensureUserMetadata(data.user, false, true)
+        }
+      } else {
+        throw new Error('No identity token present')
+      }
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        if (
+          error.message ===
+          "The operation couldn't be completed. (ASAuthorizationError error 1001.)"
+        )
+          return // User cancelled
+        toast.error(error.message, 'Error')
+      } else {
+        toast.error('Apple Sign-In failed', 'Error')
       }
     } finally {
       setLoading(false)
@@ -283,6 +328,16 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
             <View style={styles.dividerLine} />
           </View>
 
+          {Platform.OS === 'ios' && (
+            <TouchableOpacity
+              style={styles.appleButton}
+              onPress={handleAppleSignIn}
+              disabled={loading}
+            >
+              <Text style={styles.appleButtonText}>Sign in with Apple</Text>
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity
             style={styles.googleButton}
             onPress={handleGoogleSignIn}
@@ -376,6 +431,24 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
     color: '#A0AEC0',
     fontSize: 14,
+  },
+  appleButton: {
+    backgroundColor: '#000000',
+    height: 55,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  appleButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
   googleButton: {
     backgroundColor: '#FFFFFF',

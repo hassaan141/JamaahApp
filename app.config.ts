@@ -61,13 +61,13 @@ export default () => ({
       },
       infoPlist: {
         CFBundleDisplayName: 'Jamaah',
-        UIBackgroundModes: ['location', 'fetch'],
+        UIBackgroundModes: ['fetch'],
         NSLocationAlwaysAndWhenInUseUsageDescription:
-          'We need your location to update prayer times automatically as you travel, even when the app is closed.',
+          'Jamaah checks your location only when you move to a new area (approximately 500 meters) to update prayer times from the nearest masjid. Your location is not tracked continuously.',
         NSLocationAlwaysUsageDescription:
-          'We need your location to update prayer times automatically as you travel, even when the app is closed.',
+          'Jamaah uses your location occasionally when you travel to provide accurate prayer times from nearby masjids. Location is only checked when you move to a new area, not continuously.',
         NSLocationWhenInUseUsageDescription:
-          'This app uses your location to find nearby masjids and show accurate prayer times.',
+          'Jamaah uses your location to find nearby masjids and provide accurate prayer times for your current area.',
         ITSAppUsesNonExemptEncryption: false,
         CFBundleURLTypes: [
           {

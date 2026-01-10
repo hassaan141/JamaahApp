@@ -9,10 +9,7 @@ import {
   PushNotificationManager,
   syncPrayerSubscription,
 } from '../Utils/pushNotifications'
-import {
-  startBackgroundTracking,
-  stopBackgroundTracking,
-} from '../Utils/BackgroundLocationTask'
+import { stopBackgroundTracking } from '../Utils/BackgroundLocationTask'
 import messaging from '@react-native-firebase/messaging'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
@@ -102,7 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               .maybeSingle()
 
             targetOrgId = locationState?.last_org_id || null
-            await startBackgroundTracking()
+            // Background location tracking disabled for App Store compliance (Guideline 2.5.4)
           }
         } else {
           await stopBackgroundTracking()

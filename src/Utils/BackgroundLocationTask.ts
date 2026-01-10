@@ -62,24 +62,11 @@ TaskManager.defineTask(
 )
 
 export const startBackgroundTracking = async () => {
-  try {
-    const { status } = await Location.requestBackgroundPermissionsAsync()
-
-    if (status === 'granted') {
-      await Location.startLocationUpdatesAsync(BACKGROUND_LOCATION_TASK, {
-        accuracy: Location.Accuracy.Balanced,
-        distanceInterval: 1000,
-        deferredUpdatesInterval: 60 * 1000,
-        showsBackgroundLocationIndicator: false,
-        foregroundService: {
-          notificationTitle: 'Prayer Times Auto-Update',
-          notificationBody: 'Checking closest masjid location...',
-        },
-      })
-    }
-  } catch (e) {
-    console.error('[Background] Start Error:', e)
-  }
+  // Background location tracking disabled for App Store compliance (Guideline 2.5.4)
+  // Cannot use 'location' in UIBackgroundModes - would require continuous GPS which violates guidelines
+  console.log(
+    '[Background] Background tracking disabled for App Store compliance',
+  )
 }
 
 export const stopBackgroundTracking = async () => {

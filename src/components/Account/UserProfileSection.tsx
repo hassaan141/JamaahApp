@@ -6,6 +6,7 @@ import type { Profile } from '@/types'
 import { fetchOrgFollowerCount } from '@/Supabase/fetchOrgFollowerCount'
 import { fetchOrgPostCount } from '@/Supabase/fetchOrgPostCount'
 import { fetchOrganizationByProfileId } from '@/Supabase/fetchOrgFromProfileId'
+import { supabase } from '@/Supabase/supabaseClient'
 
 type MinimalNav = {
   getState?: () => { routeNames?: string[] }
@@ -28,6 +29,7 @@ export default function UserProfileSection({
   const [organizationDescription, setOrganizationDescription] = useState<
     string | null
   >(null)
+  const [isAppleUser, setIsAppleUser] = useState(false)
 
   useEffect(() => {
     const fetchOrganizationDetails = async () => {
@@ -42,7 +44,15 @@ export default function UserProfileSection({
       }
     }
 
+    const checkAppleAuth = async () => {
+      const { data } = await supabase.auth.getUser()
+      if (data.user?.identities?.some((i) => i.provider === 'apple')) {
+        setIsAppleUser(true)
+      }
+    }
+
     fetchOrganizationDetails()
+    checkAppleAuth()
   }, [isOrganization])
 
   const loadOrgCounts = useCallback(async () => {
@@ -175,7 +185,7 @@ export default function UserProfileSection({
             )}
 
             {/* Show email for individuals */}
-            {!isOrganization && profile?.email && (
+            {!isOrganization && profile?.email && !isAppleUser && (
               <Text
                 style={{ fontSize: 13, color: '#6C757D', marginBottom: 4 }}
                 numberOfLines={1}

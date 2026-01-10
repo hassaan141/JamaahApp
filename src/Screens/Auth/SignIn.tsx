@@ -329,13 +329,22 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
           </View>
 
           {Platform.OS === 'ios' && (
-            <TouchableOpacity
-              style={styles.appleButton}
-              onPress={handleAppleSignIn}
-              disabled={loading}
-            >
-              <Text style={styles.appleButtonText}>Sign in with Apple</Text>
-            </TouchableOpacity>
+            <View style={styles.appleButtonWrapper}>
+              <AppleAuthentication.AppleAuthenticationButton
+                buttonType={
+                  AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN
+                }
+                buttonStyle={
+                  AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
+                }
+                cornerRadius={10}
+                style={styles.appleAuthButton}
+                onPress={() => {
+                  if (loading) return
+                  void handleAppleSignIn()
+                }}
+              />
+            </View>
           )}
 
           <TouchableOpacity
@@ -432,23 +441,25 @@ const styles = StyleSheet.create({
     color: '#A0AEC0',
     fontSize: 14,
   },
-  appleButton: {
-    backgroundColor: '#000000',
+  appleButtonWrapper: {
     height: 55,
     borderRadius: 10,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     justifyContent: 'center',
-    alignItems: 'center',
+    alignItems: 'stretch',
     marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
   },
-  appleButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
+  appleAuthButton: {
+    height: '100%',
+    width: '100%',
+    borderRadius: 10,
   },
   googleButton: {
     backgroundColor: '#FFFFFF',
@@ -473,7 +484,7 @@ const styles = StyleSheet.create({
   },
   googleButtonText: {
     color: '#2D3748',
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: '600',
   },
   switchContainer: { marginTop: 30, alignItems: 'center' },

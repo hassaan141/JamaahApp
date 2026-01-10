@@ -1,6 +1,5 @@
 import * as TaskManager from 'expo-task-manager'
 import * as Location from 'expo-location'
-import { Platform } from 'react-native'
 import { supabase } from '@/Supabase/supabaseClient'
 import { resolveOrgForTimes } from '@/Utils/organizationResolver'
 
@@ -63,26 +62,11 @@ TaskManager.defineTask(
 )
 
 export const startBackgroundTracking = async () => {
-  try {
-    const { status } = await Location.requestBackgroundPermissionsAsync()
-
-    if (status === 'granted') {
-      await Location.startLocationUpdatesAsync(BACKGROUND_LOCATION_TASK, {
-        accuracy: Location.Accuracy.Balanced,
-        distanceInterval: 500,
-        activityType: Location.ActivityType.OtherNavigation,
-        pausesUpdatesAutomatically: true,
-        ...(Platform.OS === 'android' && {
-          foregroundService: {
-            notificationTitle: 'Prayer Times Auto-Update',
-            notificationBody: 'Tracking location for prayer times',
-          },
-        }),
-      })
-    }
-  } catch (e) {
-    console.error('[Background] Start Error:', e)
-  }
+  // Background location tracking disabled for App Store compliance (Guideline 2.5.4)
+  // Cannot use 'location' in UIBackgroundModes - would require continuous GPS which violates guidelines
+  console.log(
+    '[Background] Background tracking disabled for App Store compliance',
+  )
 }
 
 export const stopBackgroundTracking = async () => {

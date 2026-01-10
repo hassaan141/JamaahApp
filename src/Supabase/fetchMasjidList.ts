@@ -6,7 +6,7 @@ export async function fetchNearbyMasjids(
   opts: { q?: string; limit?: number } = {},
 ) {
   console.log(`[fetchNearbyMasjids] Called with lat: ${lat}, lon: ${lon}`)
-  const { q = '', limit = 15 } = opts
+  const { q = '', limit = 10000 } = opts
 
   if (lat == null || lon == null) {
     console.error(

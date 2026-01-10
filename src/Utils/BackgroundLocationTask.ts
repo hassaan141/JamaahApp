@@ -1,5 +1,6 @@
 import * as TaskManager from 'expo-task-manager'
 import * as Location from 'expo-location'
+import { Platform } from 'react-native'
 import { supabase } from '@/Supabase/supabaseClient'
 import { resolveOrgForTimes } from '@/Utils/organizationResolver'
 
@@ -68,13 +69,15 @@ export const startBackgroundTracking = async () => {
     if (status === 'granted') {
       await Location.startLocationUpdatesAsync(BACKGROUND_LOCATION_TASK, {
         accuracy: Location.Accuracy.Balanced,
-        distanceInterval: 1000,
-        deferredUpdatesInterval: 60 * 1000,
-        showsBackgroundLocationIndicator: false,
-        foregroundService: {
-          notificationTitle: 'Prayer Times Auto-Update',
-          notificationBody: 'Checking closest masjid location...',
-        },
+        distanceInterval: 500,
+        activityType: Location.ActivityType.OtherNavigation,
+        pausesUpdatesAutomatically: true,
+        ...(Platform.OS === 'android' && {
+          foregroundService: {
+            notificationTitle: 'Prayer Times Auto-Update',
+            notificationBody: 'Tracking location for prayer times',
+          },
+        }),
       })
     }
   } catch (e) {

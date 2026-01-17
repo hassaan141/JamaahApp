@@ -1,5 +1,9 @@
 import { supabase } from '../Supabase/supabaseClient'
 import { syncPrayerSubscription } from './pushNotifications'
+import {
+  startBackgroundTracking,
+  stopBackgroundTracking,
+} from './BackgroundLocationTask'
 
 export async function setAuto(userId: string) {
   const { error } = await supabase
@@ -18,6 +22,9 @@ export async function setAuto(userId: string) {
   const targetOrgId = locationState?.last_org_id || null
   console.log('[SwitchMode] Setting Auto. Syncing to:', targetOrgId)
   await syncPrayerSubscription(targetOrgId)
+
+  // Start background location tracking for auto mode
+  await startBackgroundTracking()
 }
 
 export async function setPinned(userId: string, orgId: string) {
@@ -30,4 +37,7 @@ export async function setPinned(userId: string, orgId: string) {
 
   console.log('[SwitchMode] Setting Pinned. Syncing to:', orgId)
   await syncPrayerSubscription(orgId)
+
+  // Stop background tracking when pinned
+  await stopBackgroundTracking()
 }

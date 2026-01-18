@@ -61,7 +61,7 @@ export default () => ({
       },
       infoPlist: {
         CFBundleDisplayName: 'Jamaah',
-        UIBackgroundModes: ['fetch'],
+        UIBackgroundModes: ['fetch', 'location'],
         NSLocationAlwaysAndWhenInUseUsageDescription:
           'Jamaah checks your location only when you move to a new area (approximately 500 meters) to update prayer times from the nearest masjid. Your location is not tracked continuously.',
         NSLocationAlwaysUsageDescription:

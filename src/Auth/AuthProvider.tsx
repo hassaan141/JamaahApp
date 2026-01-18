@@ -9,7 +9,10 @@ import {
   PushNotificationManager,
   syncPrayerSubscription,
 } from '../Utils/pushNotifications'
-import { stopBackgroundTracking } from '../Utils/BackgroundLocationTask'
+import {
+  startBackgroundTracking,
+  stopBackgroundTracking,
+} from '../Utils/BackgroundLocationTask'
 import messaging from '@react-native-firebase/messaging'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
@@ -92,6 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             targetOrgId = profile.pinned_org_id
             await stopBackgroundTracking()
           } else {
+            // Auto mode - start background location tracking
             const { data: locationState } = await supabase
               .from('last_location_state')
               .select('last_org_id')
@@ -99,7 +103,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               .maybeSingle()
 
             targetOrgId = locationState?.last_org_id || null
-            // Background location tracking disabled for App Store compliance (Guideline 2.5.4)
+
+            // Start background tracking for auto masjid updates
+            await startBackgroundTracking()
           }
         } else {
           await stopBackgroundTracking()
@@ -122,7 +128,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const userId = session?.user?.id
 
-      // 1. Stop location tracking
+      // 1. Stop background tracking
       await stopBackgroundTracking()
 
       // 2. Clean up DB Token

@@ -141,7 +141,7 @@ export default function Notifications() {
     )
   }
 
-  // ... (Rest of your JSX is exactly the same as before) ...
+  // .. (Rest of your JSX is exactly the same as before) ...
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>

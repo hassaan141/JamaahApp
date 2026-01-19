@@ -1,63 +1,20 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import messaging from '@react-native-firebase/messaging'
-import { PermissionsAndroid, Platform } from 'react-native'
+import { AppState, PermissionsAndroid, Platform } from 'react-native'
 import { registerDeviceToken } from '@/Supabase/registerDevice'
 import { toast } from '@/components/Toast/toast'
 
 const STORAGE_KEY_TOPIC = 'current_prayer_topic'
-const STORAGE_KEY_PERMISSION_ASKED = 'notification_permission_asked'
 
-/**
- * Request notification permission on app start (before sign-in).
- * This is the standard pattern for production apps.
- * Only prompts once - tracks if we've already asked.
- */
-export async function requestNotificationPermissionOnStart(): Promise<boolean> {
-  try {
-    // Check if we've already asked
-    const alreadyAsked = await AsyncStorage.getItem(
-      STORAGE_KEY_PERMISSION_ASKED,
-    )
-    if (alreadyAsked === 'true') {
-      console.log('[Notifications] Permission already requested previously')
-      return true
-    }
-
-    let granted = false
-
-    // Android 13+ needs runtime permission
-    if (Platform.OS === 'android' && Platform.Version >= 33) {
-      const result = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
-      )
-      granted = result === PermissionsAndroid.RESULTS.GRANTED
-      console.log('[Notifications] Android permission result:', result)
-    }
-
-    // iOS (and fallback) - use Firebase's requestPermission
-    if (Platform.OS === 'ios') {
-      const authStatus = await messaging().requestPermission()
-      granted =
-        authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-        authStatus === messaging.AuthorizationStatus.PROVISIONAL
-      console.log('[Notifications] iOS permission status:', authStatus)
-    }
-
-    // Mark as asked so we don't prompt again
-    await AsyncStorage.setItem(STORAGE_KEY_PERMISSION_ASKED, 'true')
-
-    return granted
-  } catch (error) {
-    console.error('[Notifications] Error requesting permission:', error)
-    return false
-  }
-}
+let subscriptionMutex: Promise<void> = Promise.resolve()
 
 export class PushNotificationManager {
   private static instance: PushNotificationManager
   private initialized = false
   private currentUserId: string | null = null
+
   private initInFlight: Promise<void> | null = null
+  private androidPermissionInFlight: Promise<boolean> | null = null
 
   static getInstance(): PushNotificationManager {
     if (!PushNotificationManager.instance) {
@@ -66,35 +23,62 @@ export class PushNotificationManager {
     return PushNotificationManager.instance
   }
 
-  private async checkAndroidPermission(): Promise<boolean> {
+  private async waitForAppToBeActive(): Promise<void> {
+    if (Platform.OS !== 'android') return
+    if (AppState.currentState === 'active') return
+
+    await new Promise<void>((resolve) => {
+      const subscription = AppState.addEventListener('change', (state) => {
+        if (state === 'active') {
+          subscription.remove()
+          resolve()
+        }
+      })
+    })
+  }
+
+  private async requestAndroidPermission(): Promise<boolean> {
     if (Platform.OS !== 'android') return true
     if (Platform.Version < 33) return true
 
-    try {
-      const status = await PermissionsAndroid.check(
-        PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
-      )
-      return status
-    } catch (error) {
-      console.error('[PushNotificationManager] Permission check error:', error)
-      return false
-    }
+    if (this.androidPermissionInFlight) return this.androidPermissionInFlight
+
+    this.androidPermissionInFlight = (async () => {
+      try {
+        // On cold start Android may not show the dialog until the Activity is active.
+        await this.waitForAppToBeActive()
+
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+        )
+        return granted === PermissionsAndroid.RESULTS.GRANTED
+      } catch (error) {
+        console.error(
+          'Error requesting Android notification permission:',
+          error,
+        )
+        return false
+      }
+    })()
+
+    return this.androidPermissionInFlight
   }
 
   async initialize(userId: string) {
     if (this.initialized && this.currentUserId === userId) return
 
+    // Important: do not block app startup on OS permission UI.
     this.currentUserId = userId
     const initUserId = userId
 
+    // Fire-and-forget: callers can `await initialize()` safely without getting stuck.
     if (!this.initInFlight) {
       this.initInFlight = (async () => {
         try {
-          // Permission should already be requested on app start
-          const hasPermission = await this.checkAndroidPermission()
+          const hasPermission = await this.requestAndroidPermission()
           if (!hasPermission) {
             console.warn(
-              '[PushNotificationManager] Android notification permission not granted',
+              '[PushNotificationManager] Android notification permission denied',
             )
           }
 
@@ -115,29 +99,11 @@ export class PushNotificationManager {
             console.log('FCM Token refreshed:', token)
             if (this.currentUserId) {
               await registerDeviceToken(this.currentUserId)
-              // Force resubscribe on token refresh (iOS loses subscriptions)
-              const currentTopic = await AsyncStorage.getItem(STORAGE_KEY_TOPIC)
-              if (currentTopic) {
-                const topic = `org_${currentTopic}_prayers`
-                console.log(
-                  '[PushNotificationManager] Resubscribing after token refresh:',
-                  topic,
-                )
-                await messaging().subscribeToTopic(topic)
-              }
+              await forceResubscribeFromCache()
             }
           })
 
-          // Resubscribe to current topic on init (handles iOS cold start)
-          const currentTopic = await AsyncStorage.getItem(STORAGE_KEY_TOPIC)
-          if (currentTopic) {
-            const topic = `org_${currentTopic}_prayers`
-            console.log(
-              '[PushNotificationManager] Resubscribing on init:',
-              topic,
-            )
-            await messaging().subscribeToTopic(topic)
-          }
+          await forceResubscribeFromCache()
 
           if (!this.initialized) {
             messaging().onMessage(async (remoteMessage) => {
@@ -186,8 +152,37 @@ export class PushNotificationManager {
   }
 }
 
-export async function syncPrayerSubscription(targetOrgId: string | null) {
+async function forceResubscribeFromCache() {
+  const previousMutex = subscriptionMutex
+  let resolve: () => void
+  subscriptionMutex = new Promise<void>((r) => {
+    resolve = r
+  })
+
   try {
+    await previousMutex
+    const currentTopic = await AsyncStorage.getItem(STORAGE_KEY_TOPIC)
+    if (!currentTopic) return
+
+    const topic = `org_${currentTopic}_prayers`
+    console.log('[PrayerSub] Resubscribing to:', topic)
+    await messaging().subscribeToTopic(topic)
+  } catch (error) {
+    console.error('[PrayerSub] Resubscribe failed:', error)
+  } finally {
+    resolve!()
+  }
+}
+
+export async function syncPrayerSubscription(targetOrgId: string | null) {
+  const previousMutex = subscriptionMutex
+  let resolve: () => void
+  subscriptionMutex = new Promise<void>((r) => {
+    resolve = r
+  })
+
+  try {
+    await previousMutex
     const currentSubscribedOrg = await AsyncStorage.getItem(STORAGE_KEY_TOPIC)
 
     if (currentSubscribedOrg === targetOrgId) {
@@ -199,18 +194,20 @@ export async function syncPrayerSubscription(targetOrgId: string | null) {
     )
 
     if (currentSubscribedOrg) {
-      const oldTopic = `org_${currentSubscribedOrg}_prayers`
-      await messaging().unsubscribeFromTopic(oldTopic)
+      await messaging().unsubscribeFromTopic(
+        `org_${currentSubscribedOrg}_prayers`,
+      )
     }
 
     if (targetOrgId) {
-      const newTopic = `org_${targetOrgId}_prayers`
-      await messaging().subscribeToTopic(newTopic)
+      await messaging().subscribeToTopic(`org_${targetOrgId}_prayers`)
       await AsyncStorage.setItem(STORAGE_KEY_TOPIC, targetOrgId)
     } else {
       await AsyncStorage.removeItem(STORAGE_KEY_TOPIC)
     }
   } catch (error) {
     console.error('[PrayerSub] Failed to sync topic:', error)
+  } finally {
+    resolve!()
   }
 }

@@ -25,7 +25,6 @@ import { ENV } from './src/core/env'
 import ToastHost from './src/components/Toast/ToastHost'
 import ForceUpdateScreen from './src/Screens/Navigation/ForceUpdateScreen'
 import { checkForForcedUpdate } from './src/Utils/checkForForcedUpdate'
-import { requestNotificationPermissionOnStart } from './src/Utils/pushNotifications'
 
 SplashScreen.preventAutoHideAsync().catch(() => {})
 
@@ -128,13 +127,6 @@ export default function App() {
 
     return () => clearTimeout(timeoutId)
   }, [])
-
-  // Request notification permission on app start (before sign-in)
-  useEffect(() => {
-    if (!checkingUpdate && !forceUpdate) {
-      requestNotificationPermissionOnStart()
-    }
-  }, [checkingUpdate, forceUpdate])
 
   if (checkingUpdate) {
     return (

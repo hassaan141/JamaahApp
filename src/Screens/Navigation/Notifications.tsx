@@ -6,19 +6,15 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  Linking,
-  Platform,
-  PermissionsAndroid,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useNavigation, useFocusEffect } from '@react-navigation/native'
+import { useNavigation } from '@react-navigation/native'
 import { Feather } from '@expo/vector-icons'
 import { useProfile } from '@/Auth/fetchProfile'
 import { toast } from '@/components/Toast/toast'
 import { supabase } from '@/Supabase/supabaseClient'
-import messaging from '@react-native-firebase/messaging'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-// Import your type (Adjust path if needed)
+import { syncPrayerSubscription } from '@/Utils/pushNotifications'
 import type { NotificationPreference } from '@/types/supabase'
 
 export default function Notifications() {
@@ -27,38 +23,6 @@ export default function Notifications() {
   const [loading, setLoading] = useState(false)
   const [notificationType, setNotificationType] =
     useState<NotificationPreference>('Event_Adhan')
-  const [permissionDenied, setPermissionDenied] = useState(false)
-
-  // Check notification permission status
-  const checkPermissionStatus = async () => {
-    try {
-      if (Platform.OS === 'android' && Platform.Version >= 33) {
-        const status = await PermissionsAndroid.check(
-          PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
-        )
-        setPermissionDenied(!status)
-      } else if (Platform.OS === 'ios') {
-        const authStatus = await messaging().hasPermission()
-        setPermissionDenied(
-          authStatus !== messaging.AuthorizationStatus.AUTHORIZED &&
-            authStatus !== messaging.AuthorizationStatus.PROVISIONAL,
-        )
-      }
-    } catch (error) {
-      console.error('Error checking permission:', error)
-    }
-  }
-
-  // Check permission on mount and when screen comes into focus
-  useFocusEffect(
-    React.useCallback(() => {
-      checkPermissionStatus()
-    }, []),
-  )
-
-  const openSettings = () => {
-    Linking.openSettings()
-  }
 
   // 1. Load initial setting from profile
   useEffect(() => {
@@ -105,18 +69,12 @@ export default function Notifications() {
 
       if (error) throw error
 
-      const currentMasjidId = await AsyncStorage.getItem('prayer_sub_org_id')
+      const currentMasjidId = await AsyncStorage.getItem('current_prayer_topic')
 
-      if (currentMasjidId) {
-        const topicName = `org_${currentMasjidId}_prayers`
-
-        if (notificationType === 'None') {
-          console.log(`[Settings] Unsubscribing from ${topicName}`)
-          await messaging().unsubscribeFromTopic(topicName)
-        } else {
-          console.log(`[Settings] Subscribing to ${topicName}`)
-          await messaging().subscribeToTopic(topicName)
-        }
+      if (notificationType === 'None') {
+        await syncPrayerSubscription(null)
+      } else if (currentMasjidId) {
+        await syncPrayerSubscription(currentMasjidId)
       }
 
       toast.success('Notification settings updated!', 'Success')
@@ -141,7 +99,7 @@ export default function Notifications() {
     )
   }
 
-  // .. (Rest of your JSX is exactly the same as before) ...
+  // ... (Rest of your JSX is exactly the same as before) ...
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -158,24 +116,6 @@ export default function Notifications() {
         style={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
       >
-        {permissionDenied && (
-          <TouchableOpacity
-            style={styles.permissionBanner}
-            onPress={openSettings}
-          >
-            <View style={styles.permissionIconContainer}>
-              <Feather name="alert-circle" size={24} color="#DC2626" />
-            </View>
-            <View style={styles.permissionTextContainer}>
-              <Text style={styles.permissionTitle}>Notifications Disabled</Text>
-              <Text style={styles.permissionDescription}>
-                Tap here to enable notifications in Settings
-              </Text>
-            </View>
-            <Feather name="chevron-right" size={20} color="#6C757D" />
-          </TouchableOpacity>
-        )}
-
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Feather name="bell" size={20} color="#2F855A" />
@@ -423,38 +363,5 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 16,
     color: '#6C757D',
-  },
-  permissionBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FEF2F2',
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 16,
-    borderWidth: 1,
-    borderColor: '#FECACA',
-  },
-  permissionIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#FEE2E2',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  permissionTextContainer: {
-    flex: 1,
-  },
-  permissionTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#DC2626',
-    marginBottom: 2,
-  },
-  permissionDescription: {
-    fontSize: 13,
-    color: '#7F1D1D',
-    lineHeight: 18,
   },
 })

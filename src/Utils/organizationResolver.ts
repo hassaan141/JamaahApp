@@ -7,6 +7,8 @@ import { minutesSince, sameLocalDate } from '@/Utils/datetime'
 import { getProfile } from '@/Utils/profile'
 import { syncPrayerSubscription } from '@/Utils/pushNotifications'
 
+const DEFAULT_ORG_ID = '840ffdd4-a1d2-4025-8b79-46bb4b18f457'
+
 function haversine(lat1: number, lon1: number, lat2: number, lon2: number) {
   const toRad = (v: number) => (v * Math.PI) / 180
   const R = 6371000
@@ -111,7 +113,14 @@ export async function resolveOrgForTimes(
 
   // Handle No GPS available
   if (!locOrNull) {
-    if (!state?.last_org_id) throw new Error('location-denied-and-no-cache')
+    if (!state?.last_org_id) {
+      await supabase
+        .from('profiles')
+        .update({ mode: 'pinned', pinned_org_id: DEFAULT_ORG_ID })
+        .eq('id', userId)
+      const data = await fetchPrayerData(DEFAULT_ORG_ID, dateStr)
+      return { ...data, distance_m: null, mode: 'pinned' as const }
+    }
 
     if (profile.notification_preference !== 'None') {
       await syncPrayerSubscription(state.last_org_id)

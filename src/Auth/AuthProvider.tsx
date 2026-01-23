@@ -9,7 +9,10 @@ import {
   PushNotificationManager,
   syncPrayerSubscription,
 } from '../Utils/pushNotifications'
-import { stopBackgroundTracking } from '../Utils/BackgroundLocationTask'
+import {
+  startBackgroundTracking,
+  stopBackgroundTracking,
+} from '../Utils/BackgroundLocationTask'
 import messaging from '@react-native-firebase/messaging'
 
 type NotificationPreference = 'None' | 'Adhan' | 'Event_Adhan'
@@ -98,7 +101,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               .maybeSingle()
 
             targetOrgId = locationState?.last_org_id || null
-            // Background location tracking disabled for App Store compliance (Guideline 2.5.4)
+            // Start background tracking for auto mode (uses Balanced accuracy - App Store compliant)
+            await startBackgroundTracking()
           }
         } else {
           await stopBackgroundTracking()

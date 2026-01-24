@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import type { EventItem } from '@/Supabase/fetchEventsFromRPC';
+import type { EventItem } from '@/Supabase/fetchEventsFromRPC'
 import { fetchNearbyEvents } from '@/Supabase/fetchEventsFromRPC'
 
 const EVENT_FETCH_LIMIT = 20
+const DEFAULT_LOCATION = { latitude: 49.2827, longitude: -123.1207 }
 
 export function useEventList(
   location?: { latitude: number; longitude: number } | null,
@@ -24,11 +25,6 @@ export function useEventList(
 
   const fetchEvents = useCallback(
     async (query = '', isLoadMore = false) => {
-      if (!location) {
-        setLoading(false)
-        return
-      }
-
       if (isLoadMore) {
         setFetchingMore(true)
       } else {
@@ -39,9 +35,11 @@ export function useEventList(
       setError(null)
 
       try {
+        // Use user location if available, otherwise use default
+        const coords = location || DEFAULT_LOCATION
         const list = await fetchNearbyEvents(
-          location.latitude,
-          location.longitude,
+          coords.latitude,
+          coords.longitude,
           {
             query: query,
             limit: EVENT_FETCH_LIMIT,
@@ -76,8 +74,6 @@ export function useEventList(
 
   const handleSearch = (text: string) => {
     setSearchQuery(text)
-    if (!location) return
-
     if (debounceRef.current) clearTimeout(debounceRef.current)
 
     debounceRef.current = setTimeout(() => {

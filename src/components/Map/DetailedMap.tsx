@@ -21,6 +21,9 @@ import type { OrgPost } from '@/types'
 // Local import for iOS only
 import mosqueIcon from '../../../assets/mosque_new.png'
 
+// Default fallback location when user location is unavailable
+const DEFAULT_LOCATION = { latitude: 49.2827, longitude: -123.1207 }
+
 const getEventTypeIcon = (
   postType: string | null,
 ): React.ComponentProps<typeof Feather>['name'] => {
@@ -107,15 +110,13 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
       try {
         setError(null)
         if (mode === 'masjids') {
-          if (location) {
-            const initialList = await fetchNearbyMasjids(
-              location.latitude,
-              location.longitude,
-            )
-            setNearbyMasjids(initialList as MasjidItem[])
-          } else {
-            setNearbyMasjids([])
-          }
+          // Use user location if available, otherwise use default
+          const coords = location || DEFAULT_LOCATION
+          const initialList = await fetchNearbyMasjids(
+            coords.latitude,
+            coords.longitude,
+          )
+          setNearbyMasjids(initialList as MasjidItem[])
         } else {
           const posts = await fetchAnnouncements()
           setEvents(posts)
@@ -262,10 +263,12 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
     )
   }
 
-  const defaultCenter = { lat: 49.2827, lng: -123.1207 }
   const mapCenter = location
     ? { lat: location.latitude, lng: location.longitude }
-    : initialRegion || defaultCenter
+    : initialRegion || {
+        lat: DEFAULT_LOCATION.latitude,
+        lng: DEFAULT_LOCATION.longitude,
+      }
 
   // --- ANDROID RENDER ---
   if (Platform.OS === 'android') {

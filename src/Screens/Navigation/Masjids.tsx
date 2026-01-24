@@ -11,8 +11,7 @@ import {
 import Feather from '@expo/vector-icons/Feather'
 import { getCoarseLocation } from '@/Utils/useLocation'
 import { fetchNearbyMasjids } from '@/Supabase/fetchMasjidList'
-
-const DEFAULT_LOCATION = { latitude: 49.2827, longitude: -123.1207 }
+import { DEFAULT_LOCATION } from '@/Utils/constants'
 import { getUserId } from '@/Utils/getUserID'
 import { setPinned } from '@/Utils/switchMasjidMode'
 import { syncPrayerSubscription } from '@/Utils/pushNotifications'

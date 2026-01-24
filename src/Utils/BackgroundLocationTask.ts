@@ -57,14 +57,36 @@ TaskManager.defineTask(
         }
 
         // This updates nearest masjid + syncs FCM subscription
-        await resolveOrgForTimes(user.id, undefined, {
-          lat: latestLocation.coords.latitude,
-          lon: latestLocation.coords.longitude,
-        })
+        // Retry once on failure
+        let attempts = 0
+        const maxAttempts = 2
 
-        console.log('[Background] Org resolved successfully')
+        while (attempts < maxAttempts) {
+          try {
+            await resolveOrgForTimes(user.id, undefined, {
+              lat: latestLocation.coords.latitude,
+              lon: latestLocation.coords.longitude,
+            })
+            console.log('[Background] Org resolved successfully')
+            break
+          } catch (resolveErr) {
+            attempts++
+            if (attempts < maxAttempts) {
+              console.log(
+                '[Background] Resolve failed, retrying...',
+                resolveErr,
+              )
+              await new Promise((r) => setTimeout(r, 1000)) // Wait 1 second before retry
+            } else {
+              console.error(
+                '[Background] Failed to resolve org after retries:',
+                resolveErr,
+              )
+            }
+          }
+        }
       } catch (err) {
-        console.error('[Background] Failed to resolve org:', err)
+        console.error('[Background] Failed to get user:', err)
       }
     }
   },

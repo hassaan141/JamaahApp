@@ -20,9 +20,7 @@ import type { OrgPost } from '@/types'
 
 // Local import for iOS only
 import mosqueIcon from '../../../assets/mosque_new.png'
-
-// Default fallback location when user location is unavailable
-const DEFAULT_LOCATION = { latitude: 49.2827, longitude: -123.1207 }
+import { DEFAULT_LOCATION } from '@/Utils/constants'
 
 const getEventTypeIcon = (
   postType: string | null,

@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { fetchNearbyMasjids } from '@/Supabase/fetchMasjidList'
+import { DEFAULT_LOCATION } from '@/Utils/constants'
 
 const MASJID_FETCH_LIMIT = 20
-const DEFAULT_LOCATION = { latitude: 49.2827, longitude: -123.1207 }
 
 export type MasjidItem = {
   id: string

@@ -6,8 +6,7 @@ import { getPrayerTimes } from '@/Utils/prayerTimes'
 import { minutesSince, sameLocalDate } from '@/Utils/datetime'
 import { getProfile } from '@/Utils/profile'
 import { syncPrayerSubscription } from '@/Utils/pushNotifications'
-
-const DEFAULT_ORG_ID = '840ffdd4-a1d2-4025-8b79-46bb4b18f457'
+import { DEFAULT_ORG_ID } from '@/Utils/constants'
 
 function haversine(lat1: number, lon1: number, lat2: number, lon2: number) {
   const toRad = (v: number) => (v * Math.PI) / 180

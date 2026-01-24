@@ -15,6 +15,7 @@ import {
 } from '../Utils/BackgroundLocationTask'
 import messaging from '@react-native-firebase/messaging'
 import * as Location from 'expo-location'
+import { resolveOrgForTimes } from '../Utils/organizationResolver'
 
 const DEFAULT_ORG_ID = '840ffdd4-a1d2-4025-8b79-46bb4b18f457'
 
@@ -100,18 +101,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Auto mode - check location permission first
             const { status } = await Location.getForegroundPermissionsAsync()
 
-            const { data: locationState } = await supabase
-              .from('last_location_state')
-              .select('last_org_id')
-              .eq('user_id', id)
-              .maybeSingle()
-
             if (status !== 'granted') {
               // Location permission denied - switch to pinned mode (one-time)
-              // This ensures we don't re-run this check every app open
               console.log(
                 '[AuthProvider] Location permission denied in auto mode, switching to pinned',
               )
+
+              const { data: locationState } = await supabase
+                .from('last_location_state')
+                .select('last_org_id')
+                .eq('user_id', id)
+                .maybeSingle()
 
               // Use cached org if available, otherwise fall back to default
               targetOrgId = locationState?.last_org_id || DEFAULT_ORG_ID
@@ -124,8 +124,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
               await stopBackgroundTracking()
             } else {
-              // Location permission granted - normal auto mode flow
-              targetOrgId = locationState?.last_org_id || null
+              // Location permission granted - resolve nearest masjid immediately
+              console.log(
+                '[AuthProvider] Auto mode - resolving nearest masjid...',
+              )
+              try {
+                const resolved = await resolveOrgForTimes(id)
+                targetOrgId = resolved.org?.id || null
+                console.log('[AuthProvider] Resolved nearest org:', targetOrgId)
+              } catch (e) {
+                // Fallback to cache if resolution fails
+                console.log('[AuthProvider] Resolution failed, using cache:', e)
+                const { data: locationState } = await supabase
+                  .from('last_location_state')
+                  .select('last_org_id')
+                  .eq('user_id', id)
+                  .maybeSingle()
+                targetOrgId = locationState?.last_org_id || null
+              }
               await startBackgroundTracking()
             }
           }

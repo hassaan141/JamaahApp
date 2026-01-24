@@ -21,6 +21,9 @@ import type { OrgPost } from '@/types'
 // Local import for iOS only
 import mosqueIcon from '../../../assets/mosque_new.png'
 
+// Default fallback location when user location is unavailable
+const DEFAULT_LOCATION = { latitude: 49.2827, longitude: -123.1207 }
+
 const getEventTypeIcon = (
   postType: string | null,
 ): React.ComponentProps<typeof Feather>['name'] => {
@@ -103,17 +106,15 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
 
   useEffect(() => {
     const loadData = async () => {
-      if (!location) {
-        setLoading(false)
-        return
-      }
       setLoading(true)
       try {
         setError(null)
         if (mode === 'masjids') {
+          // Use user location if available, otherwise use default
+          const coords = location || DEFAULT_LOCATION
           const initialList = await fetchNearbyMasjids(
-            location.latitude,
-            location.longitude,
+            coords.latitude,
+            coords.longitude,
           )
           setNearbyMasjids(initialList as MasjidItem[])
         } else {
@@ -151,11 +152,9 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
   const markers = React.useMemo(() => {
     if (Platform.OS !== 'android') return []
 
-    // User Location Dot
     const userLocationIcon = `
       <div style="width: 20px; height: 20px; background: #007AFF; border: 3px solid white; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>
     `
-    // Override Leaflet white box
     const transparentStyleOverride = `
       <style>
         .leaflet-div-icon {
@@ -165,17 +164,20 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
       </style>
     `
 
+    const userMarker = location
+      ? [
+          {
+            id: 'user-location',
+            position: { lat: location.latitude, lng: location.longitude },
+            icon: userLocationIcon,
+            size: [24, 24],
+            iconAnchor: [12, 12],
+          },
+        ]
+      : []
+
     return [
-      {
-        id: 'user-location',
-        position: {
-          lat: location?.latitude ?? 0,
-          lng: location?.longitude ?? 0,
-        },
-        icon: userLocationIcon,
-        size: [24, 24],
-        iconAnchor: [12, 12],
-      },
+      ...userMarker,
       ...(mode === 'masjids'
         ? nearbyMasjids
             .filter((m) => m.latitude && m.longitude)
@@ -245,7 +247,7 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
     ]
   }, [mode, nearbyMasjids, events, location])
 
-  if (loading || !location) {
+  if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="#2F855A" />
@@ -261,6 +263,13 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
     )
   }
 
+  const mapCenter = location
+    ? { lat: location.latitude, lng: location.longitude }
+    : initialRegion || {
+        lat: DEFAULT_LOCATION.latitude,
+        lng: DEFAULT_LOCATION.longitude,
+      }
+
   // --- ANDROID RENDER ---
   if (Platform.OS === 'android') {
     return (
@@ -268,9 +277,7 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
         <LeafletView
           mapLayers={mapLayers}
           mapMarkers={markers}
-          mapCenterPosition={
-            initialRegion || { lat: location.latitude, lng: location.longitude }
-          }
+          mapCenterPosition={mapCenter}
           zoom={15}
         />
       </View>
@@ -284,13 +291,13 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
         ref={mapRef}
         style={styles.map}
         initialRegion={{
-          latitude: location.latitude,
-          longitude: location.longitude,
+          latitude: mapCenter.lat,
+          longitude: mapCenter.lng,
           latitudeDelta: 0.05,
           longitudeDelta: 0.05,
         }}
-        showsUserLocation={true}
-        showsMyLocationButton={true}
+        showsUserLocation={!!location}
+        showsMyLocationButton={!!location}
         followsUserLocation={false}
       >
         {/* <Marker

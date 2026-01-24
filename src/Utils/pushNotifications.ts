@@ -174,6 +174,37 @@ async function forceResubscribeFromCache() {
   }
 }
 
+/**
+ * Check notification permission status for both iOS and Android
+ */
+export async function checkNotificationPermissionStatus(): Promise<
+  'granted' | 'denied' | 'not_determined'
+> {
+  try {
+    if (Platform.OS === 'android' && Platform.Version >= 33) {
+      const status = await PermissionsAndroid.check(
+        PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+      )
+      return status ? 'granted' : 'denied'
+    }
+
+    // iOS and older Android
+    const authStatus = await messaging().hasPermission()
+    if (
+      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+      authStatus === messaging.AuthorizationStatus.PROVISIONAL
+    ) {
+      return 'granted'
+    } else if (authStatus === messaging.AuthorizationStatus.NOT_DETERMINED) {
+      return 'not_determined'
+    }
+    return 'denied'
+  } catch (error) {
+    console.error('[Notifications] Error checking permission:', error)
+    return 'denied'
+  }
+}
+
 export async function syncPrayerSubscription(targetOrgId: string | null) {
   const previousMutex = subscriptionMutex
   let resolve: () => void

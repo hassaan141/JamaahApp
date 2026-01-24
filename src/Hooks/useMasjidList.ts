@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { fetchNearbyMasjids } from '@/Supabase/fetchMasjidList'
 
 const MASJID_FETCH_LIMIT = 20
+const DEFAULT_LOCATION = { latitude: 49.2827, longitude: -123.1207 }
 
 export type MasjidItem = {
   id: string
@@ -31,16 +32,14 @@ export function useMasjidList(
 
   const fetchMasjids = useCallback(
     async (query = '') => {
-      if (!location) {
-        setLoading(false)
-        return
-      }
       setLoading(true)
       setError(null)
       try {
+        // Use user location if available, otherwise use default
+        const coords = location || DEFAULT_LOCATION
         const list = await fetchNearbyMasjids(
-          location.latitude,
-          location.longitude,
+          coords.latitude,
+          coords.longitude,
           {
             q: query,
             limit: MASJID_FETCH_LIMIT,
@@ -63,14 +62,14 @@ export function useMasjidList(
 
   const handleSearch = (text: string) => {
     setSearchQuery(text)
-    if (!location) return
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(async () => {
       setError(null)
       try {
+        const coords = location || DEFAULT_LOCATION
         const list = await fetchNearbyMasjids(
-          location.latitude,
-          location.longitude,
+          coords.latitude,
+          coords.longitude,
           {
             q: text,
             limit: MASJID_FETCH_LIMIT,
@@ -90,18 +89,14 @@ export function useMasjidList(
   }
 
   const onRefresh = async () => {
-    if (!location) return
     setRefreshing(true)
     setError(null)
     try {
-      const list = await fetchNearbyMasjids(
-        location.latitude,
-        location.longitude,
-        {
-          q: searchQuery,
-          limit: MASJID_FETCH_LIMIT,
-        },
-      )
+      const coords = location || DEFAULT_LOCATION
+      const list = await fetchNearbyMasjids(coords.latitude, coords.longitude, {
+        q: searchQuery,
+        limit: MASJID_FETCH_LIMIT,
+      })
       setMasjids(list as MasjidItem[])
       setFilteredMasjids(list as MasjidItem[])
     } catch {

@@ -11,6 +11,8 @@ import {
 import Feather from '@expo/vector-icons/Feather'
 import { getCoarseLocation } from '@/Utils/useLocation'
 import { fetchNearbyMasjids } from '@/Supabase/fetchMasjidList'
+
+const DEFAULT_LOCATION = { latitude: 49.2827, longitude: -123.1207 }
 import { getUserId } from '@/Utils/getUserID'
 import { setPinned } from '@/Utils/switchMasjidMode'
 import { syncPrayerSubscription } from '@/Utils/pushNotifications'
@@ -52,18 +54,19 @@ const Masjids: React.FC<NavProps> = ({ navigation, route }) => {
         const loc = await getCoarseLocation()
         setLocation(loc)
       } catch {
-        setError('Location permission denied')
+        setLocation(null)
       }
     })()
   }, [])
 
   useEffect(() => {
     const load = async () => {
-      if (!location) return
       try {
+        // Use user location if available, otherwise use default
+        const coords = location || DEFAULT_LOCATION
         const list = await fetchNearbyMasjids(
-          location.latitude,
-          location.longitude,
+          coords.latitude,
+          coords.longitude,
           { q: '', limit: 15 },
         )
         setMasjids(list)
@@ -79,13 +82,13 @@ const Masjids: React.FC<NavProps> = ({ navigation, route }) => {
 
   const onChangeSearch = (text: string) => {
     setQ(text)
-    if (!location) return
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(async () => {
       try {
+        const coords = location || DEFAULT_LOCATION
         const list = await fetchNearbyMasjids(
-          location.latitude,
-          location.longitude,
+          coords.latitude,
+          coords.longitude,
           { q: text, limit: 15 },
         )
         setMasjids(list)
@@ -97,13 +100,12 @@ const Masjids: React.FC<NavProps> = ({ navigation, route }) => {
 
   const clearSearch = async () => {
     setQ('')
-    if (!location) return
     try {
-      const list = await fetchNearbyMasjids(
-        location.latitude,
-        location.longitude,
-        { q: '', limit: 15 },
-      )
+      const coords = location || DEFAULT_LOCATION
+      const list = await fetchNearbyMasjids(coords.latitude, coords.longitude, {
+        q: '',
+        limit: 15,
+      })
       setMasjids(list)
     } catch (e) {
       console.error('Reset search failed:', e)
@@ -111,14 +113,13 @@ const Masjids: React.FC<NavProps> = ({ navigation, route }) => {
   }
 
   const onRefresh = async () => {
-    if (!location) return
     setRefreshing(true)
     try {
-      const list = await fetchNearbyMasjids(
-        location.latitude,
-        location.longitude,
-        { q, limit: 15 },
-      )
+      const coords = location || DEFAULT_LOCATION
+      const list = await fetchNearbyMasjids(coords.latitude, coords.longitude, {
+        q,
+        limit: 15,
+      })
       setMasjids(list)
     } catch (e) {
       console.error('Refresh failed:', e)
@@ -211,9 +212,7 @@ const Masjids: React.FC<NavProps> = ({ navigation, route }) => {
           <View style={styles.emptyWrap}>
             <Feather name="search" size={48} color="#CBD5E0" />
             <Text style={styles.emptyText}>
-              {q.trim()
-                ? `No masjids found for "${q}"`
-                : 'No masjids found in your area'}
+              {q.trim() ? `No masjids found for "${q}"` : 'No masjids found'}
             </Text>
             {!!q.trim() && (
               <TouchableOpacity

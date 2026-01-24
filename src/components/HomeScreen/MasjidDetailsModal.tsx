@@ -5,9 +5,11 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  ActivityIndicator, // <--- 1. Import ActivityIndicator
+  ActivityIndicator,
+  Linking,
 } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
+import * as Location from 'expo-location'
 import { getUserId } from '@/Utils/getUserID'
 import { setAuto } from '@/Utils/switchMasjidMode'
 import { formatDistance } from '@/Utils/formatDistance'
@@ -31,12 +33,17 @@ const MasjidDetailsModal: React.FC<Props> = ({
   onRefreshPrayerTimes,
   activeMode = 'pinned',
 }) => {
-  // 2. Add loading state
   const [loading, setLoading] = useState(false)
+  const [locationPermissionGranted, setLocationPermissionGranted] =
+    useState(true)
 
-  // Reset loading state when modal closes
+  // Check location permission when modal opens
   useEffect(() => {
-    if (!visible) {
+    if (visible) {
+      Location.getForegroundPermissionsAsync().then(({ status }) => {
+        setLocationPermissionGranted(status === 'granted')
+      })
+    } else {
       setLoading(false)
     }
   }, [visible])
@@ -47,7 +54,16 @@ const MasjidDetailsModal: React.FC<Props> = ({
   }
 
   const handleUseNearestMasjid = async () => {
-    setLoading(true) // Start loading
+    // Check location permission first
+    const { status } = await Location.getForegroundPermissionsAsync()
+
+    if (status !== 'granted') {
+      // Open device settings so user can enable location
+      Linking.openSettings()
+      return
+    }
+
+    setLoading(true)
     try {
       const userID = await getUserId()
       await setAuto(userID)
@@ -56,7 +72,7 @@ const MasjidDetailsModal: React.FC<Props> = ({
     } catch (e) {
       console.log('Use nearest failed:', e)
     } finally {
-      setLoading(false) // Always reset loading state
+      setLoading(false)
     }
   }
 
@@ -90,7 +106,7 @@ const MasjidDetailsModal: React.FC<Props> = ({
               isPinnedActive && styles.activeOptionPinned,
             ]}
             onPress={handleChooseSpecificMasjid}
-            disabled={loading} // Prevent clicks while loading
+            disabled={loading}
           >
             <View style={styles.optionIcon}>
               <Feather name="map-pin" size={20} color="#48BB78" />
@@ -113,23 +129,38 @@ const MasjidDetailsModal: React.FC<Props> = ({
             style={[
               styles.optionButton,
               isAutoActive && styles.activeOptionAuto,
+              !locationPermissionGranted && styles.disabledOption,
             ]}
             onPress={handleUseNearestMasjid}
-            disabled={loading} // Prevent double clicks
+            disabled={loading}
           >
             <View style={styles.optionIcon}>
-              <Feather name="navigation" size={20} color="#F6AD55" />
+              <Feather
+                name="navigation"
+                size={20}
+                color={locationPermissionGranted ? '#F6AD55' : '#A0AEC0'}
+              />
             </View>
             <View style={styles.optionContent}>
-              <Text style={styles.optionTitle}>Use Nearest Masjid</Text>
+              <Text
+                style={[
+                  styles.optionTitle,
+                  !locationPermissionGranted && styles.disabledText,
+                ]}
+              >
+                Use Nearest Masjid
+              </Text>
               <Text style={styles.optionDescription}>
-                Always show the closest masjid to your location
+                {locationPermissionGranted
+                  ? 'Always show the closest masjid to your location'
+                  : 'Location permission required'}
               </Text>
             </View>
 
-            {/* 3. Conditional Rendering for Loading Indicator */}
             {loading ? (
               <ActivityIndicator size="small" color="#F6AD55" />
+            ) : !locationPermissionGranted ? (
+              <Feather name="lock" size={18} color="#A0AEC0" />
             ) : (
               <Feather
                 name="chevron-right"
@@ -218,6 +249,14 @@ const styles = StyleSheet.create({
   activeOptionAuto: {
     backgroundColor: '#FFFAF0',
     borderColor: '#F6AD55',
+  },
+  disabledOption: {
+    backgroundColor: '#F7FAFC',
+    borderColor: '#E2E8F0',
+    opacity: 0.7,
+  },
+  disabledText: {
+    color: '#A0AEC0',
   },
   optionIcon: {
     width: 40,

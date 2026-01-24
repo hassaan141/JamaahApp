@@ -1,5 +1,18 @@
 import { supabase } from './supabaseClient'
 
+export async function fetchMasjidsByName(q: string, limit = 15) {
+  const { data, error } = await supabase
+    .from('organizations')
+    .select(
+      'id, name, address, city, province_state, country, latitude, longitude, contact_phone',
+    )
+    .in('type', ['Masjid', 'MSA'])
+    .ilike('name', `%${q}%`)
+    .limit(limit)
+  if (error) throw error
+  return data ?? []
+}
+
 export async function fetchNearbyMasjids(
   lat: number,
   lon: number,

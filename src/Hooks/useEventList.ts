@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import type { EventItem } from '@/Supabase/fetchEventsFromRPC'
 import { fetchNearbyEvents } from '@/Supabase/fetchEventsFromRPC'
+import { DEFAULT_LOCATION } from '@/Utils/constants'
 
 const EVENT_FETCH_LIMIT = 20
-const DEFAULT_LOCATION = { latitude: 49.2827, longitude: -123.1207 }
 
 export function useEventList(
   location?: { latitude: number; longitude: number } | null,

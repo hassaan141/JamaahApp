@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import {
   View,
   Text,
@@ -6,15 +6,21 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  Linking,
+  Platform,
+  AppState,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useNavigation } from '@react-navigation/native'
+import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import { Feather } from '@expo/vector-icons'
 import { useProfile } from '@/Auth/fetchProfile'
 import { toast } from '@/components/Toast/toast'
 import { supabase } from '@/Supabase/supabaseClient'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { syncPrayerSubscription } from '@/Utils/pushNotifications'
+import {
+  syncPrayerSubscription,
+  checkNotificationPermissionStatus,
+} from '@/Utils/pushNotifications'
 import type { NotificationPreference } from '@/types/supabase'
 
 export default function Notifications() {
@@ -23,6 +29,47 @@ export default function Notifications() {
   const [loading, setLoading] = useState(false)
   const [notificationType, setNotificationType] =
     useState<NotificationPreference>('Event_Adhan')
+  const [permissionStatus, setPermissionStatus] = useState<
+    'granted' | 'denied' | 'not_determined'
+  >('granted')
+  const appState = useRef(AppState.currentState)
+
+  const checkPermission = useCallback(async () => {
+    const status = await checkNotificationPermissionStatus()
+    setPermissionStatus(status)
+  }, [])
+
+  // Check permission on mount and when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      checkPermission()
+    }, [checkPermission]),
+  )
+
+  // Also check when app returns from background (e.g., after visiting Settings)
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (
+        appState.current.match(/inactive|background/) &&
+        nextAppState === 'active'
+      ) {
+        checkPermission()
+      }
+      appState.current = nextAppState
+    })
+
+    return () => {
+      subscription.remove()
+    }
+  }, [checkPermission])
+
+  const openSettings = () => {
+    if (Platform.OS === 'ios') {
+      Linking.openURL('app-settings:')
+    } else {
+      Linking.openSettings()
+    }
+  }
 
   // 1. Load initial setting from profile
   useEffect(() => {
@@ -116,13 +163,33 @@ export default function Notifications() {
         style={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
       >
+        {permissionStatus === 'denied' && (
+          <TouchableOpacity
+            style={styles.permissionBanner}
+            onPress={openSettings}
+          >
+            <View style={styles.permissionIconContainer}>
+              <Feather name="bell-off" size={24} color="#DC2626" />
+            </View>
+            <View style={styles.permissionTextContainer}>
+              <Text style={styles.permissionTitle}>Notifications Disabled</Text>
+              <Text style={styles.permissionDescription}>
+                Tap here to enable notifications in Settings
+              </Text>
+            </View>
+            <Feather name="external-link" size={20} color="#6C757D" />
+          </TouchableOpacity>
+        )}
+
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Feather name="bell" size={20} color="#2F855A" />
             <Text style={styles.sectionTitle}>Notification Preferences</Text>
           </View>
           <Text style={styles.sectionSubtitle}>
-            Choose what notifications you'd like to receive
+            {permissionStatus === 'denied'
+              ? 'Enable notifications in Settings to receive alerts'
+              : "Choose what notifications you'd like to receive"}
           </Text>
 
           {notificationOptions.map((option) => (
@@ -131,8 +198,10 @@ export default function Notifications() {
               style={[
                 styles.optionCard,
                 notificationType === option.type && styles.selectedOption,
+                permissionStatus === 'denied' && styles.optionDisabled,
               ]}
               onPress={() => setNotificationType(option.type)}
+              disabled={permissionStatus === 'denied'}
             >
               <View style={styles.optionContent}>
                 <View
@@ -167,9 +236,13 @@ export default function Notifications() {
         </View>
 
         <TouchableOpacity
-          style={[styles.saveButton, loading && styles.saveButtonDisabled]}
+          style={[
+            styles.saveButton,
+            (loading || permissionStatus === 'denied') &&
+              styles.saveButtonDisabled,
+          ]}
           onPress={handleSaveNotificationSettings}
-          disabled={loading}
+          disabled={loading || permissionStatus === 'denied'}
         >
           {loading ? (
             <ActivityIndicator size="small" color="#FFFFFF" />
@@ -363,5 +436,41 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 16,
     color: '#6C757D',
+  },
+  permissionBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF2F2',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+  },
+  permissionIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#FEE2E2',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  permissionTextContainer: {
+    flex: 1,
+  },
+  permissionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#DC2626',
+    marginBottom: 2,
+  },
+  permissionDescription: {
+    fontSize: 13,
+    color: '#7F1D1D',
+    lineHeight: 18,
+  },
+  optionDisabled: {
+    opacity: 0.5,
   },
 })

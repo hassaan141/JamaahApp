@@ -113,9 +113,10 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
     return {
       name: 'Fajr',
       type: 'Adhan' as const,
-      targetTime: data.tmrw_fajr_azan,
-      adhanTime: data.tmrw_fajr_azan,
-      iqamahTime: data.tmrw_fajr_iqamah || '',
+      // Fall back to today's fajr_azan if tomorrow's isn't available
+      targetTime: data.tmrw_fajr_azan || data.fajr_azan,
+      adhanTime: data.tmrw_fajr_azan || data.fajr_azan,
+      iqamahTime: data.tmrw_fajr_iqamah || data.fajr_iqamah || '',
     }
   }
 

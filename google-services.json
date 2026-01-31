@@ -12,7 +12,12 @@
           "package_name": "com.hassaan141.jamaahapp"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "409976139410-p4bflpqpuhdhnmcja9juq17c8ps83pi9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyB9WoJe4c8K3nfwiRDlW3nOxmygXrBsDw0"
@@ -20,7 +25,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "409976139410-p4bflpqpuhdhnmcja9juq17c8ps83pi9.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "409976139410-dkmiolft5t8r3tp3rt407218rhg64bk2.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.hassaan141.jamaahapp"
+              }
+            }
+          ]
         }
       }
     }

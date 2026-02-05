@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useState } from 'react'
+import React, { useEffect, useCallback, useState, useRef } from 'react'
 import {
   View,
   StyleSheet,
@@ -6,18 +6,22 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native'
-import { NavigationContainer } from '@react-navigation/native'
+import { NavigationContainer, CommonActions } from '@react-navigation/native'
+import type { NavigationContainerRef } from '@react-navigation/native'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import * as SplashScreen from 'expo-splash-screen'
 import ErrorBoundary from 'react-native-error-boundary'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 import RootNavigator from './src/Screens/Navigation/RootNavigator'
-// Auth screens are now in RootNavigator for guest mode navigation
+import type { RootStackParamList } from './src/Screens/Navigation/RootNavigator'
 
 import { AuthProvider, useAuth } from './src/Auth/AuthProvider'
 import ToastHost from './src/components/Toast/ToastHost'
 import ForceUpdateScreen from './src/Screens/Navigation/ForceUpdateScreen'
 import { checkForForcedUpdate } from './src/Utils/checkForForcedUpdate'
+
+const ONBOARDING_COMPLETE_KEY = '@jamaah_onboarding_complete'
 
 SplashScreen.preventAutoHideAsync().catch(() => {})
 
@@ -33,25 +37,71 @@ const CustomFallback = (props: { error: Error; resetError: () => void }) => (
   </View>
 )
 
+// Navigation ref for handling auth state changes
+const navigationRef =
+  React.createRef<NavigationContainerRef<RootStackParamList>>()
+
 function AppNavigator() {
-  const { loading } = useAuth()
+  const { loading, session } = useAuth()
+  const [onboardingChecked, setOnboardingChecked] = useState(false)
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false)
+  const prevSessionRef = useRef(session)
+
+  // Check onboarding status on mount
+  useEffect(() => {
+    const checkOnboarding = async () => {
+      try {
+        const value = await AsyncStorage.getItem(ONBOARDING_COMPLETE_KEY)
+        setHasCompletedOnboarding(value === 'true')
+      } catch (e) {
+        console.log('Error checking onboarding status:', e)
+      } finally {
+        setOnboardingChecked(true)
+      }
+    }
+    checkOnboarding()
+  }, [])
+
+  // Auto-navigate to Home when user signs in (from any auth screen)
+  useEffect(() => {
+    const wasSignedOut = !prevSessionRef.current
+    const isNowSignedIn = !!session
+
+    if (wasSignedOut && isNowSignedIn && navigationRef.current) {
+      // User just signed in - navigate to Home and clear auth screens from stack
+      navigationRef.current.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: 'Tabs' }],
+        }),
+      )
+      // Also mark onboarding as complete since they signed in
+      AsyncStorage.setItem(ONBOARDING_COMPLETE_KEY, 'true').catch(() => {})
+    }
+
+    prevSessionRef.current = session
+  }, [session])
 
   const onLayoutRootView = useCallback(async () => {
-    if (!loading) {
+    if (!loading && onboardingChecked) {
       await SplashScreen.hideAsync()
     }
-  }, [loading])
+  }, [loading, onboardingChecked])
 
-  if (loading) {
+  if (loading || !onboardingChecked) {
     return null
   }
 
-  // Guest mode: Always show main app - auth screens are in RootNavigator
-  // Users can browse without signing in, auth is required for specific features
+  // Determine initial route:
+  // - If signed in → Tabs
+  // - If completed onboarding (chose guest) → Tabs
+  // - First time user → Welcome
+  const initialRoute = session || hasCompletedOnboarding ? 'Tabs' : 'Welcome'
+
   return (
     <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
-      <NavigationContainer>
-        <RootNavigator />
+      <NavigationContainer ref={navigationRef}>
+        <RootNavigator initialRouteName={initialRoute} />
       </NavigationContainer>
     </View>
   )

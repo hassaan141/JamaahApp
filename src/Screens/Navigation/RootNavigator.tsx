@@ -102,9 +102,18 @@ function TabNavigator() {
   )
 }
 
-export default function RootNavigator() {
+type RootNavigatorProps = {
+  initialRouteName?: keyof RootStackParamList
+}
+
+export default function RootNavigator({
+  initialRouteName = 'Tabs',
+}: RootNavigatorProps) {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator
+      screenOptions={{ headerShown: false }}
+      initialRouteName={initialRouteName}
+    >
       <Stack.Screen name="Tabs" component={TabNavigator} />
       <Stack.Screen name="Masjids" component={Masjids} />
       <Stack.Screen name="OrganizationDetail" component={OrganizationDetail} />

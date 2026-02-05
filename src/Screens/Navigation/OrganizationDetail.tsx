@@ -54,12 +54,14 @@ const OrganizationHeader = ({
   followLoading,
   onFollowToggle,
   followerCount,
+  isGuest,
 }: {
   org: OrgParam
   following: boolean
   followLoading: boolean
   onFollowToggle: () => void
   followerCount?: number | null
+  isGuest?: boolean
 }) => {
   const [expanded, setExpanded] = useState(false)
   const organizationName = org.name || 'Organization'
@@ -198,29 +200,32 @@ const OrganizationHeader = ({
               : `${String(org.member_count ?? memberCount)} followers`}
           </Text>
         </View>
-        <TouchableOpacity
-          style={[
-            styles.followButton,
-            following && styles.followingButton,
-            followLoading && styles.followButtonDisabled,
-          ]}
-          onPress={onFollowToggle}
-          disabled={followLoading}
-          activeOpacity={0.7}
-        >
-          {followLoading ? (
-            <ActivityIndicator size="small" color="#2D6A4F" />
-          ) : (
-            <Text
-              style={[
-                styles.followButtonText,
-                following && styles.followingButtonText,
-              ]}
-            >
-              {following ? 'Following' : 'Follow'}
-            </Text>
-          )}
-        </TouchableOpacity>
+        {/* Hide follow button for guests */}
+        {!isGuest && (
+          <TouchableOpacity
+            style={[
+              styles.followButton,
+              following && styles.followingButton,
+              followLoading && styles.followButtonDisabled,
+            ]}
+            onPress={onFollowToggle}
+            disabled={followLoading}
+            activeOpacity={0.7}
+          >
+            {followLoading ? (
+              <ActivityIndicator size="small" color="#2D6A4F" />
+            ) : (
+              <Text
+                style={[
+                  styles.followButtonText,
+                  following && styles.followingButtonText,
+                ]}
+              >
+                {following ? 'Following' : 'Follow'}
+              </Text>
+            )}
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   )
@@ -718,6 +723,7 @@ export default function OrganizationDetail() {
         followLoading={followLoading}
         onFollowToggle={handleFollowToggle}
         followerCount={followerCount}
+        isGuest={!session}
       />
 
       {/* Show tiny loader if we are fetching the missing details */}

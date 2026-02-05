@@ -9,8 +9,11 @@ import {
 import { useNavigation } from '@react-navigation/native'
 import type { StackNavigationProp } from '@react-navigation/stack'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import AuthHeader from '../../components/Auth/AuthHeader'
 import type { RootStackParamList } from '@/Screens/Navigation/RootNavigator'
+
+const ONBOARDING_COMPLETE_KEY = '@jamaah_onboarding_complete'
 
 export default function WelcomeScreen() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>()
@@ -24,7 +27,13 @@ export default function WelcomeScreen() {
     navigation.navigate('UserTypeSelection')
   }
 
-  const handleContinueAsGuest = () => {
+  const handleContinueAsGuest = async () => {
+    // Remember guest choice so we don't show WelcomeScreen again
+    try {
+      await AsyncStorage.setItem(ONBOARDING_COMPLETE_KEY, 'true')
+    } catch (e) {
+      console.log('Error saving onboarding status:', e)
+    }
     navigation.replace('Tabs')
   }
 
@@ -71,10 +80,10 @@ export default function WelcomeScreen() {
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.guestNote}>
-            Guests can browse prayer times, masjids, and communities.{'\n'}
-            Sign up to follow organizations and get notifications.
-          </Text>
+          {/* <Text style={styles.guestNote}>
+                        Guests can browse prayer times, masjids, and communities.{'\n'}
+                        Sign up to follow organizations and get notifications.
+                    </Text> */}
         </View>
       </ScrollView>
     </View>

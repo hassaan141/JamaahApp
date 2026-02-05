@@ -1,16 +1,28 @@
 import React from 'react'
 import { TouchableOpacity, Text, StyleSheet } from 'react-native'
+import { useNavigation, CommonActions } from '@react-navigation/native'
+import type { StackNavigationProp } from '@react-navigation/stack'
+import type { RootStackParamList } from '@/Screens/Navigation/RootNavigator'
 
 export default function SignOutButton({
   onLogout,
 }: {
   onLogout: () => Promise<void>
 }) {
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>()
+
   const handleLogout = async () => {
     console.log('[SignOutButton] Logout button pressed')
     try {
       await onLogout()
       console.log('[SignOutButton] Logout completed')
+      // Navigate to Welcome screen and reset the navigation stack
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: 'Welcome' }],
+        }),
+      )
     } catch (e) {
       console.warn('[SignOutButton] logout error', e)
     }

@@ -7,32 +7,19 @@ import {
   ActivityIndicator,
 } from 'react-native'
 import { NavigationContainer } from '@react-navigation/native'
-import { createStackNavigator } from '@react-navigation/stack'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import * as SplashScreen from 'expo-splash-screen'
 import ErrorBoundary from 'react-native-error-boundary'
 
 import RootNavigator from './src/Screens/Navigation/RootNavigator'
-import SignIn from './src/Screens/Auth/SignIn'
-import SignUp from './src/Screens/Auth/SignUp'
-import ForgotPassword from './src/Screens/Auth/ForgotPassword'
-import OrganizationSignUp from './src/Screens/Auth/OrganizationSignUp'
-import UserTypeSelection from './src/Screens/Auth/UserTypeSelection'
+// Auth screens are now in RootNavigator for guest mode navigation
 
 import { AuthProvider, useAuth } from './src/Auth/AuthProvider'
-import { supabase } from './src/Supabase/supabaseClient'
-import { ENV } from './src/core/env'
 import ToastHost from './src/components/Toast/ToastHost'
 import ForceUpdateScreen from './src/Screens/Navigation/ForceUpdateScreen'
 import { checkForForcedUpdate } from './src/Utils/checkForForcedUpdate'
 
 SplashScreen.preventAutoHideAsync().catch(() => {})
-
-const Stack = createStackNavigator()
-
-const TESTING_MODE = false
-const TEST_EMAIL = String(ENV.TESTING?.email || '')
-const TEST_PASSWORD = String(ENV.TESTING?.password || '')
 
 const CustomFallback = (props: { error: Error; resetError: () => void }) => (
   <View style={styles.errorContainer}>
@@ -47,20 +34,7 @@ const CustomFallback = (props: { error: Error; resetError: () => void }) => (
 )
 
 function AppNavigator() {
-  const { session, setSession, loading } = useAuth()
-
-  useEffect(() => {
-    async function autoLogin() {
-      if (__DEV__ && TESTING_MODE && !session && TEST_EMAIL && TEST_PASSWORD) {
-        const { data } = await supabase.auth.signInWithPassword({
-          email: TEST_EMAIL,
-          password: TEST_PASSWORD,
-        })
-        if (data?.session) setSession(data.session)
-      }
-    }
-    autoLogin()
-  }, [session, setSession])
+  const { loading } = useAuth()
 
   const onLayoutRootView = useCallback(async () => {
     if (!loading) {
@@ -72,28 +46,12 @@ function AppNavigator() {
     return null
   }
 
+  // Guest mode: Always show main app - auth screens are in RootNavigator
+  // Users can browse without signing in, auth is required for specific features
   return (
     <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <NavigationContainer>
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          {session ? (
-            <Stack.Screen name="Root" component={RootNavigator} />
-          ) : (
-            <>
-              <Stack.Screen name="SignIn" component={SignIn} />
-              <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
-              <Stack.Screen
-                name="UserTypeSelection"
-                component={UserTypeSelection}
-              />
-              <Stack.Screen name="SignUp" component={SignUp} />
-              <Stack.Screen
-                name="OrganizationSignUp"
-                component={OrganizationSignUp}
-              />
-            </>
-          )}
-        </Stack.Navigator>
+        <RootNavigator />
       </NavigationContainer>
     </View>
   )

@@ -20,6 +20,7 @@ import AnnouncementCard from '@/components/Shared/AnnouncementCard'
 import { useOrgPrayerTimes } from '@/Hooks/useOrgPrayerTimes'
 import CombinedPrayerCard from '@/components/HomeScreen/CombinedPrayerCard'
 import { followEventEmitter } from '@/Utils/followEventEmitter'
+import { useAuth } from '@/Auth/AuthProvider'
 
 type OrgParam = {
   id?: string | number
@@ -506,6 +507,7 @@ type GenericNav = NavigationProp<Record<string, object | undefined>>
 export default function OrganizationDetail() {
   const route = useRoute<OrgDetailRoute>()
   const navigation = useNavigation<GenericNav>()
+  const { session } = useAuth()
   const initialOrg = route.params?.org as OrgParam | undefined
 
   // FIX 1: Turn 'org' into state so we can update it with full details
@@ -568,9 +570,10 @@ export default function OrganizationDetail() {
     }
   }, [orgId]) // Run once when we get the ID
 
-  // Fetch follow status if not provided
+  // Fetch follow status if not provided (skip for guests)
   useEffect(() => {
     if (!orgId) return
+    if (!session) return // Guest mode: skip follow status check
     if (typeof org?.is_following === 'boolean') return
 
     let isMounted = true
@@ -590,7 +593,7 @@ export default function OrganizationDetail() {
     return () => {
       isMounted = false
     }
-  }, [orgId, org?.is_following])
+  }, [orgId, org?.is_following, session])
 
   // Listen for follow status changes from other components
   useEffect(() => {
@@ -647,6 +650,12 @@ export default function OrganizationDetail() {
 
   // Handle follow/unfollow with optimistic updates
   const handleFollowToggle = async () => {
+    // Guest mode: Navigate to sign-in if not logged in
+    if (!session) {
+      navigation.navigate('SignIn' as never)
+      return
+    }
+
     if (!orgId || followLoading) return
     const previousFollowState = following
     setFollowLoading(true)

@@ -1,8 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
-import { resolveOrgForTimes } from '@/Utils/organizationResolver'
-import { getUserId } from '@/Utils/getUserID'
+import {
+  resolveOrgForTimes,
+  fetchPrayerData,
+} from '@/Utils/organizationResolver'
 import { getPrayerTimesRange, type DailyPrayerTimes } from '@/Utils/prayerTimes'
 import { useLocation } from '@/Utils/useLocation'
+import { useAuth } from '@/Auth/AuthProvider'
+import { nearestOrg } from '@/Utils/nearest'
+import { DEFAULT_ORG_ID } from '@/Utils/constants'
 
 // 1. Define the State Type including 'mode'
 type UIState = {
@@ -13,7 +18,7 @@ type UIState = {
     timezone?: string | null
   } | null
   distance_m: number | null
-  mode: 'pinned' | 'auto'
+  mode: 'pinned' | 'auto' | 'guest'
 }
 
 function toYYYYMMDD(date: Date) {
@@ -25,6 +30,7 @@ function toYYYYMMDD(date: Date) {
 
 export function usePrayerTimes() {
   const { location, isLocationReady } = useLocation()
+  const { session } = useAuth()
   const [loading, setLoading] = useState(true)
   const [targetDate, setTargetDate] = useState<Date>(new Date())
 
@@ -46,25 +52,64 @@ export function usePrayerTimes() {
 
     setLoading(true)
     try {
-      const userID = await getUserId()
       const todayStr = toYYYYMMDD(new Date())
+      const userId = session?.user?.id
 
       // ✅ FIX: Map 'latitude/longitude' to 'lat/lon' for the resolver
       const formattedLocation = location
         ? { lat: location.latitude, lon: location.longitude }
         : undefined
 
-      // Fetch Org, Location, and Mode
+      // GUEST MODE: No user logged in
+      if (!userId) {
+        let orgId = DEFAULT_ORG_ID
+        let distance_m: number | null = null
+
+        // Try to find nearest masjid if location available
+        if (location) {
+          try {
+            const [nearest] = await nearestOrg(
+              location.latitude,
+              location.longitude,
+            )
+            orgId = nearest.org_id
+            distance_m = Math.round(nearest.distance_m)
+          } catch (e) {
+            console.log('[usePrayerTimes] Guest nearest org failed:', e)
+          }
+        }
+
+        // Fetch prayer data for the resolved org
+        const data = await fetchPrayerData(orgId, todayStr)
+
+        setState({
+          org: data.org ?? null,
+          distance_m,
+          mode: 'guest',
+        })
+
+        if (data.times) {
+          setTimesCache((prev) => ({ ...prev, [todayStr]: data.times! }))
+        }
+
+        if (data.org?.id) {
+          prefetchRange(data.org.id)
+        }
+
+        setLoading(false)
+        return
+      }
+
+      // LOGGED-IN USER: Use full resolver with profile settings
       const resolved = await resolveOrgForTimes(
-        userID,
+        userId,
         todayStr,
-        formattedLocation, // Passing the correctly mapped object
+        formattedLocation,
       )
 
       setState({
         org: resolved.org ?? null,
         distance_m: resolved.distance_m ?? null,
-        // 3. Save the mode from the resolver
         mode: resolved.mode ?? 'pinned',
       })
 
@@ -82,7 +127,7 @@ export function usePrayerTimes() {
     } finally {
       setLoading(false)
     }
-  }, [isLocationReady, location])
+  }, [isLocationReady, location, session?.user?.id])
 
   const prefetchRange = async (orgId: string) => {
     try {

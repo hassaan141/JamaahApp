@@ -18,7 +18,17 @@ import OurMission from './Settings/OurMission'
 import HelpSupport from './Settings/HelpSupport'
 import type { Organization } from '@/types'
 
+// Auth screens for guest mode navigation
+import WelcomeScreen from '@/Screens/Auth/WelcomeScreen'
+import SignIn from '@/Screens/Auth/SignIn'
+import SignUp from '@/Screens/Auth/SignUp'
+import ForgotPassword from '@/Screens/Auth/ForgotPassword'
+import UserTypeSelection from '@/Screens/Auth/UserTypeSelection'
+import OrganizationSignUp from '@/Screens/Auth/OrganizationSignUp'
+
 export type RootStackParamList = {
+  // Welcome/landing screen (shown after sign out)
+  Welcome: undefined
   Tabs: undefined
   Masjids: undefined
   OrganizationDetail: { org: Organization & { is_following?: boolean } }
@@ -28,7 +38,12 @@ export type RootStackParamList = {
   OurMission: undefined
   HelpSupport: undefined
   Notifications: undefined
+  // Auth screens (accessible for guest mode sign-up prompts)
   SignIn: undefined
+  SignUp: undefined
+  ForgotPassword: undefined
+  UserTypeSelection: undefined
+  OrganizationSignUp: undefined
 }
 
 type TabParamList = {
@@ -87,9 +102,18 @@ function TabNavigator() {
   )
 }
 
-export default function RootNavigator() {
+type RootNavigatorProps = {
+  initialRouteName?: keyof RootStackParamList
+}
+
+export default function RootNavigator({
+  initialRouteName = 'Tabs',
+}: RootNavigatorProps) {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator
+      screenOptions={{ headerShown: false }}
+      initialRouteName={initialRouteName}
+    >
       <Stack.Screen name="Tabs" component={TabNavigator} />
       <Stack.Screen name="Masjids" component={Masjids} />
       <Stack.Screen name="OrganizationDetail" component={OrganizationDetail} />
@@ -99,6 +123,13 @@ export default function RootNavigator() {
       <Stack.Screen name="OurMission" component={OurMission} />
       <Stack.Screen name="HelpSupport" component={HelpSupport} />
       <Stack.Screen name="Notifications" component={Notifications} />
+      {/* Auth screens */}
+      <Stack.Screen name="Welcome" component={WelcomeScreen} />
+      <Stack.Screen name="SignIn" component={SignIn} />
+      <Stack.Screen name="SignUp" component={SignUp} />
+      <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
+      <Stack.Screen name="UserTypeSelection" component={UserTypeSelection} />
+      <Stack.Screen name="OrganizationSignUp" component={OrganizationSignUp} />
     </Stack.Navigator>
   )
 }

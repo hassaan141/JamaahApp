@@ -5,13 +5,18 @@ import {
   ScrollView,
   RefreshControl,
   StyleSheet,
+  TouchableOpacity,
 } from 'react-native'
+import { useNavigation } from '@react-navigation/native'
+import type { NavigationProp } from '@react-navigation/native'
+import { Feather } from '@expo/vector-icons'
 // SafeAreaView is no longer needed here
 import { useAuth, useAuthStatus } from '@/Auth/AuthProvider'
 import { useProfile } from '@/Auth/fetchProfile'
 import LoadingAnimation from '@/components/Loading/Loading'
 import { supabase } from '@/Supabase/supabaseClient'
 import type { Database } from '@/types'
+import type { RootStackParamList } from '@/Screens/Navigation/RootNavigator'
 
 type Organization = Database['public']['Tables']['organizations']['Row']
 
@@ -29,6 +34,7 @@ export default function Account() {
   const [refreshing, setRefreshing] = useState(false)
   const [organization, setOrganization] = useState<Organization | null>(null)
   const lastFetchedOrgId = useRef<string | null>(null)
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>()
 
   const isOrganization = useMemo(
     () => profile?.is_org === true && !!profile?.org_id,
@@ -69,10 +75,35 @@ export default function Account() {
     }
   }, [refetch, isLoggedIn, profile?.id])
 
+  // Guest mode: Show sign-up prompt
   if (!isLoggedIn) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <Text>Please sign in to view your account</Text>
+      <View style={styles.guestContainer}>
+        <View style={styles.guestContent}>
+          <View style={styles.iconCircle}>
+            <Feather name="user" size={48} color="#2F855A" />
+          </View>
+          <Text style={styles.guestTitle}>Create an Account</Text>
+          <Text style={styles.guestSubtitle}>
+            Sign up to follow masjids, get prayer notifications, and more
+          </Text>
+          <TouchableOpacity
+            style={styles.signUpButton}
+            onPress={() => navigation.navigate('UserTypeSelection')}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.signUpButtonText}>Sign Up</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.signInLink}
+            onPress={() => navigation.navigate('SignIn')}
+          >
+            <Text style={styles.signInLinkText}>
+              Already have an account?{' '}
+              <Text style={styles.signInBold}>Sign In</Text>
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     )
   }
@@ -148,6 +179,71 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 16,
-    paddingBottom: 32, // Added more bottom padding for spacing
+    paddingBottom: 32,
+  },
+  // Guest mode styles
+  guestContainer: {
+    flex: 1,
+    backgroundColor: '#F8F9FA',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  guestContent: {
+    alignItems: 'center',
+    width: '100%',
+  },
+  iconCircle: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#E8F5E9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  guestTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1D4732',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  guestSubtitle: {
+    fontSize: 16,
+    color: '#6C757D',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 32,
+  },
+  signUpButton: {
+    backgroundColor: '#2F855A',
+    paddingVertical: 16,
+    paddingHorizontal: 48,
+    borderRadius: 12,
+    width: '100%',
+    alignItems: 'center',
+    shadowColor: '#2F855A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  signUpButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  signInLink: {
+    marginTop: 20,
+    padding: 8,
+  },
+  signInLinkText: {
+    fontSize: 15,
+    color: '#6C757D',
+  },
+  signInBold: {
+    color: '#2F855A',
+    fontWeight: '600',
   },
 })

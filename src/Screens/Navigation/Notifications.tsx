@@ -12,7 +12,9 @@ import {
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useNavigation, useFocusEffect } from '@react-navigation/native'
+import type { StackNavigationProp } from '@react-navigation/stack'
 import { Feather } from '@expo/vector-icons'
+import { useAuth } from '@/Auth/AuthProvider'
 import { useProfile } from '@/Auth/fetchProfile'
 import { toast } from '@/components/Toast/toast'
 import { supabase } from '@/Supabase/supabaseClient'
@@ -22,10 +24,19 @@ import {
   checkNotificationPermissionStatus,
 } from '@/Utils/pushNotifications'
 import type { NotificationPreference } from '@/types/supabase'
+import type { RootStackParamList } from '@/Screens/Navigation/RootNavigator'
 
 export default function Notifications() {
-  const navigation = useNavigation()
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>()
+  const { session } = useAuth()
   const { profile, loading: profileLoading, refetch } = useProfile()
+
+  // Guest mode: Redirect to sign-in
+  useEffect(() => {
+    if (!session) {
+      navigation.replace('SignIn')
+    }
+  }, [session, navigation])
   const [loading, setLoading] = useState(false)
   const [notificationType, setNotificationType] =
     useState<NotificationPreference>('Event_Adhan')

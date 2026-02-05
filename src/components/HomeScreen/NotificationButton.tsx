@@ -1,6 +1,7 @@
 import React from 'react'
 import { View, TouchableOpacity, StyleSheet } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
+import { useAuth } from '@/Auth/AuthProvider'
 
 interface NotificationButtonProps {
   navigation: {
@@ -11,14 +12,23 @@ interface NotificationButtonProps {
 const NotificationButton: React.FC<NotificationButtonProps> = ({
   navigation,
 }) => {
+  const { session } = useAuth()
+
+  const handlePress = () => {
+    // Guest mode: Navigate to sign-in instead of notifications
+    if (!session) {
+      navigation.navigate('SignIn')
+      return
+    }
+    navigation.navigate('Notifications')
+  }
+
   return (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={() => navigation.navigate('Notifications')}
-    >
+    <TouchableOpacity style={styles.card} onPress={handlePress}>
       <View style={styles.iconContainer}>
         <Feather name="bell" size={20} color="#2D3748" />
-        <View style={styles.notificationBadge} />
+        {/* Only show badge for logged-in users */}
+        {session && <View style={styles.notificationBadge} />}
       </View>
     </TouchableOpacity>
   )

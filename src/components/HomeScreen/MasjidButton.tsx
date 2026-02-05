@@ -17,7 +17,7 @@ interface Props {
   }
   onRefreshPrayerTimes?: () => void
   // NEW: Prop to know which mode we are in
-  activeMode?: 'pinned' | 'auto'
+  activeMode?: 'pinned' | 'auto' | 'guest'
 }
 
 const MasjidButton: React.FC<Props> = ({
@@ -31,10 +31,10 @@ const MasjidButton: React.FC<Props> = ({
   const handlePress = () => setModalVisible(true)
   const handleCloseModal = () => setModalVisible(false)
 
-  // Dynamic Icon Logic
-  const isAuto = activeMode === 'auto'
+  // Dynamic Icon Logic - guest mode behaves like auto (location-based)
+  const isAuto = activeMode === 'auto' || activeMode === 'guest'
   const iconName = isAuto ? 'navigation' : 'map-pin'
-  const iconColor = isAuto ? '#F6AD55' : '#48BB78' // Orange for Auto, Green for Pinned
+  const iconColor = isAuto ? '#F6AD55' : '#48BB78' // Orange for Auto/Guest, Green for Pinned
 
   return (
     <>

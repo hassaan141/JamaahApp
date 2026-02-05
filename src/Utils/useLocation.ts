@@ -51,7 +51,22 @@ export function useLocation() {
         data: { user },
       } = await supabase.auth.getUser()
 
-      if (!user) return
+      // GUEST MODE: No user logged in - get initial location and mark ready
+      if (!user) {
+        try {
+          const loc = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+          })
+          setLocation({
+            latitude: loc.coords.latitude,
+            longitude: loc.coords.longitude,
+          })
+        } catch (e) {
+          console.log('[Location] Guest location fetch failed:', e)
+        }
+        setIsLocationReady(true) // Unblock for guests
+        return
+      }
 
       subscription = await Location.watchPositionAsync(
         {

@@ -20,6 +20,7 @@ import AnnouncementCard from '@/components/Shared/AnnouncementCard'
 import { useOrgPrayerTimes } from '@/Hooks/useOrgPrayerTimes'
 import CombinedPrayerCard from '@/components/HomeScreen/CombinedPrayerCard'
 import { followEventEmitter } from '@/Utils/followEventEmitter'
+import { useAuth } from '@/Auth/AuthProvider'
 
 type OrgParam = {
   id?: string | number
@@ -53,12 +54,14 @@ const OrganizationHeader = ({
   followLoading,
   onFollowToggle,
   followerCount,
+  isGuest,
 }: {
   org: OrgParam
   following: boolean
   followLoading: boolean
   onFollowToggle: () => void
   followerCount?: number | null
+  isGuest?: boolean
 }) => {
   const [expanded, setExpanded] = useState(false)
   const organizationName = org.name || 'Organization'
@@ -197,29 +200,32 @@ const OrganizationHeader = ({
               : `${String(org.member_count ?? memberCount)} followers`}
           </Text>
         </View>
-        <TouchableOpacity
-          style={[
-            styles.followButton,
-            following && styles.followingButton,
-            followLoading && styles.followButtonDisabled,
-          ]}
-          onPress={onFollowToggle}
-          disabled={followLoading}
-          activeOpacity={0.7}
-        >
-          {followLoading ? (
-            <ActivityIndicator size="small" color="#2D6A4F" />
-          ) : (
-            <Text
-              style={[
-                styles.followButtonText,
-                following && styles.followingButtonText,
-              ]}
-            >
-              {following ? 'Following' : 'Follow'}
-            </Text>
-          )}
-        </TouchableOpacity>
+        {/* Hide follow button for guests */}
+        {!isGuest && (
+          <TouchableOpacity
+            style={[
+              styles.followButton,
+              following && styles.followingButton,
+              followLoading && styles.followButtonDisabled,
+            ]}
+            onPress={onFollowToggle}
+            disabled={followLoading}
+            activeOpacity={0.7}
+          >
+            {followLoading ? (
+              <ActivityIndicator size="small" color="#2D6A4F" />
+            ) : (
+              <Text
+                style={[
+                  styles.followButtonText,
+                  following && styles.followingButtonText,
+                ]}
+              >
+                {following ? 'Following' : 'Follow'}
+              </Text>
+            )}
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   )
@@ -506,6 +512,7 @@ type GenericNav = NavigationProp<Record<string, object | undefined>>
 export default function OrganizationDetail() {
   const route = useRoute<OrgDetailRoute>()
   const navigation = useNavigation<GenericNav>()
+  const { session } = useAuth()
   const initialOrg = route.params?.org as OrgParam | undefined
 
   // FIX 1: Turn 'org' into state so we can update it with full details
@@ -568,9 +575,10 @@ export default function OrganizationDetail() {
     }
   }, [orgId]) // Run once when we get the ID
 
-  // Fetch follow status if not provided
+  // Fetch follow status if not provided (skip for guests)
   useEffect(() => {
     if (!orgId) return
+    if (!session) return // Guest mode: skip follow status check
     if (typeof org?.is_following === 'boolean') return
 
     let isMounted = true
@@ -590,7 +598,7 @@ export default function OrganizationDetail() {
     return () => {
       isMounted = false
     }
-  }, [orgId, org?.is_following])
+  }, [orgId, org?.is_following, session])
 
   // Listen for follow status changes from other components
   useEffect(() => {
@@ -647,6 +655,12 @@ export default function OrganizationDetail() {
 
   // Handle follow/unfollow with optimistic updates
   const handleFollowToggle = async () => {
+    // Guest mode: Navigate to sign-in if not logged in
+    if (!session) {
+      navigation.navigate('SignIn' as never)
+      return
+    }
+
     if (!orgId || followLoading) return
     const previousFollowState = following
     setFollowLoading(true)
@@ -709,6 +723,7 @@ export default function OrganizationDetail() {
         followLoading={followLoading}
         onFollowToggle={handleFollowToggle}
         followerCount={followerCount}
+        isGuest={!session}
       />
 
       {/* Show tiny loader if we are fetching the missing details */}

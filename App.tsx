@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useState } from 'react'
+import React, { useEffect, useCallback, useState, useRef } from 'react'
 import {
   View,
   StyleSheet,
@@ -6,33 +6,24 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native'
-import { NavigationContainer } from '@react-navigation/native'
-import { createStackNavigator } from '@react-navigation/stack'
+import { NavigationContainer, CommonActions } from '@react-navigation/native'
+import type { NavigationContainerRef } from '@react-navigation/native'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import * as SplashScreen from 'expo-splash-screen'
 import ErrorBoundary from 'react-native-error-boundary'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 import RootNavigator from './src/Screens/Navigation/RootNavigator'
-import SignIn from './src/Screens/Auth/SignIn'
-import SignUp from './src/Screens/Auth/SignUp'
-import ForgotPassword from './src/Screens/Auth/ForgotPassword'
-import OrganizationSignUp from './src/Screens/Auth/OrganizationSignUp'
-import UserTypeSelection from './src/Screens/Auth/UserTypeSelection'
+import type { RootStackParamList } from './src/Screens/Navigation/RootNavigator'
 
 import { AuthProvider, useAuth } from './src/Auth/AuthProvider'
-import { supabase } from './src/Supabase/supabaseClient'
-import { ENV } from './src/core/env'
 import ToastHost from './src/components/Toast/ToastHost'
 import ForceUpdateScreen from './src/Screens/Navigation/ForceUpdateScreen'
 import { checkForForcedUpdate } from './src/Utils/checkForForcedUpdate'
 
+const ONBOARDING_COMPLETE_KEY = '@jamaah_onboarding_complete'
+
 SplashScreen.preventAutoHideAsync().catch(() => {})
-
-const Stack = createStackNavigator()
-
-const TESTING_MODE = false
-const TEST_EMAIL = String(ENV.TESTING?.email || '')
-const TEST_PASSWORD = String(ENV.TESTING?.password || '')
 
 const CustomFallback = (props: { error: Error; resetError: () => void }) => (
   <View style={styles.errorContainer}>
@@ -46,54 +37,71 @@ const CustomFallback = (props: { error: Error; resetError: () => void }) => (
   </View>
 )
 
-function AppNavigator() {
-  const { session, setSession, loading } = useAuth()
+// Navigation ref for handling auth state changes
+const navigationRef =
+  React.createRef<NavigationContainerRef<RootStackParamList>>()
 
+function AppNavigator() {
+  const { loading, session } = useAuth()
+  const [onboardingChecked, setOnboardingChecked] = useState(false)
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false)
+  const prevSessionRef = useRef(session)
+
+  // Check onboarding status on mount
   useEffect(() => {
-    async function autoLogin() {
-      if (__DEV__ && TESTING_MODE && !session && TEST_EMAIL && TEST_PASSWORD) {
-        const { data } = await supabase.auth.signInWithPassword({
-          email: TEST_EMAIL,
-          password: TEST_PASSWORD,
-        })
-        if (data?.session) setSession(data.session)
+    const checkOnboarding = async () => {
+      try {
+        const value = await AsyncStorage.getItem(ONBOARDING_COMPLETE_KEY)
+        setHasCompletedOnboarding(value === 'true')
+      } catch (e) {
+        console.log('Error checking onboarding status:', e)
+      } finally {
+        setOnboardingChecked(true)
       }
     }
-    autoLogin()
-  }, [session, setSession])
+    checkOnboarding()
+  }, [])
+
+  // Auto-navigate to Home when user signs in (from any auth screen)
+  useEffect(() => {
+    const wasSignedOut = !prevSessionRef.current
+    const isNowSignedIn = !!session
+
+    if (wasSignedOut && isNowSignedIn && navigationRef.current) {
+      // User just signed in - navigate to Home and clear auth screens from stack
+      navigationRef.current.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: 'Tabs' }],
+        }),
+      )
+      // Also mark onboarding as complete since they signed in
+      AsyncStorage.setItem(ONBOARDING_COMPLETE_KEY, 'true').catch(() => {})
+    }
+
+    prevSessionRef.current = session
+  }, [session])
 
   const onLayoutRootView = useCallback(async () => {
-    if (!loading) {
+    if (!loading && onboardingChecked) {
       await SplashScreen.hideAsync()
     }
-  }, [loading])
+  }, [loading, onboardingChecked])
 
-  if (loading) {
+  if (loading || !onboardingChecked) {
     return null
   }
 
+  // Determine initial route:
+  // - If signed in → Tabs
+  // - If completed onboarding (chose guest) → Tabs
+  // - First time user → Welcome
+  const initialRoute = session || hasCompletedOnboarding ? 'Tabs' : 'Welcome'
+
   return (
     <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
-      <NavigationContainer>
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          {session ? (
-            <Stack.Screen name="Root" component={RootNavigator} />
-          ) : (
-            <>
-              <Stack.Screen name="SignIn" component={SignIn} />
-              <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
-              <Stack.Screen
-                name="UserTypeSelection"
-                component={UserTypeSelection}
-              />
-              <Stack.Screen name="SignUp" component={SignUp} />
-              <Stack.Screen
-                name="OrganizationSignUp"
-                component={OrganizationSignUp}
-              />
-            </>
-          )}
-        </Stack.Navigator>
+      <NavigationContainer ref={navigationRef}>
+        <RootNavigator initialRouteName={initialRoute} />
       </NavigationContainer>
     </View>
   )

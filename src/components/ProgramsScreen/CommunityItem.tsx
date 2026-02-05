@@ -13,11 +13,14 @@ import type { Organization } from '@/types'
 import { followEventEmitter } from '@/Utils/followEventEmitter'
 import type { NavigationProp } from '@react-navigation/native'
 import type { RootStackParamList } from '@/Screens/Navigation/RootNavigator'
+import { useAuth } from '@/Auth/AuthProvider'
 
 type Props = { community: Organization & { is_following?: boolean } }
 
 export default function CommunityItem({ community }: Props) {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>()
+  const { session } = useAuth()
+  const isGuest = !session
   const [following, setFollowing] = useState(!!community.is_following)
   const [loading, setLoading] = useState(false)
   const [expanded, setExpanded] = useState(false)
@@ -184,28 +187,31 @@ export default function CommunityItem({ community }: Props) {
             </Text>
           </View>
         </View>
-        <TouchableOpacity
-          style={[
-            styles.followButton,
-            following && styles.followingButton,
-            loading && { opacity: 0.6 },
-          ]}
-          onPress={handleFollowToggle}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator size="small" color="#38A169" />
-          ) : (
-            <Text
-              style={[
-                styles.followButtonText,
-                following && styles.followingButtonText,
-              ]}
-            >
-              {following ? 'Following' : 'Follow'}
-            </Text>
-          )}
-        </TouchableOpacity>
+        {/* Hide follow button for guests */}
+        {!isGuest && (
+          <TouchableOpacity
+            style={[
+              styles.followButton,
+              following && styles.followingButton,
+              loading && { opacity: 0.6 },
+            ]}
+            onPress={handleFollowToggle}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator size="small" color="#38A169" />
+            ) : (
+              <Text
+                style={[
+                  styles.followButtonText,
+                  following && styles.followingButtonText,
+                ]}
+              >
+                {following ? 'Following' : 'Follow'}
+              </Text>
+            )}
+          </TouchableOpacity>
+        )}
       </View>
 
       <Text

@@ -31,6 +31,8 @@ export default function Home({ navigation }: { navigation: NavigationLike }) {
     targetDate,
     nextDay,
     prevDay,
+    canNextDay,
+    canPrevDay,
     mode,
     loading,
   } = usePrayerTimes()
@@ -109,6 +111,8 @@ export default function Home({ navigation }: { navigation: NavigationLike }) {
         currentDate={targetDate}
         onNextDay={nextDay}
         onPrevDay={prevDay}
+        canNextDay={canNextDay}
+        canPrevDay={canPrevDay}
       />
 
       <NotificationList refreshKey={refreshing} />

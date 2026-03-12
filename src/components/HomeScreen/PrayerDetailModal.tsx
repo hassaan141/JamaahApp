@@ -22,6 +22,8 @@ interface PrayerDetailModalProps {
   currentDate: Date
   onNextDay: () => void
   onPrevDay: () => void
+  canNextDay?: boolean
+  canPrevDay?: boolean
 }
 
 const formatTime = (timeString?: string | null) => {
@@ -41,14 +43,6 @@ const formatDatePretty = (date: Date) => {
     day: 'numeric',
     month: 'short',
   }).format(date)
-}
-
-const isSameDay = (d1: Date, d2: Date) => {
-  return (
-    d1.getFullYear() === d2.getFullYear() &&
-    d1.getMonth() === d2.getMonth() &&
-    d1.getDate() === d2.getDate()
-  )
 }
 
 // Updated Row to accept an Icon
@@ -131,15 +125,10 @@ const PrayerDetailModal: React.FC<PrayerDetailModalProps> = ({
   currentDate,
   onNextDay,
   onPrevDay,
+  canNextDay = false,
+  canPrevDay = false,
 }) => {
   if (!prayerTimes) return null
-
-  const today = new Date()
-  const tomorrow = new Date(today)
-  tomorrow.setDate(tomorrow.getDate() + 1)
-
-  const isToday = isSameDay(currentDate, today)
-  const isTomorrow = isSameDay(currentDate, tomorrow)
 
   // Force check for Jummah existence
   const hasJummah = Boolean(
@@ -182,9 +171,9 @@ const PrayerDetailModal: React.FC<PrayerDetailModalProps> = ({
           {/* Date Navigator */}
           <View style={styles.dateNav}>
             <TouchableOpacity
-              onPress={isToday ? undefined : onPrevDay}
-              style={[styles.navArrow, { opacity: isToday ? 0 : 1 }]}
-              disabled={isToday}
+              onPress={canPrevDay ? onPrevDay : undefined}
+              style={[styles.navArrow, { opacity: canPrevDay ? 1 : 0 }]}
+              disabled={!canPrevDay}
             >
               <Feather name="chevron-left" size={24} color="#50b962" />
             </TouchableOpacity>
@@ -192,9 +181,9 @@ const PrayerDetailModal: React.FC<PrayerDetailModalProps> = ({
             <Text style={styles.dateText}>{formatDatePretty(currentDate)}</Text>
 
             <TouchableOpacity
-              onPress={isTomorrow ? undefined : onNextDay}
-              style={[styles.navArrow, { opacity: isTomorrow ? 0 : 1 }]}
-              disabled={isTomorrow}
+              onPress={canNextDay ? onNextDay : undefined}
+              style={[styles.navArrow, { opacity: canNextDay ? 1 : 0 }]}
+              disabled={!canNextDay}
             >
               <Feather name="chevron-right" size={24} color="#50b962" />
             </TouchableOpacity>

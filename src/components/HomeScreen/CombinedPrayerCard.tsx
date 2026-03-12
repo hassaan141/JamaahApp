@@ -13,6 +13,8 @@ interface CombinedPrayerCardProps {
   currentDate?: Date
   onNextDay?: () => void
   onPrevDay?: () => void
+  canNextDay?: boolean
+  canPrevDay?: boolean
 }
 
 const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
@@ -22,6 +24,8 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
   currentDate = new Date(),
   onNextDay = () => {},
   onPrevDay = () => {},
+  canNextDay = false,
+  canPrevDay = false,
 }) => {
   const [modalVisible, setModalVisible] = useState(false)
 
@@ -278,6 +282,8 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
         currentDate={currentDate}
         onNextDay={onNextDay}
         onPrevDay={onPrevDay}
+        canNextDay={canNextDay}
+        canPrevDay={canPrevDay}
       />
     </>
   )

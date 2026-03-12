@@ -546,6 +546,8 @@ export default function OrganizationDetail() {
     targetDate,
     nextDay,
     prevDay,
+    canNextDay,
+    canPrevDay,
     loading: prayerLoading,
   } = useOrgPrayerTimes(orgId)
 
@@ -745,6 +747,8 @@ export default function OrganizationDetail() {
               currentDate={targetDate}
               onNextDay={nextDay}
               onPrevDay={prevDay}
+              canNextDay={canNextDay}
+              canPrevDay={canPrevDay}
             />
           </View>
         )}

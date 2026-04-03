@@ -15,7 +15,7 @@ export default () => ({
     scheme: 'com.hassaan141.jamaahapp',
     icon: './assets/JamahProd.png',
     projectId: '738cfaa7-cbea-4042-b627-a2a351da154b',
-    version: '1.0.0',
+    version: '1.0.1',
     orientation: 'portrait',
     userInterfaceStyle: 'automatic',
     newArchEnabled: false,
@@ -54,7 +54,7 @@ export default () => ({
 
     ios: {
       bundleIdentifier: getBundleId(),
-      buildNumber: '3',
+      buildNumber: '4',
       googleServicesFile: './GoogleService-Info.plist',
       supportsTablet: true,
       entitlements: {
@@ -83,7 +83,7 @@ export default () => ({
     android: {
       package: getBundleId(),
       userInterfaceStyle: 'automatic',
-      versionCode: 3,
+      versionCode: 4,
       googleServicesFile: './google-services.json',
       permissions: [
         'ACCESS_COARSE_LOCATION',

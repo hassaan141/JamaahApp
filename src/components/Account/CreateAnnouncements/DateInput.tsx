@@ -10,6 +10,7 @@ import DateTimePicker, {
   type DateTimePickerEvent,
 } from '@react-native-community/datetimepicker'
 import { Feather } from '@expo/vector-icons'
+import { useTheme } from '@/theme'
 
 interface DateInputProps {
   date: string | null
@@ -17,6 +18,7 @@ interface DateInputProps {
 }
 
 export default function DateInput({ date, setDate }: DateInputProps) {
+  const { theme } = useTheme()
   const [show, setShow] = useState(false)
 
   // Parse YYYY-MM-DD safely to local date
@@ -42,22 +44,40 @@ export default function DateInput({ date, setDate }: DateInputProps) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Date</Text>
+      <Text style={[styles.label, { color: theme.colors.text }]}>Date</Text>
 
       <TouchableOpacity
         onPress={() => setShow((prev) => !prev)}
-        style={styles.inputButton}
+        style={[
+          styles.inputButton,
+          {
+            borderColor: theme.colors.border,
+            backgroundColor: theme.colors.surfaceMuted,
+          },
+        ]}
         activeOpacity={0.7}
       >
-        <Text style={[styles.inputText, !date && styles.placeholder]}>
+        <Text
+          style={[
+            styles.inputText,
+            { color: date ? theme.colors.text : theme.colors.textSoft },
+          ]}
+        >
           {date || 'YYYY-MM-DD'}
         </Text>
-        <Feather name="calendar" size={20} color="#6C757D" />
+        <Feather name="calendar" size={20} color={theme.colors.textMuted} />
       </TouchableOpacity>
 
       {show && (
         <View
-          style={Platform.OS === 'ios' ? styles.iosPickerContainer : undefined}
+          style={
+            Platform.OS === 'ios'
+              ? [
+                  styles.iosPickerContainer,
+                  { backgroundColor: theme.colors.surfaceMuted },
+                ]
+              : undefined
+          }
         >
           <DateTimePicker
             testID="dateTimePicker"
@@ -65,15 +85,31 @@ export default function DateInput({ date, setDate }: DateInputProps) {
             mode="date"
             display={Platform.OS === 'ios' ? 'spinner' : 'default'}
             onChange={onChange}
-            style={styles.datePicker}
-            textColor="#000000"
+            style={[
+              styles.datePicker,
+              Platform.OS === 'ios'
+                ? { backgroundColor: theme.colors.surfaceMuted }
+                : null,
+            ]}
+            textColor={theme.colors.text}
+            accentColor={theme.colors.primary}
           />
           {Platform.OS === 'ios' && (
             <TouchableOpacity
-              style={styles.iosCloseButton}
+              style={[
+                styles.iosCloseButton,
+                {
+                  backgroundColor: theme.colors.surface,
+                  borderTopColor: theme.colors.border,
+                },
+              ]}
               onPress={() => setShow(false)}
             >
-              <Text style={styles.iosCloseText}>Done</Text>
+              <Text
+                style={[styles.iosCloseText, { color: theme.colors.primary }]}
+              >
+                Done
+              </Text>
             </TouchableOpacity>
           )}
         </View>

@@ -1,5 +1,6 @@
 import React from 'react'
 import { View, Text, TouchableOpacity } from 'react-native'
+import { useTheme } from '@/theme'
 
 interface DaySelectorProps {
   selectedDays: number[]
@@ -10,6 +11,7 @@ export default function DaySelector({
   selectedDays,
   setSelectedDays,
 }: DaySelectorProps) {
+  const { theme } = useTheme()
   const days = [
     { label: 'Mon', value: 1 },
     { label: 'Tue', value: 2 },
@@ -34,7 +36,7 @@ export default function DaySelector({
         style={{
           fontSize: 14,
           fontWeight: '600',
-          color: '#1D4732',
+          color: theme.colors.text,
           marginBottom: 10,
         }}
       >
@@ -48,8 +50,12 @@ export default function DaySelector({
               key={day.value}
               onPress={() => toggleDay(day.value)}
               style={{
-                backgroundColor: isSelected ? '#2F855A' : '#F8F9FA',
-                borderColor: isSelected ? '#2F855A' : '#DEE2E6',
+                backgroundColor: isSelected
+                  ? theme.colors.primary
+                  : theme.colors.surfaceMuted,
+                borderColor: isSelected
+                  ? theme.colors.primary
+                  : theme.colors.border,
                 borderWidth: 1,
                 borderRadius: 20,
                 paddingVertical: 8,
@@ -62,7 +68,7 @@ export default function DaySelector({
             >
               <Text
                 style={{
-                  color: isSelected ? '#FFFFFF' : '#1D4732',
+                  color: isSelected ? theme.colors.surface : theme.colors.text,
                   fontSize: 13,
                   fontWeight: '600',
                 }}

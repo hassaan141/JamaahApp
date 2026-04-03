@@ -8,7 +8,8 @@ import {
   Animated,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import logo from '../../../assets/JamahProdNoBG.png'
+import logo from '../../../assets/JamahProdAndroidNoBG.png'
+import { useTheme } from '@/theme'
 
 const { width } = Dimensions.get('window')
 
@@ -24,6 +25,7 @@ const THEME_BG_COLOR = '#48BB78'
 const THEME_INK_COLOR = '#1F5126'
 
 export default function LoadingScreen() {
+  const { theme } = useTheme()
   const [hintIndex, setHintIndex] = useState(0)
   const progress = useRef(new Animated.Value(0)).current
   const fadeAnim = useRef(new Animated.Value(1)).current // For text transitions
@@ -50,7 +52,7 @@ export default function LoadingScreen() {
     return () => clearInterval(interval)
   }, [])
 
-  // 2. Animate Progress Bar
+  // 2. Animate Progress Barr
   useEffect(() => {
     Animated.timing(progress, {
       toValue: 1,
@@ -65,7 +67,15 @@ export default function LoadingScreen() {
   })
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView
+      style={[
+        styles.container,
+        {
+          backgroundColor:
+            theme.mode === 'dark' ? theme.colors.background : THEME_BG_COLOR,
+        },
+      ]}
+    >
       <View style={styles.content}>
         {/* LOGO */}
         <View style={styles.logoContainer}>
@@ -76,7 +86,18 @@ export default function LoadingScreen() {
         {/* Placed distinctly below the logo */}
         <View style={styles.progressSection}>
           <View style={styles.track}>
-            <Animated.View style={[styles.bar, { width: widthInterpolated }]} />
+            <Animated.View
+              style={[
+                styles.bar,
+                {
+                  width: widthInterpolated,
+                  backgroundColor:
+                    theme.mode === 'dark'
+                      ? theme.colors.primary
+                      : THEME_INK_COLOR,
+                },
+              ]}
+            />
           </View>
         </View>
 

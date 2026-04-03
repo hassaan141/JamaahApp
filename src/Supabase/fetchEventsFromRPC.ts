@@ -28,11 +28,20 @@ export async function fetchNearbyEvents(
   opts: {
     query?: string
     demographic?: string
+    postType?: string
+    recurringDays?: number[]
     limit?: number
     offset?: number
   } = {},
 ) {
-  const { query = '', demographic = null, limit = 20, offset = 0 } = opts
+  const {
+    query = '',
+    demographic = null,
+    postType = null,
+    recurringDays = null,
+    limit = 20,
+    offset = 0,
+  } = opts
 
   if (lat == null || lon == null)
     throw new Error('Location coordinates are required')
@@ -42,6 +51,8 @@ export async function fetchNearbyEvents(
     user_long: lon,
     search_query: query,
     filter_demographic: demographic,
+    filter_post_type: postType,
+    filter_recurring_days: recurringDays,
     limit_count: limit,
     offset_count: offset,
   }

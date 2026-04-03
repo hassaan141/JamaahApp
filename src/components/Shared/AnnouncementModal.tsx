@@ -17,6 +17,7 @@ import {
   getEventTypeIcon,
   getEventTypeColor,
 } from './announcementUtils'
+import { useTheme } from '@/theme'
 
 interface AnnouncementModalProps {
   visible: boolean
@@ -31,6 +32,7 @@ export default function AnnouncementModal({
   announcement,
   showPublishedDate = true,
 }: AnnouncementModalProps) {
+  const { theme } = useTheme()
   const eventColor = getEventTypeColor(announcement.post_type)
   const eventIcon = getEventTypeIcon(announcement.post_type)
   const startTime = formatTime(announcement.start_time)
@@ -46,14 +48,31 @@ export default function AnnouncementModal({
       visible={visible}
       onRequestClose={onClose}
     >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContainer}>
+      <View
+        style={[styles.modalOverlay, { backgroundColor: theme.colors.overlay }]}
+      >
+        <View
+          style={[
+            styles.modalContainer,
+            {
+              backgroundColor: theme.colors.surfaceElevated,
+              borderColor: theme.colors.border,
+              shadowColor: theme.colors.shadow,
+            },
+          ]}
+        >
           <TouchableOpacity
-            style={styles.closeButton}
+            style={[
+              styles.closeButton,
+              {
+                backgroundColor: theme.colors.surfaceMuted,
+                borderColor: theme.colors.borderSoft,
+              },
+            ]}
             onPress={onClose}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Feather name="x" size={24} color="#4A5568" />
+            <Feather name="x" size={24} color={theme.colors.textMuted} />
           </TouchableOpacity>
 
           <ScrollView
@@ -71,9 +90,13 @@ export default function AnnouncementModal({
               </View>
 
               <View style={styles.titleContainer}>
-                <Text style={styles.title}>{announcement.title}</Text>
+                <Text style={[styles.title, { color: theme.colors.text }]}>
+                  {announcement.title}
+                </Text>
                 {announcement.organizations?.name && (
-                  <Text style={styles.orgName}>
+                  <Text
+                    style={[styles.orgName, { color: theme.colors.textMuted }]}
+                  >
                     {announcement.organizations.name}
                   </Text>
                 )}
@@ -83,9 +106,23 @@ export default function AnnouncementModal({
             <View style={styles.badgesRow}>
               {announcement.post_type && (
                 <View
-                  style={[styles.badge, { backgroundColor: `${eventColor}15` }]}
+                  style={[
+                    styles.badge,
+                    {
+                      backgroundColor: `${eventColor}15`,
+                      borderColor: 'transparent',
+                    },
+                  ]}
                 >
-                  <Text style={[styles.badgeText, { color: eventColor }]}>
+                  <Text
+                    style={[
+                      styles.badgeText,
+                      {
+                        color: eventColor,
+                        textShadowColor: 'transparent',
+                      },
+                    ]}
+                  >
                     {announcement.post_type === 'Repeating_classes'
                       ? 'Classes'
                       : announcement.post_type === 'Volunteerng'
@@ -95,24 +132,52 @@ export default function AnnouncementModal({
                 </View>
               )}
               {announcement.demographic && (
-                <View style={[styles.badge, { backgroundColor: '#F7FAFC' }]}>
-                  <Text style={[styles.badgeText, { color: '#4A5568' }]}>
+                <View
+                  style={[
+                    styles.badge,
+                    {
+                      backgroundColor: theme.colors.surfaceMuted,
+                      borderColor: theme.colors.borderSoft,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.badgeText,
+                      { color: theme.colors.textMuted },
+                    ]}
+                  >
                     {announcement.demographic}
                   </Text>
                 </View>
               )}
             </View>
 
-            <View style={styles.detailsSection}>
+            <View
+              style={[
+                styles.detailsSection,
+                {
+                  backgroundColor: theme.colors.surfaceMuted,
+                  borderColor: theme.colors.borderSoft,
+                },
+              ]}
+            >
               {eventDate && !recurringDays && (
                 <View style={styles.detailRow}>
                   <Feather
                     name="calendar"
                     size={16}
-                    color="#718096"
+                    color={theme.colors.textSoft}
                     style={styles.detailIcon}
                   />
-                  <Text style={styles.detailText}>{eventDate}</Text>
+                  <Text
+                    style={[
+                      styles.detailText,
+                      { color: theme.colors.textMuted },
+                    ]}
+                  >
+                    {eventDate}
+                  </Text>
                 </View>
               )}
 
@@ -121,10 +186,15 @@ export default function AnnouncementModal({
                   <Feather
                     name="clock"
                     size={16}
-                    color="#718096"
+                    color={theme.colors.textSoft}
                     style={styles.detailIcon}
                   />
-                  <Text style={styles.detailText}>
+                  <Text
+                    style={[
+                      styles.detailText,
+                      { color: theme.colors.textMuted },
+                    ]}
+                  >
                     {startTime && endTime
                       ? `${startTime} - ${endTime}`
                       : startTime || endTime}
@@ -138,22 +208,35 @@ export default function AnnouncementModal({
                     <Feather
                       name="repeat"
                       size={16}
-                      color="#718096"
+                      color={theme.colors.textSoft}
                       style={styles.detailIcon}
                     />
-                    <Text style={styles.detailText}>{row}</Text>
+                    <Text
+                      style={[
+                        styles.detailText,
+                        { color: theme.colors.textMuted },
+                      ]}
+                    >
+                      {row}
+                    </Text>
                   </View>
                 ))}
             </View>
 
-            <View style={styles.divider} />
+            <View
+              style={[styles.divider, { backgroundColor: theme.colors.border }]}
+            />
 
             {!!announcement.body && (
-              <Text style={styles.bodyText}>{announcement.body}</Text>
+              <Text style={[styles.bodyText, { color: theme.colors.text }]}>
+                {announcement.body}
+              </Text>
             )}
 
             {showPublishedDate && announcement.created_at && (
-              <Text style={styles.footerText}>
+              <Text
+                style={[styles.footerText, { color: theme.colors.textSoft }]}
+              >
                 Posted on {formatDate(announcement.created_at)}
               </Text>
             )}
@@ -173,11 +256,11 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalContainer: {
-    backgroundColor: 'white',
-    borderRadius: 20,
+    borderRadius: 16,
     width: '100%',
     maxHeight: '85%',
     padding: 24,
+    borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -193,8 +276,8 @@ const styles = StyleSheet.create({
     top: 20,
     zIndex: 10,
     padding: 4,
-    backgroundColor: '#F7FAFC',
-    borderRadius: 20,
+    borderRadius: 12,
+    borderWidth: 1,
   },
   modalScrollContent: {
     paddingTop: 8,
@@ -236,16 +319,17 @@ const styles = StyleSheet.create({
   badge: {
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: 8,
     marginRight: 8,
     marginBottom: 8,
+    borderWidth: 1,
   },
   badgeText: {
     fontSize: 12,
     fontWeight: '600',
   },
   detailsSection: {
-    backgroundColor: '#F7FAFC',
+    borderWidth: 1,
     borderRadius: 12,
     padding: 16,
     marginBottom: 20,
@@ -270,13 +354,11 @@ const styles = StyleSheet.create({
   },
   bodyText: {
     fontSize: 16,
-    color: '#2D3748',
     lineHeight: 26,
     marginBottom: 24,
   },
   footerText: {
     fontSize: 12,
-    color: '#A0AEC0',
     textAlign: 'center',
     fontStyle: 'italic',
   },

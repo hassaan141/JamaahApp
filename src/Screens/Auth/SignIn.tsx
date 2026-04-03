@@ -24,11 +24,13 @@ import * as AppleAuthentication from 'expo-apple-authentication'
 import type { User } from '@supabase/supabase-js'
 import googleLogo from '../../../assets/google-logo.png'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useTheme } from '@/theme'
 
 type Nav = { navigate: (route: string) => void; goBack: () => void }
 
 export default function SignIn({ navigation }: { navigation: Nav }) {
   const insets = useSafeAreaInsets()
+  const { theme } = useTheme()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [passwordVisible, setPasswordVisible] = useState(false)
@@ -241,9 +243,17 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
+      <View
+        pointerEvents="none"
+        style={[
+          styles.topBounceFill,
+          { backgroundColor: theme.colors.primary },
+        ]}
+      />
       <ScrollView
+        style={styles.scrollView}
         contentContainerStyle={[
           styles.scrollContent,
           { paddingBottom: insets.bottom + 20 },
@@ -253,43 +263,68 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
       >
         <AuthHeader />
 
-        <View style={styles.formContainer}>
-          <Text style={styles.title}>Welcome Back</Text>
-          <Text style={styles.subtitle}>Sign in to continue</Text>
+        <View
+          style={[
+            styles.formContainer,
+            { backgroundColor: theme.colors.background },
+          ]}
+        >
+          <Text style={[styles.title, { color: theme.colors.text }]}>
+            Welcome Back
+          </Text>
+          <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>
+            Sign in to continue
+          </Text>
 
-          <View style={styles.inputContainer}>
+          <View
+            style={[
+              styles.inputContainer,
+              {
+                borderColor: theme.colors.border,
+                backgroundColor: theme.colors.surface,
+              },
+            ]}
+          >
             <Feather
               name="mail"
               size={20}
-              color="#48BB78"
+              color={theme.colors.primary}
               style={styles.inputIcon}
             />
             <TextInput
-              style={styles.input}
+              style={[styles.input, { color: theme.colors.text }]}
               placeholder="Email"
               value={email}
               onChangeText={setEmail}
               autoCapitalize="none"
               keyboardType="email-address"
-              placeholderTextColor="#A0AEC0"
+              placeholderTextColor={theme.colors.textSoft}
             />
           </View>
 
-          <View style={styles.inputContainer}>
+          <View
+            style={[
+              styles.inputContainer,
+              {
+                borderColor: theme.colors.border,
+                backgroundColor: theme.colors.surface,
+              },
+            ]}
+          >
             <Feather
               name="lock"
               size={20}
-              color="#48BB78"
+              color={theme.colors.primary}
               style={styles.inputIcon}
             />
             <TextInput
-              style={styles.input}
+              style={[styles.input, { color: theme.colors.text }]}
               placeholder="Password"
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!passwordVisible}
               autoCapitalize="none"
-              placeholderTextColor="#A0AEC0"
+              placeholderTextColor={theme.colors.textSoft}
             />
             <TouchableOpacity
               onPress={() => setPasswordVisible(!passwordVisible)}
@@ -298,7 +333,7 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
               <Feather
                 name={passwordVisible ? 'eye-off' : 'eye'}
                 size={20}
-                color="#48BB78"
+                color={theme.colors.primary}
               />
             </TouchableOpacity>
           </View>
@@ -307,11 +342,24 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
             style={styles.forgotPassword}
             onPress={() => navigation.navigate('ForgotPassword')}
           >
-            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+            <Text
+              style={[
+                styles.forgotPasswordText,
+                { color: theme.colors.primary },
+              ]}
+            >
+              Forgot Password?
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.button}
+            style={[
+              styles.button,
+              {
+                backgroundColor: theme.colors.primary,
+                shadowColor: theme.colors.primary,
+              },
+            ]}
             onPress={handleSignIn}
             disabled={loading}
           >
@@ -323,9 +371,23 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
           </TouchableOpacity>
 
           <View style={styles.dividerContainer}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>OR</Text>
-            <View style={styles.dividerLine} />
+            <View
+              style={[
+                styles.dividerLine,
+                { backgroundColor: theme.colors.border },
+              ]}
+            />
+            <Text
+              style={[styles.dividerText, { color: theme.colors.textSoft }]}
+            >
+              OR
+            </Text>
+            <View
+              style={[
+                styles.dividerLine,
+                { backgroundColor: theme.colors.border },
+              ]}
+            />
           </View>
 
           {Platform.OS === 'ios' && (
@@ -335,7 +397,9 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
                   AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN
                 }
                 buttonStyle={
-                  AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
+                  theme.mode === 'dark'
+                    ? AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
+                    : AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
                 }
                 cornerRadius={10}
                 style={styles.appleAuthButton}
@@ -348,7 +412,13 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
           )}
 
           <TouchableOpacity
-            style={styles.googleButton}
+            style={[
+              styles.googleButton,
+              {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+              },
+            ]}
             onPress={handleGoogleSignIn}
             disabled={loading}
           >
@@ -357,16 +427,27 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
               style={styles.googleIcon}
               fadeDuration={0}
             />
-            <Text style={styles.googleButtonText}>Sign in with Google</Text>
+            <Text
+              style={[styles.googleButtonText, { color: theme.colors.text }]}
+            >
+              Sign in with Google
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.switchContainer}
             onPress={() => navigation.navigate('UserTypeSelection')}
           >
-            <Text style={styles.switchText}>
+            <Text
+              style={[styles.switchText, { color: theme.colors.textMuted }]}
+            >
               Don't have an account?{' '}
-              <Text style={styles.switchTextBold}> Sign Up</Text>
+              <Text
+                style={[styles.switchTextBold, { color: theme.colors.primary }]}
+              >
+                {' '}
+                Sign Up
+              </Text>
             </Text>
           </TouchableOpacity>
         </View>
@@ -377,13 +458,28 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F7FAFC' },
+  scrollView: {
+    flex: 1,
+  },
+  topBounceFill: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 420,
+  },
   scrollContent: {
     flexGrow: 1,
-    backgroundColor: '#F7FAFC',
     // Added static bottom padding for spacing instead of dynamic insets
     paddingBottom: 40,
   },
-  formContainer: { flex: 1, paddingHorizontal: 30, paddingTop: 40 },
+  formContainer: {
+    flex: 1,
+    paddingHorizontal: 30,
+    paddingTop: 40,
+    paddingBottom: 24,
+    marginTop: -1,
+  },
   title: {
     fontSize: 28,
     fontWeight: '600',

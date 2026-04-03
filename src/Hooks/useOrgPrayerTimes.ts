@@ -2,11 +2,29 @@ import { useCallback, useEffect, useState } from 'react'
 import { fetchPrayerData } from '@/Utils/organizationResolver'
 import { getPrayerTimesRange, type DailyPrayerTimes } from '@/Utils/prayerTimes'
 
-function toYYYYMMDD(date: Date) {
+function toYMD(date: Date) {
   const y = date.getFullYear()
   const m = String(date.getMonth() + 1).padStart(2, '0')
   const d = String(date.getDate()).padStart(2, '0')
   return `${y}-${m}-${d}`
+}
+
+function fromYMD(dateStr: string) {
+  const [year, month, day] = dateStr.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
+
+function getPrayerTimesWindow(baseDate: Date = new Date()) {
+  const start = new Date(baseDate)
+  start.setDate(start.getDate() - 1)
+
+  const end = new Date(baseDate)
+  end.setMonth(end.getMonth() + 1, 0)
+
+  return {
+    startDate: toYMD(start),
+    endDate: toYMD(end),
+  }
 }
 
 export function useOrgPrayerTimes(orgId: string | undefined) {
@@ -18,12 +36,18 @@ export function useOrgPrayerTimes(orgId: string | undefined) {
   const [orgMeta, setOrgMeta] = useState<{ name?: string; id?: string } | null>(
     null,
   )
+  const availableDateKeys = Object.keys(timesCache).sort()
+  const selectedKey = toYMD(targetDate)
+  const selectedIndex = availableDateKeys.indexOf(selectedKey)
+  const canPrevDay = selectedIndex > 0
+  const canNextDay =
+    selectedIndex !== -1 && selectedIndex < availableDateKeys.length - 1
 
   const retrieve = useCallback(async () => {
     if (!orgId) return
     setLoading(true)
     try {
-      const todayStr = toYYYYMMDD(new Date())
+      const todayStr = toYMD(new Date())
       // Use the pure fetcher to get specific org data
       const resolved = await fetchPrayerData(orgId, todayStr)
 
@@ -34,16 +58,9 @@ export function useOrgPrayerTimes(orgId: string | undefined) {
       }
 
       // Prefetch range for this specific masjid
-      const start = new Date()
-      start.setDate(start.getDate() - 2)
-      const end = new Date()
-      end.setDate(end.getDate() + 14)
+      const { startDate, endDate } = getPrayerTimesWindow()
 
-      const rangeData = await getPrayerTimesRange(
-        orgId,
-        toYYYYMMDD(start),
-        toYYYYMMDD(end),
-      )
+      const rangeData = await getPrayerTimesRange(orgId, startDate, endDate)
       const newCache: Record<string, DailyPrayerTimes> = {}
       rangeData.forEach((row) => {
         newCache[row.prayer_date] = row
@@ -61,20 +78,29 @@ export function useOrgPrayerTimes(orgId: string | undefined) {
     retrieve()
   }, [retrieve])
 
+  useEffect(() => {
+    if (availableDateKeys.length === 0) return
+    if (availableDateKeys.includes(selectedKey)) return
+
+    const fallbackKey = availableDateKeys.find(
+      (dateKey) => dateKey >= selectedKey,
+    )
+    setTargetDate(
+      fromYMD(fallbackKey || availableDateKeys[availableDateKeys.length - 1]),
+    )
+  }, [availableDateKeys, selectedKey])
+
   const nextDay = () => {
-    const next = new Date(targetDate)
-    next.setDate(next.getDate() + 1)
-    setTargetDate(next)
+    if (!canNextDay) return
+    setTargetDate(fromYMD(availableDateKeys[selectedIndex + 1]))
   }
 
   const prevDay = () => {
-    const prev = new Date(targetDate)
-    prev.setDate(prev.getDate() - 1)
-    setTargetDate(prev)
+    if (!canPrevDay) return
+    setTargetDate(fromYMD(availableDateKeys[selectedIndex - 1]))
   }
 
-  const selectedKey = toYYYYMMDD(targetDate)
-  const todayKey = toYYYYMMDD(new Date())
+  const todayKey = toYMD(new Date())
 
   return {
     loading,
@@ -84,6 +110,8 @@ export function useOrgPrayerTimes(orgId: string | undefined) {
     targetDate,
     nextDay,
     prevDay,
+    canNextDay,
+    canPrevDay,
     refresh: retrieve,
   }
 }

@@ -1,9 +1,8 @@
 import React from 'react'
 import { View, Text, TouchableOpacity, Platform } from 'react-native'
 import { Feather } from '@expo/vector-icons'
-import type {
-  DateTimePickerEvent,
-} from '@react-native-community/datetimepicker';
+import { useTheme } from '@/theme'
+import type { DateTimePickerEvent } from '@react-native-community/datetimepicker'
 import DateTimePicker from '@react-native-community/datetimepicker'
 
 interface TimeInputProps {
@@ -21,6 +20,7 @@ export default function TimeInput({
   isOpen,
   onToggle,
 }: TimeInputProps) {
+  const { theme } = useTheme()
   // Helper to create a valid Date object from various time string formats (HH:mm or HH:mm:ss)
   const getDateFromTimeString = (timeString: string | null): Date => {
     if (!timeString) {
@@ -68,8 +68,10 @@ export default function TimeInput({
         onPress={onToggle}
         activeOpacity={0.8}
         style={{
-          backgroundColor: isOpen ? '#F0FFF4' : '#F8F9FA',
-          borderColor: isOpen ? '#2F855A' : '#DEE2E6',
+          backgroundColor: isOpen
+            ? theme.colors.primarySoft
+            : theme.colors.surfaceMuted,
+          borderColor: isOpen ? theme.colors.primary : theme.colors.border,
           borderWidth: 1,
           borderRadius: 10,
           padding: 10,
@@ -79,7 +81,9 @@ export default function TimeInput({
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <View
             style={{
-              backgroundColor: isOpen ? 'rgba(47, 133, 90, 0.1)' : '#E9ECEF',
+              backgroundColor: isOpen
+                ? theme.colors.primarySoft
+                : theme.colors.borderSoft,
               borderRadius: 6,
               padding: 6,
               marginRight: 10,
@@ -88,14 +92,14 @@ export default function TimeInput({
             <Feather
               name="clock"
               size={16}
-              color={isOpen ? '#2F855A' : '#6C757D'}
+              color={isOpen ? theme.colors.primary : theme.colors.textMuted}
             />
           </View>
           <View style={{ flex: 1 }}>
             <Text
               style={{
                 fontSize: 10,
-                color: '#6C757D',
+                color: theme.colors.textMuted,
                 fontWeight: '600',
                 textTransform: 'uppercase',
               }}
@@ -107,7 +111,7 @@ export default function TimeInput({
               style={{
                 fontSize: 13,
                 fontWeight: '600',
-                color: '#1D4732',
+                color: theme.colors.text,
                 marginTop: 2,
               }}
             >
@@ -120,10 +124,10 @@ export default function TimeInput({
       {isOpen && (
         <View
           style={{
-            backgroundColor: '#FFFFFF',
+            backgroundColor: theme.colors.surface,
             borderRadius: 10,
             borderWidth: 1,
-            borderColor: '#E9ECEF',
+            borderColor: theme.colors.border,
             overflow: 'hidden',
             marginBottom: 12,
             height: 130,
@@ -136,8 +140,8 @@ export default function TimeInput({
             mode="time"
             display={Platform.OS === 'ios' ? 'spinner' : 'default'}
             onChange={handleChange}
-            textColor="#1D4732"
-            accentColor="#2F855A"
+            textColor={theme.colors.text}
+            accentColor={theme.colors.primary}
             style={{
               width: 320,
               marginLeft: -10,

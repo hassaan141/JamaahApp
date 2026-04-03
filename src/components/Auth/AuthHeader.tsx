@@ -9,6 +9,7 @@ import {
 } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import Feather from '@expo/vector-icons/Feather'
+import { useTheme } from '@/theme'
 import logo from '../../../assets/JamahProdNoBG.png'
 
 // 1. Get screen height to detect small devices
@@ -24,8 +25,13 @@ export default function AuthHeader({
   showBackButton = false,
   onBackPress,
 }: Props) {
+  const { theme } = useTheme()
+
   return (
-    <LinearGradient colors={['#48BB78', '#48BB78']} style={styles.topSection}>
+    <LinearGradient
+      colors={[theme.colors.primary, theme.colors.primary]}
+      style={styles.topSection}
+    >
       {showBackButton && (
         <TouchableOpacity style={styles.backButton} onPress={onBackPress}>
           <Feather name="arrow-left" size={24} color="#FFFFFF" />

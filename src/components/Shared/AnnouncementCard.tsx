@@ -11,6 +11,7 @@ import {
   getEventTypeIcon,
   getEventTypeColor,
 } from './announcementUtils'
+import { useTheme } from '@/theme'
 
 interface AnnouncementCardProps {
   announcement: OrgPost & { organizations?: { name?: string } | null }
@@ -25,6 +26,7 @@ export default function AnnouncementCard({
   onEdit,
   showPublishedDate = true,
 }: AnnouncementCardProps) {
+  const { theme } = useTheme()
   const [expanded, setExpanded] = useState(false)
   const [textOverflowing, setTextOverflowing] = useState(false)
   const [modalVisible, setModalVisible] = useState(false)
@@ -47,7 +49,14 @@ export default function AnnouncementCard({
   return (
     <>
       <TouchableOpacity
-        style={styles.announcementCard}
+        style={[
+          styles.announcementCard,
+          {
+            backgroundColor: theme.colors.surface,
+            borderColor: theme.colors.border,
+            shadowColor: theme.colors.shadow,
+          },
+        ]}
         onPress={() => setModalVisible(true)}
         activeOpacity={0.9}
       >
@@ -63,11 +72,21 @@ export default function AnnouncementCard({
           <View style={styles.announcementHeading}>
             <View style={styles.titleRow}>
               <View style={styles.leftContent}>
-                <Text style={styles.announcementTitle}>
+                <Text
+                  style={[
+                    styles.announcementTitle,
+                    { color: theme.colors.text },
+                  ]}
+                >
                   {announcement.title}
                 </Text>
                 {announcement.organizations?.name && (
-                  <Text style={styles.organizationName}>
+                  <Text
+                    style={[
+                      styles.organizationName,
+                      { color: theme.colors.textMuted },
+                    ]}
+                  >
                     {announcement.organizations.name}
                   </Text>
                 )}
@@ -76,7 +95,10 @@ export default function AnnouncementCard({
                     <View
                       style={[
                         styles.eventBadge,
-                        { backgroundColor: `${eventColor}15` },
+                        {
+                          backgroundColor: `${eventColor}15`,
+                          borderColor: 'transparent',
+                        },
                       ]}
                     >
                       <Text
@@ -94,11 +116,17 @@ export default function AnnouncementCard({
                     <View
                       style={[
                         styles.eventBadge,
-                        { backgroundColor: '#F7FAFC' },
+                        {
+                          backgroundColor: theme.colors.surfaceMuted,
+                          borderColor: theme.colors.borderSoft,
+                        },
                       ]}
                     >
                       <Text
-                        style={[styles.eventBadgeText, { color: '#4A5568' }]}
+                        style={[
+                          styles.eventBadgeText,
+                          { color: theme.colors.textMuted },
+                        ]}
                       >
                         {announcement.demographic}
                       </Text>
@@ -108,10 +136,14 @@ export default function AnnouncementCard({
               </View>
               <View style={styles.rightContent}>
                 {eventDate && !recurringDays && (
-                  <Text style={styles.dateText}>{eventDate}</Text>
+                  <Text style={[styles.dateText, { color: theme.colors.text }]}>
+                    {eventDate}
+                  </Text>
                 )}
                 {(startTime || endTime) && (
-                  <Text style={styles.timeText}>
+                  <Text
+                    style={[styles.timeText, { color: theme.colors.textMuted }]}
+                  >
                     {startTime && endTime
                       ? `${startTime} - ${endTime}`
                       : startTime || endTime}
@@ -121,14 +153,22 @@ export default function AnnouncementCard({
                   recurringDayRows.map((row, idx) => (
                     <Text
                       key={idx}
-                      style={styles.recurringText}
+                      style={[
+                        styles.recurringText,
+                        { color: theme.colors.textMuted },
+                      ]}
                       numberOfLines={2}
                     >
                       {row}
                     </Text>
                   ))}
                 {showPublishedDate && announcement.created_at && (
-                  <Text style={styles.announcementPublished}>
+                  <Text
+                    style={[
+                      styles.announcementPublished,
+                      { color: theme.colors.textSoft },
+                    ]}
+                  >
                     {formatDate(announcement.created_at)}
                   </Text>
                 )}
@@ -136,8 +176,14 @@ export default function AnnouncementCard({
             </View>
           </View>
           {showEditButton && (
-            <TouchableOpacity style={styles.smallIconButton} onPress={onEdit}>
-              <Feather name="edit-3" size={16} color="#2F855A" />
+            <TouchableOpacity
+              style={[
+                styles.smallIconButton,
+                { backgroundColor: theme.colors.primarySoft },
+              ]}
+              onPress={onEdit}
+            >
+              <Feather name="edit-3" size={16} color={theme.colors.primary} />
             </TouchableOpacity>
           )}
         </View>
@@ -146,7 +192,10 @@ export default function AnnouncementCard({
         {!!announcement.body && (
           <>
             <Text
-              style={styles.announcementBody}
+              style={[
+                styles.announcementBody,
+                { color: theme.colors.textMuted },
+              ]}
               numberOfLines={expanded ? undefined : 2}
               onTextLayout={(e) => {
                 // only consider overflow when collapsed
@@ -162,7 +211,9 @@ export default function AnnouncementCard({
                 onPress={() => setExpanded((s) => !s)}
                 activeOpacity={0.7}
               >
-                <Text style={styles.readMore}>
+                <Text
+                  style={[styles.readMore, { color: theme.colors.primary }]}
+                >
                   {expanded ? 'Show less' : 'Read more'}
                 </Text>
               </TouchableOpacity>
@@ -228,7 +279,7 @@ const styles = StyleSheet.create({
   announcementTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#1D4732',
+    color: '#1F2937',
     marginBottom: 2,
     lineHeight: 20,
   },
@@ -256,7 +307,7 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 12,
-    color: '#1D4732',
+    color: '#1F2937',
     fontWeight: '600',
     textAlign: 'right',
     marginBottom: 2,

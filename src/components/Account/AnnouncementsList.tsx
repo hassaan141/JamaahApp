@@ -15,6 +15,7 @@ import AnnouncementCard from '@/components/Shared/AnnouncementCard'
 import EditAnnouncementModal from './EditAnnouncementModal'
 import { toast } from '@/components/Toast/toast'
 import MiniLoading from '@/components/Loading/MiniLoading'
+import { useTheme } from '@/theme'
 
 const TABS = [
   { label: 'Classes', value: 'CLASSES' },
@@ -31,6 +32,7 @@ export default function AnnouncementsList({
   refreshKey?: boolean
   organization?: Organization | null
 }) {
+  const { theme } = useTheme()
   const [announcements, setAnnouncements] = useState<OrgPost[]>([])
   const [loading, setLoading] = useState(false)
   const [editingAnnouncement, setEditingAnnouncement] =
@@ -127,7 +129,15 @@ export default function AnnouncementsList({
   // Loading state wrapped in the card container for visual consistency
   if (loading) {
     return (
-      <View style={styles.sectionCard}>
+      <View
+        style={[
+          styles.sectionCard,
+          {
+            backgroundColor: theme.colors.surface,
+            shadowColor: theme.colors.shadow,
+          },
+        ]}
+      >
         <View style={styles.loadingContainer}>
           <MiniLoading />
         </View>
@@ -136,17 +146,29 @@ export default function AnnouncementsList({
   }
 
   return (
-    <View style={styles.sectionCard}>
+    <View
+      style={[
+        styles.sectionCard,
+        {
+          backgroundColor: theme.colors.surface,
+          shadowColor: theme.colors.shadow,
+        },
+      ]}
+    >
       <View style={styles.sectionHeader}>
         <Feather
           name="volume-2"
           size={20}
-          color="#2F855A"
+          color={theme.colors.primary}
           style={styles.sectionIcon}
         />
         <View>
-          <Text style={styles.sectionTitle}>Your Announcements</Text>
-          <Text style={styles.sectionSubtitle}>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+            Your Announcements
+          </Text>
+          <Text
+            style={[styles.sectionSubtitle, { color: theme.colors.textMuted }]}
+          >
             Review what your community sees
           </Text>
         </View>
@@ -154,7 +176,11 @@ export default function AnnouncementsList({
 
       {announcements.length === 0 ? (
         <Text
-          style={{ color: '#6C757D', textAlign: 'center', paddingVertical: 20 }}
+          style={{
+            color: theme.colors.textMuted,
+            textAlign: 'center',
+            paddingVertical: 20,
+          }}
         >
           No announcements yet.
         </Text>
@@ -167,12 +193,27 @@ export default function AnnouncementsList({
                 return (
                   <TouchableOpacity
                     key={tab.value}
-                    style={[styles.tab, isActive && styles.activeTab]}
+                    style={[
+                      styles.tab,
+                      {
+                        backgroundColor: isActive
+                          ? theme.colors.primary
+                          : theme.colors.surfaceMuted,
+                      },
+                    ]}
                     onPress={() => setActiveTab(tab.value)}
                     activeOpacity={0.7}
                   >
                     <Text
-                      style={[styles.tabText, isActive && styles.activeTabText]}
+                      style={[
+                        styles.tabText,
+                        {
+                          color: isActive
+                            ? theme.colors.surface
+                            : theme.colors.textMuted,
+                        },
+                        isActive && styles.activeTabText,
+                      ]}
                     >
                       {tab.label}
                     </Text>
@@ -184,7 +225,9 @@ export default function AnnouncementsList({
 
           {filteredAnnouncements.length === 0 ? (
             <View style={styles.emptyStateContainer}>
-              <Text style={styles.emptyText}>
+              <Text
+                style={[styles.emptyText, { color: theme.colors.textMuted }]}
+              >
                 No {activeTab.toLowerCase()} found.
               </Text>
             </View>
@@ -201,11 +244,19 @@ export default function AnnouncementsList({
 
               {!isExpanded && hiddenCount > 0 && (
                 <TouchableOpacity
-                  style={styles.expandButton}
+                  style={[
+                    styles.expandButton,
+                    { backgroundColor: theme.colors.surfaceMuted },
+                  ]}
                   onPress={handleExpand}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.expandButtonText}>
+                  <Text
+                    style={[
+                      styles.expandButtonText,
+                      { color: theme.colors.primary },
+                    ]}
+                  >
                     +{hiddenCount} more {activeTab.toLowerCase()}
                   </Text>
                 </TouchableOpacity>
@@ -213,12 +264,26 @@ export default function AnnouncementsList({
 
               {isExpanded && (
                 <TouchableOpacity
-                  style={styles.collapseButton}
+                  style={[
+                    styles.collapseButton,
+                    { backgroundColor: theme.colors.surfaceMuted },
+                  ]}
                   onPress={handleCollapse}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.collapseButtonText}>Show less</Text>
-                  <Feather name="chevron-up" size={16} color="#718096" />
+                  <Text
+                    style={[
+                      styles.collapseButtonText,
+                      { color: theme.colors.textMuted },
+                    ]}
+                  >
+                    Show less
+                  </Text>
+                  <Feather
+                    name="chevron-up"
+                    size={16}
+                    color={theme.colors.textMuted}
+                  />
                 </TouchableOpacity>
               )}
             </>

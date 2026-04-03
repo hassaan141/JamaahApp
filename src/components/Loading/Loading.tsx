@@ -1,8 +1,10 @@
 import React, { useEffect, useRef } from 'react'
 import { View, Text, StyleSheet, Animated, Easing } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
+import { useTheme } from '@/theme'
 
 export default function LoadingAnimation() {
+  const { theme } = useTheme()
   const spinValue = useRef(new Animated.Value(0)).current
   const scaleValue = useRef(new Animated.Value(0.8)).current
   const opacityValue = useRef(new Animated.Value(0.6)).current
@@ -56,20 +58,34 @@ export default function LoadingAnimation() {
   })
 
   return (
-    <View style={styles.container}>
-      <View style={styles.loadingCard}>
+    <View
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
+      <View
+        style={[
+          styles.loadingCard,
+          {
+            backgroundColor: theme.colors.surface,
+            borderColor: theme.colors.border,
+            shadowColor: theme.colors.shadow,
+          },
+        ]}
+      >
         <Animated.View
           style={[
             styles.iconContainer,
+            { backgroundColor: theme.colors.primarySoft },
             {
               transform: [{ rotate: spin }, { scale: scaleValue }],
               opacity: opacityValue,
             },
           ]}
         >
-          <Feather name="moon" size={40} color="#48BB78" />
+          <Feather name="moon" size={40} color={theme.colors.primary} />
         </Animated.View>
-        <Text style={styles.loadingText}>Loading</Text>
+        <Text style={[styles.loadingText, { color: theme.colors.text }]}>
+          Loading
+        </Text>
         <View style={styles.dotsContainer}>
           <Animated.View
             style={[
@@ -104,15 +120,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F7FAFC',
     padding: 20,
   },
   loadingCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 15,
+    borderRadius: 12,
     padding: 30,
     alignItems: 'center',
-    shadowColor: '#000',
+    borderWidth: 1,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -124,7 +138,6 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: 'rgba(72, 187, 120, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
@@ -132,7 +145,6 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#2D3748',
     marginBottom: 20,
   },
   dotsContainer: { flexDirection: 'row', justifyContent: 'center' },

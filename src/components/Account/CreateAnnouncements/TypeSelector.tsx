@@ -1,5 +1,6 @@
 import React from 'react'
 import { View, Text, TouchableOpacity } from 'react-native'
+import { useTheme } from '@/theme'
 
 interface TypeSelectorProps {
   postType: string | null
@@ -10,6 +11,7 @@ export default function TypeSelector({
   postType,
   setPostType,
 }: TypeSelectorProps) {
+  const { theme } = useTheme()
   const types = [
     { label: 'Event', value: 'Event' },
     { label: 'Class', value: 'Repeating_classes' },
@@ -23,7 +25,7 @@ export default function TypeSelector({
         style={{
           fontSize: 14,
           fontWeight: '600',
-          color: '#1D4732',
+          color: theme.colors.text,
           marginBottom: 8,
         }}
       >
@@ -37,8 +39,12 @@ export default function TypeSelector({
               key={opt.value}
               onPress={() => setPostType(active ? null : opt.value)}
               style={{
-                backgroundColor: active ? '#2F855A' : '#F8F9FA',
-                borderColor: active ? '#2F855A' : '#DEE2E6',
+                backgroundColor: active
+                  ? theme.colors.primary
+                  : theme.colors.surfaceMuted,
+                borderColor: active
+                  ? theme.colors.primary
+                  : theme.colors.border,
                 borderWidth: 1,
                 borderRadius: 16,
                 paddingVertical: 6,
@@ -49,7 +55,7 @@ export default function TypeSelector({
             >
               <Text
                 style={{
-                  color: active ? '#FFFFFF' : '#1D4732',
+                  color: active ? theme.colors.surface : theme.colors.text,
                   fontSize: 13,
                   fontWeight: '600',
                 }}

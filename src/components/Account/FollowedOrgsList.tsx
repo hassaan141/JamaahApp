@@ -9,15 +9,13 @@ import {
 import { useNavigation } from '@react-navigation/native'
 import type { NavigationProp, ParamListBase } from '@react-navigation/native'
 import Feather from '@expo/vector-icons/Feather'
-import type {
-  FollowedOrganization} from '@/Supabase/fetchMyFollowedOrgs';
-import {
-  fetchMyFollowedOrgs
-} from '@/Supabase/fetchMyFollowedOrgs'
+import type { FollowedOrganization } from '@/Supabase/fetchMyFollowedOrgs'
+import { fetchMyFollowedOrgs } from '@/Supabase/fetchMyFollowedOrgs'
 import { unfollowOrganization } from '@/Supabase/organizationFollow'
 import { followEventEmitter } from '@/Utils/followEventEmitter'
 import MiniLoading from '@/components/Loading/MiniLoading'
 import { toast } from '@/components/Toast/toast'
+import { useTheme } from '@/theme'
 
 interface FollowedOrgsListProps {
   refreshKey?: boolean
@@ -27,6 +25,7 @@ export default function FollowedOrgsList({
   refreshKey,
 }: FollowedOrgsListProps) {
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
+  const { theme } = useTheme()
   const [orgs, setOrgs] = useState<FollowedOrganization[]>([])
   const [loading, setLoading] = useState(true)
   const [isExpanded, setIsExpanded] = useState(false)
@@ -149,7 +148,16 @@ export default function FollowedOrgsList({
 
   if (loading) {
     return (
-      <View style={styles.sectionCard}>
+      <View
+        style={[
+          styles.sectionCard,
+          {
+            backgroundColor: theme.colors.surface,
+            borderColor: theme.colors.border,
+            shadowColor: theme.colors.shadow,
+          },
+        ]}
+      >
         <View style={styles.loadingContainer}>
           <MiniLoading />
         </View>
@@ -158,17 +166,30 @@ export default function FollowedOrgsList({
   }
 
   return (
-    <View style={styles.sectionCard}>
+    <View
+      style={[
+        styles.sectionCard,
+        {
+          backgroundColor: theme.colors.surface,
+          borderColor: theme.colors.border,
+          shadowColor: theme.colors.shadow,
+        },
+      ]}
+    >
       <View style={styles.sectionHeader}>
         <Feather
           name="users"
           size={20}
-          color="#2F855A"
+          color={theme.colors.primary}
           style={styles.sectionIcon}
         />
         <View style={styles.headerTextContainer}>
-          <Text style={styles.sectionTitle}>Following</Text>
-          <Text style={styles.sectionSubtitle}>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+            Following
+          </Text>
+          <Text
+            style={[styles.sectionSubtitle, { color: theme.colors.textMuted }]}
+          >
             {orgs.length} organization{orgs.length !== 1 ? 's' : ''}
           </Text>
         </View>
@@ -176,7 +197,7 @@ export default function FollowedOrgsList({
 
       {orgs.length === 0 ? (
         <View style={styles.emptyStateContainer}>
-          <Text style={styles.emptyText}>
+          <Text style={[styles.emptyText, { color: theme.colors.textMuted }]}>
             You're not following any organizations yet. Explore the Communities
             tab to discover masjids and Islamic organizations near you.
           </Text>
@@ -186,33 +207,67 @@ export default function FollowedOrgsList({
           {visibleOrgs.map((org) => (
             <TouchableOpacity
               key={org.id}
-              style={styles.orgItem}
+              style={[
+                styles.orgItem,
+                { borderBottomColor: theme.colors.borderSoft },
+              ]}
               onPress={() => handleOrgPress(org)}
               activeOpacity={0.7}
             >
-              <View style={styles.orgIconContainer}>
+              <View
+                style={[
+                  styles.orgIconContainer,
+                  {
+                    backgroundColor: theme.colors.primarySoft,
+                    borderColor: theme.colors.primaryBorder,
+                  },
+                ]}
+              >
                 <Feather
                   name={getOrgTypeIcon(org.type)}
                   size={20}
-                  color="#2F855A"
+                  color={theme.colors.primary}
                 />
               </View>
               <View style={styles.orgInfo}>
-                <Text style={styles.orgName} numberOfLines={1}>
+                <Text
+                  style={[styles.orgName, { color: theme.colors.text }]}
+                  numberOfLines={1}
+                >
                   {org.name}
                 </Text>
-                <Text style={styles.orgType}>{getOrgTypeLabel(org.type)}</Text>
+                <Text
+                  style={[styles.orgType, { color: theme.colors.textMuted }]}
+                >
+                  {getOrgTypeLabel(org.type)}
+                </Text>
               </View>
               <TouchableOpacity
-                style={styles.followingButton}
+                style={[
+                  styles.followingButton,
+                  {
+                    backgroundColor: theme.colors.surfaceMuted,
+                    borderColor: theme.colors.primaryBorder,
+                  },
+                ]}
                 onPress={() => handleUnfollow(org.id)}
                 disabled={unfollowingId === org.id}
                 activeOpacity={0.7}
               >
                 {unfollowingId === org.id ? (
-                  <ActivityIndicator size="small" color="#48BB78" />
+                  <ActivityIndicator
+                    size="small"
+                    color={theme.colors.primary}
+                  />
                 ) : (
-                  <Text style={styles.followingButtonText}>Following</Text>
+                  <Text
+                    style={[
+                      styles.followingButtonText,
+                      { color: theme.colors.primary },
+                    ]}
+                  >
+                    Following
+                  </Text>
                 )}
               </TouchableOpacity>
             </TouchableOpacity>
@@ -220,11 +275,19 @@ export default function FollowedOrgsList({
 
           {!isExpanded && hiddenCount > 0 && (
             <TouchableOpacity
-              style={styles.expandButton}
+              style={[
+                styles.expandButton,
+                { backgroundColor: theme.colors.surfaceMuted },
+              ]}
               onPress={() => setIsExpanded(true)}
               activeOpacity={0.7}
             >
-              <Text style={styles.expandButtonText}>
+              <Text
+                style={[
+                  styles.expandButtonText,
+                  { color: theme.colors.primary },
+                ]}
+              >
                 +{hiddenCount} more organization{hiddenCount !== 1 ? 's' : ''}
               </Text>
             </TouchableOpacity>
@@ -232,12 +295,26 @@ export default function FollowedOrgsList({
 
           {isExpanded && orgs.length > 2 && (
             <TouchableOpacity
-              style={styles.collapseButton}
+              style={[
+                styles.collapseButton,
+                { backgroundColor: theme.colors.surfaceMuted },
+              ]}
               onPress={() => setIsExpanded(false)}
               activeOpacity={0.7}
             >
-              <Text style={styles.collapseButtonText}>Show less</Text>
-              <Feather name="chevron-up" size={16} color="#718096" />
+              <Text
+                style={[
+                  styles.collapseButtonText,
+                  { color: theme.colors.textMuted },
+                ]}
+              >
+                Show less
+              </Text>
+              <Feather
+                name="chevron-up"
+                size={16}
+                color={theme.colors.textSoft}
+              />
             </TouchableOpacity>
           )}
         </>
@@ -248,11 +325,10 @@ export default function FollowedOrgsList({
 
 const styles = StyleSheet.create({
   sectionCard: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#000',
+    borderWidth: 1,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -300,13 +376,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#E9ECEF',
   },
   orgIconContainer: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: '#E8F5E9',
+    borderRadius: 12,
+    borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },

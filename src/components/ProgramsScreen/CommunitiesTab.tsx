@@ -14,6 +14,7 @@ import type { Organization } from '@/types'
 import CommunityItem from './CommunityItem'
 import SearchBar from '@/components/SearchBar/SearchBar'
 import LoadingAnimation from '@/components/Loading/Loading'
+import { useTheme } from '@/theme'
 
 const FILTER_OPTIONS = [
   { label: 'Masjid', value: 'masjid' },
@@ -32,20 +33,34 @@ const FilterModal = ({
   activeFilters,
   onToggle,
   onReset,
+  theme,
 }: {
   visible: boolean
   onClose: () => void
   activeFilters: string[]
   onToggle: (val: string) => void
   onReset: () => void
+  theme: ReturnType<typeof useTheme>['theme']
 }) => (
   <Modal visible={visible} animationType="slide" transparent>
-    <View style={styles.modalOverlay}>
-      <View style={styles.modalContent}>
+    <View
+      style={[styles.modalOverlay, { backgroundColor: theme.colors.overlay }]}
+    >
+      <View
+        style={[
+          styles.modalContent,
+          {
+            backgroundColor: theme.colors.surface,
+            borderColor: theme.colors.border,
+          },
+        ]}
+      >
         <View style={styles.modalHeader}>
-          <Text style={styles.modalTitle}>Filter Communities</Text>
+          <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
+            Filter Communities
+          </Text>
           <TouchableOpacity onPress={onClose}>
-            <Feather name="x" size={24} color="#4A5568" />
+            <Feather name="x" size={24} color={theme.colors.textMuted} />
           </TouchableOpacity>
         </View>
         <ScrollView style={styles.filterList}>
@@ -56,7 +71,15 @@ const FilterModal = ({
                 key={opt.value}
                 style={[
                   styles.filterOption,
+                  {
+                    backgroundColor: theme.colors.surfaceMuted,
+                    borderColor: theme.colors.borderSoft,
+                  },
                   isActive && styles.filterOptionActive,
+                  isActive && {
+                    backgroundColor: theme.colors.primary,
+                    borderColor: theme.colors.primary,
+                  },
                 ]}
                 onPress={() => onToggle(opt.value)}
                 activeOpacity={0.7}
@@ -64,6 +87,7 @@ const FilterModal = ({
                 <Text
                   style={[
                     styles.filterText,
+                    { color: theme.colors.textMuted },
                     isActive && styles.filterTextActive,
                   ]}
                 >
@@ -76,14 +100,27 @@ const FilterModal = ({
         </ScrollView>
         <View style={styles.modalFooter}>
           <TouchableOpacity
-            style={styles.resetButton}
+            style={[
+              styles.resetButton,
+              { backgroundColor: theme.colors.surfaceMuted },
+            ]}
             onPress={onReset}
             activeOpacity={0.7}
           >
-            <Text style={styles.resetButtonText}>Reset</Text>
+            <Text
+              style={[
+                styles.resetButtonText,
+                { color: theme.colors.textMuted },
+              ]}
+            >
+              Reset
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.applyButton}
+            style={[
+              styles.applyButton,
+              { backgroundColor: theme.colors.primary },
+            ]}
             onPress={onClose}
             activeOpacity={0.7}
           >
@@ -96,6 +133,7 @@ const FilterModal = ({
 )
 
 export default function CommunitiesTab() {
+  const { theme } = useTheme()
   // 1. New State to track if it is the very first load
   const [isFirstLoad, setIsFirstLoad] = useState(true)
   const [loading, setLoading] = useState(false)
@@ -166,7 +204,10 @@ export default function CommunitiesTab() {
     ) {
       return (
         <ScrollView
-          style={styles.scrollContainer}
+          style={[
+            styles.scrollContainer,
+            { backgroundColor: theme.colors.background },
+          ]}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
@@ -185,20 +226,35 @@ export default function CommunitiesTab() {
               />
             </View>
             <TouchableOpacity
-              style={styles.filterButton}
+              style={[
+                styles.filterButton,
+                {
+                  backgroundColor: theme.colors.surface,
+                  borderColor: theme.colors.border,
+                },
+              ]}
               onPress={() => setFilterVisible(true)}
               activeOpacity={0.7}
             >
-              <Feather name="sliders" size={20} color="#2D3748" />
+              <Feather name="sliders" size={20} color={theme.colors.text} />
               {activeFilters.length > 0 && (
-                <View style={styles.badge}>
+                <View
+                  style={[
+                    styles.badge,
+                    { backgroundColor: theme.colors.danger },
+                  ]}
+                >
                   <Text style={styles.badgeText}>{activeFilters.length}</Text>
                 </View>
               )}
             </TouchableOpacity>
           </View>
           <View style={styles.noResultsContainer}>
-            <Text style={styles.noResultsText}>No communities found</Text>
+            <Text
+              style={[styles.noResultsText, { color: theme.colors.textMuted }]}
+            >
+              No communities found
+            </Text>
           </View>
         </ScrollView>
       )
@@ -207,7 +263,10 @@ export default function CommunitiesTab() {
     // If we have results
     return (
       <ScrollView
-        style={styles.scrollContainer}
+        style={[
+          styles.scrollContainer,
+          { backgroundColor: theme.colors.background },
+        ]}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -226,13 +285,21 @@ export default function CommunitiesTab() {
             />
           </View>
           <TouchableOpacity
-            style={styles.filterButton}
+            style={[
+              styles.filterButton,
+              {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+              },
+            ]}
             onPress={() => setFilterVisible(true)}
             activeOpacity={0.7}
           >
-            <Feather name="sliders" size={20} color="#2D3748" />
+            <Feather name="sliders" size={20} color={theme.colors.text} />
             {activeFilters.length > 0 && (
-              <View style={styles.badge}>
+              <View
+                style={[styles.badge, { backgroundColor: theme.colors.danger }]}
+              >
                 <Text style={styles.badgeText}>{activeFilters.length}</Text>
               </View>
             )}
@@ -249,7 +316,9 @@ export default function CommunitiesTab() {
   }
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       {renderContent()}
 
       <FilterModal
@@ -258,6 +327,7 @@ export default function CommunitiesTab() {
         activeFilters={activeFilters}
         onToggle={handleToggleFilter}
         onReset={handleResetFilters}
+        theme={theme}
       />
     </View>
   )
@@ -351,6 +421,7 @@ const styles = StyleSheet.create({
     maxHeight: '80%',
     padding: 20,
     paddingBottom: 40,
+    borderWidth: 1,
   },
   modalHeader: {
     flexDirection: 'row',

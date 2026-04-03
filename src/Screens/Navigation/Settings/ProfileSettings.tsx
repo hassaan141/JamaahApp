@@ -19,10 +19,12 @@ import { useProfile } from '@/Auth/fetchProfile'
 import { updateProfile } from '@/Supabase/updateProfile'
 import { deleteAccount } from '@/Supabase/deleteAccount'
 import { toast } from '@/components/Toast/toast'
+import { useTheme } from '@/theme'
 
 export default function ProfileSettings() {
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
   const { profile, loading: profileLoading, refetch } = useProfile()
+  const { theme } = useTheme()
   const [loading, setLoading] = useState(false)
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
@@ -95,60 +97,113 @@ export default function ProfileSettings() {
 
   if (profileLoading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: theme.colors.background }]}
+      >
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#2F855A" />
-          <Text style={styles.loadingText}>Loading...</Text>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <Text style={[styles.loadingText, { color: theme.colors.textMuted }]}>
+            Loading...
+          </Text>
         </View>
       </SafeAreaView>
     )
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
-        <View style={styles.header}>
+        <View
+          style={[
+            styles.header,
+            {
+              backgroundColor: theme.colors.background,
+              borderBottomColor: theme.colors.border,
+            },
+          ]}
+        >
           <TouchableOpacity
             onPress={() => navigation.goBack()}
-            style={styles.backButton}
+            style={[
+              styles.backButton,
+              {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+              },
+            ]}
           >
-            <Feather name="arrow-left" size={24} color="#1D4732" />
+            <Feather name="arrow-left" size={20} color={theme.colors.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Profile Settings</Text>
+          <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
+            Profile Settings
+          </Text>
         </View>
 
         <ScrollView
           style={styles.scrollContainer}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.section}>
+          <View
+            style={[
+              styles.section,
+              {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+                shadowColor: theme.colors.shadow,
+              },
+            ]}
+          >
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>First Name</Text>
+              <Text style={[styles.label, { color: theme.colors.text }]}>
+                First Name
+              </Text>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  {
+                    borderColor: theme.colors.border,
+                    backgroundColor: theme.colors.surfaceMuted,
+                    color: theme.colors.text,
+                  },
+                ]}
                 value={firstName}
                 onChangeText={setFirstName}
                 placeholder="Enter your first name"
-                placeholderTextColor="#999"
+                placeholderTextColor={theme.colors.textSoft}
               />
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Last Name</Text>
+              <Text style={[styles.label, { color: theme.colors.text }]}>
+                Last Name
+              </Text>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  {
+                    borderColor: theme.colors.border,
+                    backgroundColor: theme.colors.surfaceMuted,
+                    color: theme.colors.text,
+                  },
+                ]}
                 value={lastName}
                 onChangeText={setLastName}
                 placeholder="Enter your last name"
-                placeholderTextColor="#999"
+                placeholderTextColor={theme.colors.textSoft}
               />
             </View>
 
             <TouchableOpacity
-              style={[styles.button, styles.primaryButton]}
+              style={[
+                styles.button,
+                styles.primaryButton,
+                { backgroundColor: theme.colors.primary },
+              ]}
               onPress={handleUpdateProfile}
               disabled={loading}
             >
@@ -160,7 +215,16 @@ export default function ProfileSettings() {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.dangerSection}>
+          <View
+            style={[
+              styles.dangerSection,
+              {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+                shadowColor: theme.colors.shadow,
+              },
+            ]}
+          >
             <View style={styles.dangerHeader}>
               <Feather name="alert-triangle" size={20} color="#E53E3E" />
               <Text style={styles.dangerTitle}>Danger Zone</Text>
@@ -195,12 +259,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#E9ECEF',
   },
   backButton: {
-    padding: 8,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 8,
   },
   headerTitle: {
@@ -213,10 +280,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   section: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
     marginTop: 16,
+    borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -234,13 +301,10 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: '#E9ECEF',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 12,
     fontSize: 16,
-    color: '#495057',
-    backgroundColor: '#FFFFFF',
   },
   button: {
     paddingVertical: 12,
@@ -268,10 +332,10 @@ const styles = StyleSheet.create({
     color: '#6C757D',
   },
   dangerSection: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     marginTop: 16,
     padding: 16,
+    borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,

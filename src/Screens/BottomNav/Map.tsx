@@ -9,17 +9,20 @@ import {
   RefreshControl,
 } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import DetailedMap from '@/components/Map/DetailedMap'
 import SearchBar from '@/components/SearchBar/SearchBar'
 import MapHeader from '@/components/Map/MapHeader'
 import MapTabs from '@/components/Map/MapTabs'
 import CompactMapView from '@/components/Map/CompactMapView'
+import EventFilterControl from '@/components/Map/EventFilterControl'
 import MasjidList from '@/components/Map/MasjidList'
 import EventList from '@/components/Map/EventList'
 import NoResults from '@/components/Map/NoResults'
 import { useLocation } from '@/Utils/useLocation'
 import MiniLoading from '@/components/Loading/MiniLoading'
 import { openDirections, openCall } from '@/Utils/links'
+import { useTheme } from '@/theme'
 
 // 1. Import your new hooks and types
 import { useMasjidList, type MasjidItem } from '@/Hooks/useMasjidList'
@@ -30,6 +33,8 @@ import type { EventItem } from '@/Supabase/fetchEventsFromRPC' // <--- NEW: Impo
 type EventListEvent = Omit<EventItem, 'dist_km'>
 
 export default function MapScreen() {
+  const insets = useSafeAreaInsets()
+  const { theme } = useTheme()
   const [isExpanded, setIsExpanded] = useState(false)
   const [mapMode, setMapMode] = useState<'masjids' | 'events'>('events')
 
@@ -39,10 +44,15 @@ export default function MapScreen() {
   const fadeAnim = useRef(new Animated.Value(1)).current
   const slideAnim = useRef(new Animated.Value(0)).current
   const { location } = useLocation()
+  const [eventPostTypeFilter, setEventPostTypeFilter] = useState<string | null>(
+    null,
+  )
 
   // 3. Initialize BOTH hooks
   const masjidLogic = useMasjidList(location)
-  const eventLogic = useEventList(location) // <--- NEW: Init event logic
+  const eventLogic = useEventList(location, {
+    postType: eventPostTypeFilter,
+  }) // <--- NEW: Init event logic
 
   // 4. Create "Dynamic" variables based on the current mode
   // This acts as the "Traffic Controller" for your UI
@@ -174,26 +184,60 @@ export default function MapScreen() {
 
   if (isExpanded) {
     return (
-      <Animated.View style={[styles.expandedContainer, { opacity: fadeAnim }]}>
-        <View style={styles.expandedHeader}>
-          <TouchableOpacity style={styles.backButton} onPress={collapseMap}>
-            <Feather name="chevron-left" size={24} color="#2D3748" />
-          </TouchableOpacity>
-          <Text style={styles.expandedTitle}>Map</Text>
-          <View style={styles.placeholder} />
-        </View>
-        <View style={{ backgroundColor: '#fff' }}>
-          <MapTabs selectedTab={mapMode} onTabChange={setMapMode} />
-        </View>
+      <Animated.View
+        style={[
+          styles.expandedContainer,
+          { opacity: fadeAnim, backgroundColor: theme.colors.background },
+        ]}
+      >
         <View style={styles.expandedMapContainer}>
           <DetailedMap mode={mapMode} />
+        </View>
+        <View
+          style={[
+            styles.expandedOverlayTop,
+            { paddingTop: Math.max(insets.top, 12) },
+          ]}
+          pointerEvents="box-none"
+        >
+          <View style={styles.expandedOverlayRow}>
+            <TouchableOpacity
+              style={[
+                styles.floatingBackButton,
+                {
+                  backgroundColor: theme.colors.surface,
+                  borderColor: theme.colors.border,
+                },
+              ]}
+              onPress={collapseMap}
+              activeOpacity={0.9}
+            >
+              <Feather
+                name="chevron-left"
+                size={20}
+                color={theme.colors.text}
+              />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.expandedOverlayRow}>
+            <MapTabs
+              selectedTab={mapMode}
+              onTabChange={setMapMode}
+              floating={true}
+            />
+          </View>
         </View>
       </Animated.View>
     )
   }
 
   return (
-    <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
+    <Animated.View
+      style={[
+        styles.container,
+        { opacity: fadeAnim, backgroundColor: theme.colors.background },
+      ]}
+    >
       <ScrollView
         style={styles.content}
         refreshControl={
@@ -207,19 +251,37 @@ export default function MapScreen() {
       >
         <View style={styles.searchContainer}>
           {/* 5. Update Search Bar to use Unified Handlers */}
-          <SearchBar
-            value={currentSearchQuery}
-            onChangeText={handleUnifiedSearch}
-            onClear={handleUnifiedClear}
-            placeholder={
-              isMasjidMode
-                ? 'Search for masjids nearby...'
-                : "Search events ('Quran', 'Sisters')..."
-            }
-          />
+          <View style={styles.searchRow}>
+            <View style={styles.searchBarWrapper}>
+              <SearchBar
+                value={currentSearchQuery}
+                onChangeText={handleUnifiedSearch}
+                onClear={handleUnifiedClear}
+                placeholder={
+                  isMasjidMode
+                    ? 'Search for masjids nearby...'
+                    : "Search events ('Quran', 'Sisters')..."
+                }
+              />
+            </View>
+            {!isMasjidMode && (
+              <EventFilterControl
+                value={eventPostTypeFilter}
+                onChange={setEventPostTypeFilter}
+              />
+            )}
+          </View>
         </View>
 
-        <View style={styles.compactMapContainer}>
+        <View
+          style={[
+            styles.compactMapContainer,
+            {
+              backgroundColor: theme.colors.surface,
+              shadowColor: theme.colors.shadow,
+            },
+          ]}
+        >
           <MapHeader
             onExpand={expandMap}
             selectedTab={mapMode}
@@ -229,30 +291,58 @@ export default function MapScreen() {
         </View>
 
         {currentLoading && (
-          <View style={styles.loadingContainer}>
+          <View
+            style={[
+              styles.loadingContainer,
+              {
+                backgroundColor: theme.colors.surface,
+                shadowColor: theme.colors.shadow,
+              },
+            ]}
+          >
             <MiniLoading />
-            <Text style={styles.loadingText}>
+            <Text
+              style={[styles.loadingText, { color: theme.colors.textMuted }]}
+            >
               {isMasjidMode ? 'Loading masjids...' : 'Loading events...'}
             </Text>
           </View>
         )}
 
         {currentError && (
-          <View style={styles.errorContainer}>
+          <View
+            style={[
+              styles.errorContainer,
+              {
+                backgroundColor: theme.colors.surface,
+                shadowColor: theme.colors.shadow,
+              },
+            ]}
+          >
             <Text style={styles.errorText}>{currentError}</Text>
           </View>
         )}
 
         {!currentLoading && !currentError && (
-          <View style={styles.masjidListContainer}>
-            <Text style={styles.masjidListTitle}>
+          <View
+            style={[
+              styles.masjidListContainer,
+              {
+                backgroundColor: theme.colors.surface,
+                shadowColor: theme.colors.shadow,
+              },
+            ]}
+          >
+            <Text
+              style={[styles.masjidListTitle, { color: theme.colors.text }]}
+            >
               {isMasjidMode
                 ? currentSearchQuery
                   ? `Search Results (${masjidLogic.filteredMasjids.length})`
                   : 'Nearest Masjids'
                 : currentSearchQuery
                   ? `Search Results (${eventLogic.events.length})`
-                  : 'Upcoming Events & Classes'}
+                  : 'Upcoming Near You'}
             </Text>
 
             {/* 6. Render the Correct List based on mode */}
@@ -281,8 +371,6 @@ export default function MapScreen() {
               <NoResults message="No events found" />
             ) : (
               <EventList
-                // We slice(0,3) because this is just the "Preview" list
-                // The full list would be in a separate "See All" screen or similar
                 items={eventLogic.events.slice(0, 3)}
                 onPress={handleEventPress}
                 onDirections={handleEventDirections}
@@ -300,6 +388,14 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F7FAFC' },
   content: { flex: 1 },
   searchContainer: { padding: 20, paddingBottom: 10, marginTop: 40 },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  searchBarWrapper: {
+    flex: 1,
+  },
   compactMapContainer: {
     backgroundColor: '#FFFFFF',
     marginHorizontal: 20,
@@ -385,17 +481,28 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 16,
   },
-  expandedContainer: { flex: 1, backgroundColor: '#F7FAFC' },
-  expandedHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    backgroundColor: '#FFFFFF',
-  },
-  backButton: { padding: 4 },
-  expandedTitle: { fontSize: 18, fontWeight: '600', color: '#2D3748' },
-  placeholder: { width: 32 },
+  expandedContainer: { flex: 1, backgroundColor: '#000000' },
   expandedMapContainer: { flex: 1 },
+  expandedOverlayTop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 16,
+    gap: 12,
+  },
+  expandedOverlayRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+  },
+  floatingBackButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.96)',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 })

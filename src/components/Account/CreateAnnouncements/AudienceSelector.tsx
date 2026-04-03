@@ -1,5 +1,6 @@
 import React from 'react'
 import { View, Text, TouchableOpacity } from 'react-native'
+import { useTheme } from '@/theme'
 
 interface AudienceSelectorProps {
   demographic: string | null
@@ -10,6 +11,7 @@ export default function AudienceSelector({
   demographic,
   setDemographic,
 }: AudienceSelectorProps) {
+  const { theme } = useTheme()
   const audiences = [
     { label: 'Men', value: 'Brothers' },
     { label: 'Women', value: 'Sisters' },
@@ -22,7 +24,7 @@ export default function AudienceSelector({
         style={{
           fontSize: 14,
           fontWeight: '600',
-          color: '#1D4732',
+          color: theme.colors.text,
           marginBottom: 8,
         }}
       >
@@ -36,8 +38,12 @@ export default function AudienceSelector({
               key={opt.value}
               onPress={() => setDemographic(active ? null : opt.value)}
               style={{
-                backgroundColor: active ? '#2F855A' : '#F8F9FA',
-                borderColor: active ? '#2F855A' : '#DEE2E6',
+                backgroundColor: active
+                  ? theme.colors.primary
+                  : theme.colors.surfaceMuted,
+                borderColor: active
+                  ? theme.colors.primary
+                  : theme.colors.border,
                 borderWidth: 1,
                 borderRadius: 16,
                 paddingVertical: 6,
@@ -48,7 +54,7 @@ export default function AudienceSelector({
             >
               <Text
                 style={{
-                  color: active ? '#FFFFFF' : '#1D4732',
+                  color: active ? theme.colors.surface : theme.colors.text,
                   fontSize: 13,
                   fontWeight: '600',
                 }}

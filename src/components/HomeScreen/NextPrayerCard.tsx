@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { View, Text, StyleSheet } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
+import { useTheme } from '@/theme'
 
 export interface PrayerTimes {
   fajr_azan: string
@@ -23,6 +24,7 @@ interface NextPrayerCardProps {
 }
 
 const NextPrayerCard: React.FC<NextPrayerCardProps> = ({ prayerTimes }) => {
+  const { theme } = useTheme()
   const [nextPrayer, setNextPrayer] = useState<{
     name: string
     adhan: string
@@ -32,7 +34,21 @@ const NextPrayerCard: React.FC<NextPrayerCardProps> = ({ prayerTimes }) => {
 
   if (!prayerTimes) {
     return (
-      <View style={styles.nextPrayerCard}>
+      <View
+        style={[
+          styles.nextPrayerCard,
+          {
+            backgroundColor:
+              theme.mode === 'dark'
+                ? theme.colors.primarySoft
+                : theme.colors.primary,
+            borderColor:
+              theme.mode === 'dark'
+                ? theme.colors.primaryBorder
+                : 'transparent',
+          },
+        ]}
+      >
         <View style={styles.leftSection}>
           <Feather name="clock" size={20} color="#FFFFFF" />
         </View>
@@ -190,7 +206,19 @@ const NextPrayerCard: React.FC<NextPrayerCardProps> = ({ prayerTimes }) => {
   }, [prayerTimes])
 
   return (
-    <View style={styles.nextPrayerCard}>
+    <View
+      style={[
+        styles.nextPrayerCard,
+        {
+          backgroundColor:
+            theme.mode === 'dark'
+              ? theme.colors.primarySoft
+              : theme.colors.primary,
+          borderColor:
+            theme.mode === 'dark' ? theme.colors.primaryBorder : 'transparent',
+        },
+      ]}
+    >
       <View style={styles.leftSection}>
         <Feather name="clock" size={20} color="#FFFFFF" />
       </View>
@@ -214,11 +242,11 @@ const NextPrayerCard: React.FC<NextPrayerCardProps> = ({ prayerTimes }) => {
 
 const styles = StyleSheet.create({
   nextPrayerCard: {
-    backgroundColor: '#50b962ff',
     padding: 15,
     marginHorizontal: 20,
     marginBottom: 20,
     borderRadius: 10,
+    borderWidth: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',

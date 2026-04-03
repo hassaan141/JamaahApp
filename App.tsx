@@ -5,6 +5,7 @@ import {
   Text,
   TouchableOpacity,
   ActivityIndicator,
+  useColorScheme,
 } from 'react-native'
 import { NavigationContainer, CommonActions } from '@react-navigation/native'
 import type { NavigationContainerRef } from '@react-navigation/native'
@@ -20,22 +21,43 @@ import { AuthProvider, useAuth } from './src/Auth/AuthProvider'
 import ToastHost from './src/components/Toast/ToastHost'
 import ForceUpdateScreen from './src/Screens/Navigation/ForceUpdateScreen'
 import { checkForForcedUpdate } from './src/Utils/checkForForcedUpdate'
+import { ThemeProvider, useTheme } from './src/theme'
+import { darkTheme } from './src/theme/dark'
+import { lightTheme } from './src/theme/light'
 
 const ONBOARDING_COMPLETE_KEY = '@jamaah_onboarding_complete'
 
 SplashScreen.preventAutoHideAsync().catch(() => {})
 
 const CustomFallback = (props: { error: Error; resetError: () => void }) => (
-  <View style={styles.errorContainer}>
-    <Text style={styles.errorTitle}>Something went wrong</Text>
-    <Text style={styles.errorText}>
-      The app encountered an unexpected error.
-    </Text>
-    <TouchableOpacity style={styles.resetButton} onPress={props.resetError}>
-      <Text style={styles.resetButtonText}>Try Again</Text>
-    </TouchableOpacity>
-  </View>
+  <ThemedFallback {...props} />
 )
+
+function ThemedFallback(props: { error: Error; resetError: () => void }) {
+  const { theme } = useTheme()
+
+  return (
+    <View
+      style={[
+        styles.errorContainer,
+        { backgroundColor: theme.colors.background },
+      ]}
+    >
+      <Text style={[styles.errorTitle, { color: theme.colors.text }]}>
+        Something went wrong
+      </Text>
+      <Text style={[styles.errorText, { color: theme.colors.textMuted }]}>
+        The app encountered an unexpected error.
+      </Text>
+      <TouchableOpacity
+        style={[styles.resetButton, { backgroundColor: theme.colors.primary }]}
+        onPress={props.resetError}
+      >
+        <Text style={styles.resetButtonText}>Try Again</Text>
+      </TouchableOpacity>
+    </View>
+  )
+}
 
 // Navigation ref for handling auth state changes
 const navigationRef =
@@ -43,6 +65,7 @@ const navigationRef =
 
 function AppNavigator() {
   const { loading, session } = useAuth()
+  const { theme } = useTheme()
   const [onboardingChecked, setOnboardingChecked] = useState(false)
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false)
   const prevSessionRef = useRef(session)
@@ -99,7 +122,10 @@ function AppNavigator() {
   const initialRoute = session || hasCompletedOnboarding ? 'Tabs' : 'Welcome'
 
   return (
-    <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+    <View
+      style={{ flex: 1, backgroundColor: theme.colors.background }}
+      onLayout={onLayoutRootView}
+    >
       <NavigationContainer ref={navigationRef}>
         <RootNavigator initialRouteName={initialRoute} />
       </NavigationContainer>
@@ -108,8 +134,10 @@ function AppNavigator() {
 }
 
 export default function App() {
+  const colorScheme = useColorScheme()
   const [checkingUpdate, setCheckingUpdate] = useState(true)
   const [forceUpdate, setForceUpdate] = useState(false)
+  const bootTheme = colorScheme === 'dark' ? darkTheme : lightTheme
 
   useEffect(() => {
     let didTimeout = false
@@ -138,8 +166,15 @@ export default function App() {
 
   if (checkingUpdate) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" />
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: bootTheme.colors.background,
+        }}
+      >
+        <ActivityIndicator size="large" color={bootTheme.colors.primary} />
       </View>
     )
   }
@@ -150,12 +185,14 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <ErrorBoundary FallbackComponent={CustomFallback}>
-        <AuthProvider>
-          <AppNavigator />
-          <ToastHost />
-        </AuthProvider>
-      </ErrorBoundary>
+      <ThemeProvider>
+        <ErrorBoundary FallbackComponent={CustomFallback}>
+          <AuthProvider>
+            <AppNavigator />
+            <ToastHost />
+          </AuthProvider>
+        </ErrorBoundary>
+      </ThemeProvider>
     </SafeAreaProvider>
   )
 }

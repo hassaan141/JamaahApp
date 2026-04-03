@@ -2,6 +2,7 @@ import React from 'react'
 import type { TextInputProps } from 'react-native'
 import { View, TextInput, TouchableOpacity, StyleSheet } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
+import { useTheme } from '@/theme'
 
 export default function SearchBar({
   value,
@@ -16,20 +17,31 @@ export default function SearchBar({
   placeholder?: string
   onSubmitEditing?: TextInputProps['onSubmitEditing']
 }) {
+  const { theme } = useTheme()
+
   return (
     <View style={styles.container}>
-      <View style={styles.searchCard}>
+      <View
+        style={[
+          styles.searchCard,
+          {
+            backgroundColor: theme.colors.surface,
+            borderColor: theme.colors.border,
+            shadowColor: theme.colors.shadow,
+          },
+        ]}
+      >
         <View style={styles.inputRow}>
           <Feather
             name="search"
             size={20}
-            color="#64748b"
+            color={theme.colors.textSoft}
             style={styles.searchIcon}
           />
           <TextInput
-            style={styles.input}
+            style={[styles.input, { color: theme.colors.text }]}
             placeholder={placeholder}
-            placeholderTextColor="#94a3b8"
+            placeholderTextColor={theme.colors.textSoft}
             value={value}
             onChangeText={onChangeText}
             onSubmitEditing={onSubmitEditing}
@@ -40,7 +52,7 @@ export default function SearchBar({
               style={styles.clearBtn}
               activeOpacity={0.7}
             >
-              <Feather name="x" size={18} color="#64748b" />
+              <Feather name="x" size={18} color={theme.colors.textSoft} />
             </TouchableOpacity>
           )}
         </View>
@@ -52,9 +64,8 @@ export default function SearchBar({
 const styles = StyleSheet.create({
   container: { paddingHorizontal: 0 },
   searchCard: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    shadowColor: '#000',
+    borderWidth: 1,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 8,
@@ -68,6 +79,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   searchIcon: { marginRight: 12 },
-  input: { flex: 1, fontSize: 16, color: '#1e293b', paddingVertical: 0 },
+  input: { flex: 1, fontSize: 16, paddingVertical: 0 },
   clearBtn: { padding: 4, marginLeft: 8 },
 })

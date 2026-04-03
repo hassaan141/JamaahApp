@@ -25,18 +25,13 @@ import {
 } from '@/Utils/pushNotifications'
 import type { NotificationPreference } from '@/types/supabase'
 import type { RootStackParamList } from '@/Screens/Navigation/RootNavigator'
+import { useTheme } from '@/theme'
 
 export default function Notifications() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>()
   const { session } = useAuth()
   const { profile, loading: profileLoading, refetch } = useProfile()
-
-  // Guest mode: Redirect to sign-in
-  useEffect(() => {
-    if (!session) {
-      navigation.replace('SignIn')
-    }
-  }, [session, navigation])
+  const { theme } = useTheme()
   const [loading, setLoading] = useState(false)
   const [notificationType, setNotificationType] =
     useState<NotificationPreference>('Event_Adhan')
@@ -147,11 +142,84 @@ export default function Notifications() {
     }
   }
 
+  if (!session) {
+    return (
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: theme.colors.background }]}
+      >
+        <View
+          style={[
+            styles.header,
+            {
+              backgroundColor: theme.colors.background,
+              borderBottomColor: theme.colors.border,
+            },
+          ]}
+        >
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={[
+              styles.backButton,
+              {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+              },
+            ]}
+          >
+            <Feather name="arrow-left" size={20} color={theme.colors.text} />
+          </TouchableOpacity>
+          <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
+            Notifications
+          </Text>
+        </View>
+
+        <View style={styles.guestContainer}>
+          <View
+            style={[
+              styles.guestCard,
+              {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+                shadowColor: theme.colors.shadow,
+              },
+            ]}
+          >
+            <View
+              style={[
+                styles.guestIconCircle,
+                { backgroundColor: theme.colors.primarySoft },
+              ]}
+            >
+              <Feather name="bell" size={22} color={theme.colors.primary} />
+            </View>
+            <Text style={[styles.guestTitle, { color: theme.colors.text }]}>
+              Sign in to get notifications
+            </Text>
+            <Text style={[styles.guestText, { color: theme.colors.textMuted }]}>
+              Create an account to enable prayer time and event alerts.
+            </Text>
+            <TouchableOpacity
+              style={[
+                styles.guestSignInButton,
+                { backgroundColor: theme.colors.primary },
+              ]}
+              onPress={() => navigation.navigate('SignIn')}
+            >
+              <Text style={styles.guestSignInButtonText}>Sign In</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </SafeAreaView>
+    )
+  }
+
   if (profileLoading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: theme.colors.background }]}
+      >
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#2F855A" />
+          <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       </SafeAreaView>
     )
@@ -159,15 +227,33 @@ export default function Notifications() {
 
   // ... (Rest of your JSX is exactly the same as before) ...
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
+      <View
+        style={[
+          styles.header,
+          {
+            backgroundColor: theme.colors.background,
+            borderBottomColor: theme.colors.border,
+          },
+        ]}
+      >
         <TouchableOpacity
           onPress={() => navigation.goBack()}
-          style={styles.backButton}
+          style={[
+            styles.backButton,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+            },
+          ]}
         >
-          <Feather name="arrow-left" size={24} color="#1D4732" />
+          <Feather name="arrow-left" size={20} color={theme.colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Notifications</Text>
+        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
+          Notifications
+        </Text>
       </View>
 
       <ScrollView
@@ -176,10 +262,21 @@ export default function Notifications() {
       >
         {permissionStatus === 'denied' && (
           <TouchableOpacity
-            style={styles.permissionBanner}
+            style={[
+              styles.permissionBanner,
+              {
+                backgroundColor: '#4A2626',
+                borderColor: '#7F3434',
+              },
+            ]}
             onPress={openSettings}
           >
-            <View style={styles.permissionIconContainer}>
+            <View
+              style={[
+                styles.permissionIconContainer,
+                { backgroundColor: '#6B2D2D' },
+              ]}
+            >
               <Feather name="bell-off" size={24} color="#DC2626" />
             </View>
             <View style={styles.permissionTextContainer}>
@@ -188,16 +285,33 @@ export default function Notifications() {
                 Tap here to enable notifications in Settings
               </Text>
             </View>
-            <Feather name="external-link" size={20} color="#6C757D" />
+            <Feather
+              name="external-link"
+              size={20}
+              color={theme.colors.textSoft}
+            />
           </TouchableOpacity>
         )}
 
-        <View style={styles.section}>
+        <View
+          style={[
+            styles.section,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+              shadowColor: theme.colors.shadow,
+            },
+          ]}
+        >
           <View style={styles.sectionHeader}>
-            <Feather name="bell" size={20} color="#2F855A" />
-            <Text style={styles.sectionTitle}>Notification Preferences</Text>
+            <Feather name="bell" size={20} color={theme.colors.primary} />
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+              Notification Preferences
+            </Text>
           </View>
-          <Text style={styles.sectionSubtitle}>
+          <Text
+            style={[styles.sectionSubtitle, { color: theme.colors.textMuted }]}
+          >
             {permissionStatus === 'denied'
               ? 'Enable notifications in Settings to receive alerts'
               : "Choose what notifications you'd like to receive"}
@@ -208,7 +322,15 @@ export default function Notifications() {
               key={option.type}
               style={[
                 styles.optionCard,
+                {
+                  borderColor: theme.colors.border,
+                  backgroundColor: theme.colors.surfaceMuted,
+                },
                 notificationType === option.type && styles.selectedOption,
+                notificationType === option.type && {
+                  borderColor: theme.colors.primaryBorder,
+                  backgroundColor: theme.colors.primarySoft,
+                },
                 permissionStatus === 'denied' && styles.optionDisabled,
               ]}
               onPress={() => setNotificationType(option.type)}
@@ -224,8 +346,17 @@ export default function Notifications() {
                   <Feather name={option.icon} size={24} color={option.color} />
                 </View>
                 <View style={styles.optionText}>
-                  <Text style={styles.optionTitle}>{option.title}</Text>
-                  <Text style={styles.optionDescription}>
+                  <Text
+                    style={[styles.optionTitle, { color: theme.colors.text }]}
+                  >
+                    {option.title}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.optionDescription,
+                      { color: theme.colors.textMuted },
+                    ]}
+                  >
                     {option.description}
                   </Text>
                 </View>
@@ -233,11 +364,20 @@ export default function Notifications() {
                   <View
                     style={[
                       styles.radioOuter,
+                      { borderColor: theme.colors.border },
                       notificationType === option.type && styles.radioSelected,
+                      notificationType === option.type && {
+                        borderColor: theme.colors.primary,
+                      },
                     ]}
                   >
                     {notificationType === option.type && (
-                      <View style={styles.radioInner} />
+                      <View
+                        style={[
+                          styles.radioInner,
+                          { backgroundColor: theme.colors.primary },
+                        ]}
+                      />
                     )}
                   </View>
                 </View>
@@ -249,6 +389,10 @@ export default function Notifications() {
         <TouchableOpacity
           style={[
             styles.saveButton,
+            {
+              backgroundColor: theme.colors.primary,
+              shadowColor: theme.colors.shadow,
+            },
             (loading || permissionStatus === 'denied') &&
               styles.saveButtonDisabled,
           ]}
@@ -280,12 +424,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#E9ECEF',
   },
   backButton: {
-    padding: 8,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 8,
   },
   headerTitle: {
@@ -298,10 +445,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   section: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
     marginTop: 16,
+    borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -327,16 +474,11 @@ const styles = StyleSheet.create({
   },
   optionCard: {
     borderWidth: 1,
-    borderColor: '#E9ECEF',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    backgroundColor: '#FAFAFA',
   },
-  selectedOption: {
-    borderColor: '#2F855A',
-    backgroundColor: '#F0FDF4',
-  },
+  selectedOption: {},
   optionContent: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -442,6 +584,55 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  guestContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  },
+  guestCard: {
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingVertical: 28,
+    paddingHorizontal: 22,
+    alignItems: 'center',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    elevation: 3,
+  },
+  guestIconCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  guestTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  guestText: {
+    fontSize: 15,
+    lineHeight: 22,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  guestSignInButton: {
+    minWidth: 140,
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  guestSignInButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
   },
   loadingText: {
     marginTop: 12,

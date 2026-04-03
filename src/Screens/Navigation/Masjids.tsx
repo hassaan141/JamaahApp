@@ -19,6 +19,7 @@ import SearchBar from '@/components/SearchBar/SearchBar'
 import MasjidListItem from '@/components/MasjidScreen/MasjidListItem'
 import LoadingAnimation from '@/components/Loading/Loading'
 import { toast } from '@/components/Toast/toast'
+import { useTheme } from '@/theme'
 
 interface NavProps {
   navigation: { goBack: () => void }
@@ -33,6 +34,7 @@ type MasjidItem = {
 }
 
 const Masjids: React.FC<NavProps> = ({ navigation, route }) => {
+  const { theme } = useTheme()
   const showBackButton = !!route?.params?.showBackButton
 
   const [location, setLocation] = useState<{
@@ -66,7 +68,7 @@ const Masjids: React.FC<NavProps> = ({ navigation, route }) => {
         const list = await fetchNearbyMasjids(
           coords.latitude,
           coords.longitude,
-          { q: '', limit: 15 },
+          { q: '', limit: 100 },
         )
         setMasjids(list)
       } catch (err) {
@@ -88,7 +90,7 @@ const Masjids: React.FC<NavProps> = ({ navigation, route }) => {
         const list = await fetchNearbyMasjids(
           coords.latitude,
           coords.longitude,
-          { q: text, limit: 15 },
+          { q: text, limit: 100 },
         )
         setMasjids(list)
       } catch (e) {
@@ -103,7 +105,7 @@ const Masjids: React.FC<NavProps> = ({ navigation, route }) => {
       const coords = location || DEFAULT_LOCATION
       const list = await fetchNearbyMasjids(coords.latitude, coords.longitude, {
         q: '',
-        limit: 15,
+        limit: 100,
       })
       setMasjids(list)
     } catch (e) {
@@ -117,7 +119,7 @@ const Masjids: React.FC<NavProps> = ({ navigation, route }) => {
       const coords = location || DEFAULT_LOCATION
       const list = await fetchNearbyMasjids(coords.latitude, coords.longitude, {
         q,
-        limit: 15,
+        limit: 100,
       })
       setMasjids(list)
     } catch (e) {
@@ -154,9 +156,17 @@ const Masjids: React.FC<NavProps> = ({ navigation, route }) => {
 
   if (loading) {
     return (
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
         <LoadingAnimation />
-        <Text style={{ textAlign: 'center', marginTop: 16 }}>Loading…</Text>
+        <Text
+          style={{
+            textAlign: 'center',
+            marginTop: 16,
+            color: theme.colors.textMuted,
+          }}
+        >
+          Loading…
+        </Text>
       </View>
     )
   }
@@ -164,21 +174,30 @@ const Masjids: React.FC<NavProps> = ({ navigation, route }) => {
   const hasNoResults = masjids.length === 0
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       <View style={styles.header}>
         <View style={styles.headerRow}>
           {showBackButton && (
             <TouchableOpacity
               onPress={() => navigation.goBack()}
-              style={styles.backButton}
+              style={[
+                styles.backButton,
+                {
+                  backgroundColor: theme.colors.surface,
+                  borderColor: theme.colors.border,
+                },
+              ]}
             >
-              <Feather name="arrow-left" size={24} color="#1D4732" />
+              <Feather name="arrow-left" size={20} color={theme.colors.text} />
             </TouchableOpacity>
           )}
           <Text
             style={[
               styles.headerTitle,
               showBackButton && styles.headerTitleWithBack,
+              { color: theme.colors.text },
             ]}
           >
             {showBackButton ? 'Choose Masjid' : 'Nearby Masjids'}
@@ -188,7 +207,11 @@ const Masjids: React.FC<NavProps> = ({ navigation, route }) => {
 
       {!!error && (
         <Text
-          style={{ color: '#E53E3E', textAlign: 'center', marginBottom: 8 }}
+          style={{
+            color: theme.colors.danger,
+            textAlign: 'center',
+            marginBottom: 8,
+          }}
         >
           {error}
         </Text>
@@ -209,14 +232,17 @@ const Masjids: React.FC<NavProps> = ({ navigation, route }) => {
             />
           </View>
           <View style={styles.emptyWrap}>
-            <Feather name="search" size={48} color="#CBD5E0" />
-            <Text style={styles.emptyText}>
+            <Feather name="search" size={48} color={theme.colors.textSoft} />
+            <Text style={[styles.emptyText, { color: theme.colors.textMuted }]}>
               {q.trim() ? `No masjids found for "${q}"` : 'No masjids found'}
             </Text>
             {!!q.trim() && (
               <TouchableOpacity
                 onPress={clearSearch}
-                style={styles.clearSearchButton}
+                style={[
+                  styles.clearSearchButton,
+                  { backgroundColor: theme.colors.primary },
+                ]}
               >
                 <Text style={styles.clearSearchText}>Clear search</Text>
               </TouchableOpacity>
@@ -245,8 +271,16 @@ const Masjids: React.FC<NavProps> = ({ navigation, route }) => {
                   onPress={() => onSelectMasjid(item.id)}
                 />
                 {selectingId === item.id && (
-                  <View style={styles.loadingOverlay}>
-                    <ActivityIndicator size="small" color="#228f2bff" />
+                  <View
+                    style={[
+                      styles.loadingOverlay,
+                      { backgroundColor: theme.colors.overlay },
+                    ]}
+                  >
+                    <ActivityIndicator
+                      size="small"
+                      color={theme.colors.primary}
+                    />
                   </View>
                 )}
               </View>
@@ -259,7 +293,7 @@ const Masjids: React.FC<NavProps> = ({ navigation, route }) => {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F7FAFC', padding: 10 },
+  container: { flex: 1, padding: 10 },
   header: {
     padding: 20,
     paddingTop: 50,
@@ -268,13 +302,17 @@ const styles = StyleSheet.create({
   },
   headerRow: { flexDirection: 'row', alignItems: 'center' },
   backButton: {
-    padding: 8,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 8,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1D4732',
   },
   headerTitleWithBack: { textAlign: 'left', flex: 1 },
   scrollContent: { flexGrow: 1 },
@@ -288,13 +326,11 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#718096',
     textAlign: 'center',
     marginTop: 16,
     marginBottom: 20,
   },
   clearSearchButton: {
-    backgroundColor: '#48BB78',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,
@@ -309,7 +345,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.85)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 10,

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { View, Text, StyleSheet } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
 import type { DailyPrayerTimes } from '@/Utils/prayerTimes'
+import { useTheme } from '@/theme'
 
 interface JummahCardProps {
   prayerTimes: DailyPrayerTimes | null
@@ -9,6 +10,7 @@ interface JummahCardProps {
 }
 
 export default function JummahCard({ prayerTimes, org }: JummahCardProps) {
+  const { theme } = useTheme()
   const [isVisible, setIsVisible] = useState(false)
   const [futureJummahs, setFutureJummahs] = useState<string[]>([])
 
@@ -141,17 +143,46 @@ export default function JummahCard({ prayerTimes, org }: JummahCardProps) {
   }
 
   return (
-    <View style={styles.card}>
+    <View
+      style={[
+        styles.card,
+        {
+          backgroundColor: theme.colors.surface,
+          borderColor: theme.colors.border,
+          shadowColor: theme.colors.shadow,
+        },
+      ]}
+    >
       <View style={styles.header}>
         <Feather name="sun" size={18} color="#D69E2E" />
-        <Text style={styles.title}>Jummah Times</Text>
-        <Text style={styles.orgName}>{org?.name}</Text>
+        <Text style={[styles.title, { color: theme.colors.text }]}>
+          Jummah Times
+        </Text>
+        <Text style={[styles.orgName, { color: theme.colors.textMuted }]}>
+          {org?.name}
+        </Text>
       </View>
 
       <View style={styles.timesContainer}>
         {futureJummahs.map((time, index) => (
-          <View key={index} style={styles.timeBadge}>
-            <Text style={styles.timeText}>{formatTo12Hour(time)}</Text>
+          <View
+            key={index}
+            style={[
+              styles.timeBadge,
+              {
+                backgroundColor: theme.mode === 'dark' ? '#4C4420' : '#FEFCBF',
+                borderColor: theme.mode === 'dark' ? '#806C2A' : '#F6E05E',
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.timeText,
+                { color: theme.mode === 'dark' ? '#F5E7A8' : '#744210' },
+              ]}
+            >
+              {formatTo12Hour(time)}
+            </Text>
           </View>
         ))}
       </View>
@@ -161,17 +192,15 @@ export default function JummahCard({ prayerTimes, org }: JummahCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FFFFFF',
     marginHorizontal: 20,
     marginBottom: 12,
     borderRadius: 12,
     padding: 16,
-    shadowColor: '#000',
+    borderWidth: 1,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
-    borderLeftWidth: 4,
     borderLeftColor: '#D69E2E',
   },
   header: {
@@ -182,13 +211,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#2D3748',
     marginLeft: 8,
     marginRight: 8,
   },
   orgName: {
     fontSize: 12,
-    color: '#718096',
     flex: 1,
     textAlign: 'right',
   },
@@ -198,15 +225,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   timeBadge: {
-    backgroundColor: '#FEFCBF',
     paddingVertical: 6,
     paddingHorizontal: 12,
-    borderRadius: 20,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#F6E05E',
   },
   timeText: {
-    color: '#744210',
     fontWeight: '600',
     fontSize: 14,
   },

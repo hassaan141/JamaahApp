@@ -132,9 +132,7 @@ export function useLocation() {
           appState.current.match(/inactive|background/) &&
           nextAppState === 'active'
         ) {
-          console.log(
-            '⚡️ App returned to foreground! Forcing location check...',
-          )
+          console.log('App returned to foreground! Forcing location check...')
           try {
             const loc = await Location.getCurrentPositionAsync({
               accuracy: Location.Accuracy.Balanced,

@@ -15,15 +15,16 @@ export default () => ({
     scheme: 'com.hassaan141.jamaahapp',
     icon: './assets/JamahProd.png',
     projectId: '738cfaa7-cbea-4042-b627-a2a351da154b',
-    version: '1.0.0',
+    version: '1.0.1',
     orientation: 'portrait',
-    userInterfaceStyle: 'light',
+    userInterfaceStyle: 'automatic',
     newArchEnabled: false,
 
     plugins: [
       'expo-splash-screen',
       'expo-font',
       'expo-asset',
+      '@maplibre/maplibre-react-native',
       '@react-native-firebase/app',
       '@react-native-firebase/messaging',
       'expo-secure-store',
@@ -48,12 +49,12 @@ export default () => ({
     splash: {
       image: './assets/JamahProdNoBG.png',
       resizeMode: 'contain',
-      backgroundColor: '#48BB78',
+      backgroundColor: '#245c43',
     },
 
     ios: {
       bundleIdentifier: getBundleId(),
-      buildNumber: '3',
+      buildNumber: '4',
       googleServicesFile: './GoogleService-Info.plist',
       supportsTablet: true,
       entitlements: {
@@ -81,8 +82,8 @@ export default () => ({
 
     android: {
       package: getBundleId(),
-      userInterfaceStyle: 'light',
-      versionCode: 3,
+      userInterfaceStyle: 'automatic',
+      versionCode: 4,
       googleServicesFile: './google-services.json',
       permissions: [
         'ACCESS_COARSE_LOCATION',
@@ -94,7 +95,7 @@ export default () => ({
       ],
       adaptiveIcon: {
         foregroundImage: './assets/JamahProdAndroidNoBG.png',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: '#245c43',
       },
       icon: './assets/JamahProd.png',
       edgeToEdgeEnabled: true,

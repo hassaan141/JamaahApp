@@ -21,6 +21,7 @@ import { useOrgPrayerTimes } from '@/Hooks/useOrgPrayerTimes'
 import CombinedPrayerCard from '@/components/HomeScreen/CombinedPrayerCard'
 import { followEventEmitter } from '@/Utils/followEventEmitter'
 import { useAuth } from '@/Auth/AuthProvider'
+import { useTheme } from '@/theme'
 
 type OrgParam = {
   id?: string | number
@@ -55,6 +56,7 @@ const OrganizationHeader = ({
   onFollowToggle,
   followerCount,
   isGuest,
+  theme,
 }: {
   org: OrgParam
   following: boolean
@@ -62,6 +64,7 @@ const OrganizationHeader = ({
   onFollowToggle: () => void
   followerCount?: number | null
   isGuest?: boolean
+  theme: ReturnType<typeof useTheme>['theme']
 }) => {
   const [expanded, setExpanded] = useState(false)
   const organizationName = org.name || 'Organization'
@@ -75,15 +78,15 @@ const OrganizationHeader = ({
   ): React.ComponentProps<typeof Feather>['name'] => {
     switch (t?.toLowerCase()) {
       case 'masjid':
-        return 'home'
+        return 'map-pin'
       case 'msa':
         return 'users'
       case 'islamic-school':
-        return 'book-open'
+        return 'bookmark'
       case 'sisters-group':
         return 'heart'
       case 'youth-group':
-        return 'user-plus'
+        return 'zap'
       case 'book-club':
         return 'book'
       case 'book-store':
@@ -142,28 +145,58 @@ const OrganizationHeader = ({
   }
 
   return (
-    <View style={styles.headerCard}>
+    <View
+      style={[
+        styles.headerCard,
+        {
+          backgroundColor: theme.colors.surface,
+          shadowColor: theme.colors.shadow,
+        },
+      ]}
+    >
+      <View
+        style={[
+          styles.headerAccent,
+          { backgroundColor: getOrgTypeColor(type).text },
+        ]}
+      />
       <View style={styles.headerContent}>
-        <View
-          style={[
-            styles.iconContainer,
-            { backgroundColor: getOrgTypeColor(type).bg },
-          ]}
-        >
-          <Feather
-            name={getOrgTypeIcon(type)}
-            size={32}
-            color={getOrgTypeColor(type).text}
-          />
-        </View>
         <View style={styles.headerTextContainer}>
-          <Text style={styles.organizationName} numberOfLines={2}>
+          {type ? (
+            <View
+              style={[
+                styles.headerTypeBadge,
+                { backgroundColor: getOrgTypeColor(type).bg },
+              ]}
+            >
+              <Feather
+                name={getOrgTypeIcon(type)}
+                size={12}
+                color={getOrgTypeColor(type).text}
+              />
+              <Text
+                style={[
+                  styles.headerTypeBadgeText,
+                  { color: getOrgTypeColor(type).text },
+                ]}
+              >
+                {getOrgTypeLabel(type)}
+              </Text>
+            </View>
+          ) : null}
+          <Text
+            style={[styles.organizationName, { color: theme.colors.text }]}
+            numberOfLines={2}
+          >
             {organizationName}
           </Text>
           {description ? (
             <>
               <Text
-                style={styles.organizationDescription}
+                style={[
+                  styles.organizationDescription,
+                  { color: theme.colors.textMuted },
+                ]}
                 numberOfLines={expanded ? undefined : 3}
               >
                 {description}
@@ -174,27 +207,25 @@ const OrganizationHeader = ({
                   activeOpacity={0.7}
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
-                  <Text style={styles.readMoreText}>
+                  <Text
+                    style={[
+                      styles.readMoreText,
+                      { color: theme.colors.primary },
+                    ]}
+                  >
                     {expanded ? 'Show less' : 'Read more'}
                   </Text>
                 </TouchableOpacity>
               )}
             </>
           ) : null}
-          {type ? (
-            <Text
-              style={[styles.typeLabel, { color: getOrgTypeColor(type).text }]}
-            >
-              {getOrgTypeLabel(type)}
-            </Text>
-          ) : null}
         </View>
       </View>
 
       <View style={styles.headerActions}>
         <View style={styles.memberInfo}>
-          <Feather name="users" size={16} color="#52796F" />
-          <Text style={styles.memberCount}>
+          <Feather name="users" size={16} color={theme.colors.textMuted} />
+          <Text style={[styles.memberCount, { color: theme.colors.textMuted }]}>
             {typeof followerCount === 'number'
               ? `${followerCount.toLocaleString()} followers`
               : `${String(org.member_count ?? memberCount)} followers`}
@@ -205,7 +236,12 @@ const OrganizationHeader = ({
           <TouchableOpacity
             style={[
               styles.followButton,
+              { backgroundColor: theme.colors.primary },
               following && styles.followingButton,
+              following && {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.primary,
+              },
               followLoading && styles.followButtonDisabled,
             ]}
             onPress={onFollowToggle}
@@ -213,12 +249,13 @@ const OrganizationHeader = ({
             activeOpacity={0.7}
           >
             {followLoading ? (
-              <ActivityIndicator size="small" color="#2D6A4F" />
+              <ActivityIndicator size="small" color={theme.colors.primary} />
             ) : (
               <Text
                 style={[
                   styles.followButtonText,
                   following && styles.followingButtonText,
+                  following && { color: theme.colors.primary },
                 ]}
               >
                 {following ? 'Following' : 'Follow'}
@@ -231,7 +268,43 @@ const OrganizationHeader = ({
   )
 }
 
-const ContactInfoCard = ({ org }: { org: OrgParam }) => {
+const SectionHeader = ({
+  title,
+  icon,
+  compact = false,
+  theme,
+}: {
+  title: string
+  icon: React.ComponentProps<typeof Feather>['name']
+  compact?: boolean
+  theme: ReturnType<typeof useTheme>['theme']
+}) => (
+  <View
+    style={[styles.sectionHeaderRow, compact && styles.sectionHeaderRowCompact]}
+  >
+    <View
+      style={[
+        styles.sectionIconBox,
+        {
+          backgroundColor: theme.colors.primarySoft,
+        },
+      ]}
+    >
+      <Feather name={icon} size={16} color={theme.colors.primary} />
+    </View>
+    <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+      {title}
+    </Text>
+  </View>
+)
+
+const ContactInfoCard = ({
+  org,
+  theme,
+}: {
+  org: OrgParam
+  theme: ReturnType<typeof useTheme>['theme']
+}) => {
   const items: {
     key: string
     label: string
@@ -295,18 +368,66 @@ const ContactInfoCard = ({ org }: { org: OrgParam }) => {
   if (!items.length) return null
 
   return (
-    <View style={styles.card}>
-      <Text style={styles.cardTitle}>Contact & Links</Text>
-      <View style={styles.linksRow}>
+    <View
+      style={[
+        styles.card,
+        {
+          backgroundColor: theme.colors.surface,
+          shadowColor: theme.colors.shadow,
+        },
+      ]}
+    >
+      <SectionHeader
+        title="Contact & Links"
+        icon="link-2"
+        compact={true}
+        theme={theme}
+      />
+      <View style={styles.linksList}>
         {items.map((it) => (
           <TouchableOpacity
             key={it.key}
-            style={styles.linkPill}
+            style={[
+              styles.linkRow,
+              {
+                backgroundColor: theme.colors.surfaceMuted,
+                borderColor: theme.colors.borderSoft,
+              },
+            ]}
             onPress={it.onPress}
             activeOpacity={0.7}
           >
-            <MaterialCommunityIcons name={it.icon} size={14} color="#2D6A4F" />
-            <Text style={styles.linkPillLabel}>{it.value}</Text>
+            <View
+              style={[
+                styles.linkIconBox,
+                { backgroundColor: theme.colors.primarySoft },
+              ]}
+            >
+              <MaterialCommunityIcons
+                name={it.icon}
+                size={16}
+                color={theme.colors.primary}
+              />
+            </View>
+            <View style={styles.linkTextBlock}>
+              <Text
+                style={[styles.linkLabel, { color: theme.colors.textMuted }]}
+              >
+                {it.label}
+              </Text>
+              <Text
+                style={[styles.linkValue, { color: theme.colors.text }]}
+                numberOfLines={1}
+              >
+                {it.value}
+              </Text>
+            </View>
+            <Feather
+              name="arrow-up-right"
+              size={16}
+              color={theme.colors.textSoft}
+              style={styles.linkArrow}
+            />
           </TouchableOpacity>
         ))}
       </View>
@@ -314,7 +435,13 @@ const ContactInfoCard = ({ org }: { org: OrgParam }) => {
   )
 }
 
-const AmenitiesCard = ({ org }: { org: OrgParam }) => {
+const AmenitiesCard = ({
+  org,
+  theme,
+}: {
+  org: OrgParam
+  theme: ReturnType<typeof useTheme>['theme']
+}) => {
   const amenities = org.amenities || {}
   const items: {
     key: string
@@ -336,38 +463,60 @@ const AmenitiesCard = ({ org }: { org: OrgParam }) => {
     },
   ]
 
+  const presentItems = items.filter((it) =>
+    Boolean((amenities as Record<string, boolean | undefined>)[it.key]),
+  )
+
+  if (!presentItems.length) return null
+
   return (
-    <View style={styles.amenitiesCard}>
-      <Text style={styles.cardTitle}>Amenities</Text>
+    <View
+      style={[
+        styles.amenitiesCard,
+        {
+          backgroundColor: theme.colors.surface,
+          borderColor: theme.colors.border,
+        },
+      ]}
+    >
+      <SectionHeader
+        title="Amenities"
+        icon="grid"
+        compact={true}
+        theme={theme}
+      />
       <View style={styles.amenitiesRow}>
-        {items.map((it) => {
-          const present = Boolean(
-            (amenities as Record<string, boolean | undefined>)[it.key],
-          )
+        {presentItems.map((it) => {
           return (
             <View
               key={it.key}
-              style={[styles.amenityPill, present && styles.amenityPillActive]}
+              style={[
+                styles.amenityPill,
+                {
+                  backgroundColor: theme.colors.primarySoft,
+                  borderColor: theme.colors.primaryBorder,
+                },
+              ]}
             >
-              <MaterialCommunityIcons
-                name={it.icon}
-                size={14}
-                color={present ? '#FFFFFF' : '#475569'}
-              />
-              <Text
+              <View
                 style={[
-                  styles.amenityPillLabel,
-                  present ? styles.amenityPillLabelActive : undefined,
+                  styles.amenityIconBox,
+                  {
+                    backgroundColor: theme.colors.surface,
+                  },
                 ]}
+              >
+                <MaterialCommunityIcons
+                  name={it.icon}
+                  size={14}
+                  color={theme.colors.primary}
+                />
+              </View>
+              <Text
+                style={[styles.amenityPillLabel, { color: theme.colors.text }]}
               >
                 {it.label}
               </Text>
-              <MaterialCommunityIcons
-                name={present ? 'check-circle' : 'close-circle'}
-                size={14}
-                color={present ? (present ? '#FFFFFF' : '#10B981') : '#94A3B8'}
-                style={styles.amenityStatusIcon}
-              />
             </View>
           )
         })}
@@ -513,6 +662,7 @@ export default function OrganizationDetail() {
   const route = useRoute<OrgDetailRoute>()
   const navigation = useNavigation<GenericNav>()
   const { session } = useAuth()
+  const { theme } = useTheme()
   const initialOrg = route.params?.org as OrgParam | undefined
 
   // FIX 1: Turn 'org' into state so we can update it with full details
@@ -546,6 +696,8 @@ export default function OrganizationDetail() {
     targetDate,
     nextDay,
     prevDay,
+    canNextDay,
+    canPrevDay,
     loading: prayerLoading,
   } = useOrgPrayerTimes(orgId)
 
@@ -701,7 +853,7 @@ export default function OrganizationDetail() {
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
       contentContainerStyle={styles.contentContainer}
       showsVerticalScrollIndicator={false}
     >
@@ -712,7 +864,7 @@ export default function OrganizationDetail() {
             style={styles.backButton}
             activeOpacity={0.7}
           >
-            <Feather name="arrow-left" size={24} color="#228f2bff" />
+            <Feather name="arrow-left" size={22} color={theme.colors.primary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -724,6 +876,7 @@ export default function OrganizationDetail() {
         onFollowToggle={handleFollowToggle}
         followerCount={followerCount}
         isGuest={!session}
+        theme={theme}
       />
 
       {/* Show tiny loader if we are fetching the missing details */}
@@ -745,12 +898,14 @@ export default function OrganizationDetail() {
               currentDate={targetDate}
               onNextDay={nextDay}
               onPrevDay={prevDay}
+              canNextDay={canNextDay}
+              canPrevDay={canPrevDay}
             />
           </View>
         )}
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Recent Announcements</Text>
+        <SectionHeader title="Recent Announcements" icon="bell" theme={theme} />
         <AnnouncementsSection
           announcements={announcements}
           loading={loading}
@@ -758,9 +913,11 @@ export default function OrganizationDetail() {
         />
       </View>
 
-      {org.type?.toLowerCase() === 'masjid' && <AmenitiesCard org={org} />}
+      {org.type?.toLowerCase() === 'masjid' && (
+        <AmenitiesCard org={org} theme={theme} />
+      )}
 
-      <ContactInfoCard org={org} />
+      <ContactInfoCard org={org} theme={theme} />
     </ScrollView>
   )
 }
@@ -789,27 +946,39 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 3,
     elevation: 2,
+    overflow: 'hidden',
   },
-  headerContent: { flexDirection: 'row', marginBottom: 16 },
-  iconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 12,
-    backgroundColor: '#E8F5E9',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 16,
+  headerAccent: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 3,
   },
+  headerContent: { marginBottom: 16 },
   headerTextContainer: { flex: 1 },
+  headerTypeBadge: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginBottom: 10,
+  },
+  headerTypeBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
   organizationName: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#1B4332',
-    marginBottom: 4,
+    color: '#1F2937',
+    marginBottom: 6,
     lineHeight: 28,
   },
-  organizationDescription: { fontSize: 14, color: '#52796F', lineHeight: 20 },
-  typeLabel: { marginTop: 6, fontSize: 12, fontWeight: '700' },
+  organizationDescription: { fontSize: 14, color: '#4B5563', lineHeight: 20 },
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -823,7 +992,7 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   readMoreText: {
-    color: '#2563EB',
+    color: '#2D6A4F',
     fontSize: 13,
     fontWeight: '600',
     marginTop: 2,
@@ -864,6 +1033,24 @@ const styles = StyleSheet.create({
     color: '#1B4332',
     marginBottom: 16,
   },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 16,
+    marginBottom: 14,
+    gap: 10,
+  },
+  sectionHeaderRowCompact: {
+    marginHorizontal: 0,
+  },
+  sectionIconBox: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: '#E8F5E9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   infoRow: { flexDirection: 'row', marginBottom: 16 },
   infoIconContainer: {
     width: 32,
@@ -893,11 +1080,9 @@ const styles = StyleSheet.create({
   infoLink: { color: '#2D6A4F', textDecorationLine: 'underline' },
   section: { marginTop: 24 },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '700',
-    color: '#1B4332',
-    marginHorizontal: 16,
-    marginBottom: 16,
+    color: '#1F2937',
   },
   announcementsList: { paddingHorizontal: 16, gap: 12 },
   loadingContainer: {
@@ -923,8 +1108,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginTop: 12,
     borderRadius: 12,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
     borderWidth: 1,
     borderColor: '#E8F5E9',
   },
@@ -937,34 +1122,59 @@ const styles = StyleSheet.create({
   amenityPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 6,
+    paddingVertical: 8,
     paddingHorizontal: 10,
-    borderRadius: 20,
-    backgroundColor: '#F1F5F9',
+    borderRadius: 10,
+    borderWidth: 1,
     marginRight: 8,
     marginBottom: 8,
   },
-  amenityPillActive: { backgroundColor: '#2D6A4F' },
+  amenityIconBox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    backgroundColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   amenityPillLabel: {
     marginLeft: 8,
     fontSize: 12,
     color: '#475569',
     fontWeight: '600',
   },
-  amenityPillLabelActive: { color: '#FFFFFF' },
-  amenityStatusIcon: { marginLeft: 8 },
-  linksRow: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 8 },
-  linkPill: {
+  linksList: { marginTop: 2, gap: 10 },
+  linkRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
     backgroundColor: '#F8FAFC',
-    marginRight: 8,
-    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#EDF2F7',
   },
-  linkPillLabel: { marginLeft: 8, fontSize: 13, color: '#1B4332' },
+  linkIconBox: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: '#E8F5E9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  linkTextBlock: { flex: 1, minWidth: 0 },
+  linkLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#6B7280',
+    marginBottom: 2,
+  },
+  linkValue: { fontSize: 14, color: '#1F2937' },
+  linkArrow: {
+    marginLeft: 8,
+    marginRight: 4,
+  },
   tabContainer: {
     flexDirection: 'row',
     marginBottom: 16,
@@ -973,7 +1183,7 @@ const styles = StyleSheet.create({
   tab: {
     paddingVertical: 6,
     paddingHorizontal: 12,
-    borderRadius: 20,
+    borderRadius: 8,
     backgroundColor: '#EDF2F7',
     marginRight: 8,
   },

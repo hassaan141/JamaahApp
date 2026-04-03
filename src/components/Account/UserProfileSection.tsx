@@ -7,6 +7,7 @@ import { fetchOrgFollowerCount } from '@/Supabase/fetchOrgFollowerCount'
 import { fetchOrgPostCount } from '@/Supabase/fetchOrgPostCount'
 import { fetchOrganizationByProfileId } from '@/Supabase/fetchOrgFromProfileId'
 import { supabase } from '@/Supabase/supabaseClient'
+import { useTheme } from '@/theme'
 
 type MinimalNav = {
   getState?: () => { routeNames?: string[] }
@@ -23,6 +24,7 @@ export default function UserProfileSection({
   isOrganization: boolean
 }) {
   const navigation = useNavigation() as unknown as MinimalNav
+  const { theme } = useTheme()
   const [postCount, setPostCount] = useState(0)
   const [followerCount, setFollowerCount] = useState(0)
   const [organizationName, setOrganizationName] = useState<string | null>(null)
@@ -131,7 +133,16 @@ export default function UserProfileSection({
 
   return (
     <>
-      <View style={styles.container}>
+      <View
+        style={[
+          styles.container,
+          {
+            backgroundColor: theme.colors.surface,
+            borderColor: theme.colors.border,
+            shadowColor: theme.colors.shadow,
+          },
+        ]}
+      >
         <View
           style={{
             flexDirection: 'row',
@@ -144,7 +155,7 @@ export default function UserProfileSection({
               width: 64,
               height: 64,
               borderRadius: 32,
-              backgroundColor: '#2F855A',
+              backgroundColor: theme.colors.primary,
               justifyContent: 'center',
               alignItems: 'center',
               marginRight: 14,
@@ -162,7 +173,11 @@ export default function UserProfileSection({
               }}
             >
               <Text
-                style={{ fontSize: 20, fontWeight: '600', color: '#1D4732' }}
+                style={{
+                  fontSize: 20,
+                  fontWeight: '600',
+                  color: theme.colors.text,
+                }}
               >
                 {displayName}
               </Text>
@@ -172,14 +187,21 @@ export default function UserProfileSection({
             {isOrganization && (
               <View style={{ flexDirection: 'row', marginBottom: 4 }}>
                 <Text
-                  style={{ fontSize: 14, color: '#1D4732', marginRight: 16 }}
+                  style={{
+                    fontSize: 14,
+                    color: theme.colors.text,
+                    marginRight: 16,
+                  }}
                 >
                   <Text style={{ fontWeight: '600' }}>{postCount}</Text>
-                  <Text style={{ color: '#6C757D' }}> posts</Text>
+                  <Text style={{ color: theme.colors.textMuted }}> posts</Text>
                 </Text>
-                <Text style={{ fontSize: 14, color: '#1D4732' }}>
+                <Text style={{ fontSize: 14, color: theme.colors.text }}>
                   <Text style={{ fontWeight: '600' }}>{followerCount}</Text>
-                  <Text style={{ color: '#6C757D' }}> followers</Text>
+                  <Text style={{ color: theme.colors.textMuted }}>
+                    {' '}
+                    followers
+                  </Text>
                 </Text>
               </View>
             )}
@@ -187,7 +209,11 @@ export default function UserProfileSection({
             {/* Show email for individuals */}
             {!isOrganization && profile?.email && !isAppleUser && (
               <Text
-                style={{ fontSize: 13, color: '#6C757D', marginBottom: 4 }}
+                style={{
+                  fontSize: 13,
+                  color: theme.colors.textMuted,
+                  marginBottom: 4,
+                }}
                 numberOfLines={1}
               >
                 {profile.email}
@@ -199,18 +225,24 @@ export default function UserProfileSection({
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
-                  backgroundColor: '#E8F5E9',
+                  backgroundColor: theme.colors.primarySoft,
+                  borderWidth: 1,
+                  borderColor: theme.colors.primaryBorder,
                   paddingHorizontal: 8,
                   paddingVertical: 4,
                   borderRadius: 4,
                   alignSelf: 'flex-start',
                 }}
               >
-                <Feather name="briefcase" size={12} color="#2F855A" />
+                <Feather
+                  name="briefcase"
+                  size={12}
+                  color={theme.colors.primary}
+                />
                 <Text
                   style={{
                     fontSize: 12,
-                    color: '#2F855A',
+                    color: theme.colors.primary,
                     marginLeft: 4,
                     fontWeight: '500',
                   }}
@@ -226,7 +258,9 @@ export default function UserProfileSection({
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
-                  backgroundColor: '#EBF8FF',
+                  backgroundColor: theme.colors.surfaceMuted,
+                  borderWidth: 1,
+                  borderColor: theme.colors.border,
                   paddingHorizontal: 8,
                   paddingVertical: 4,
                   borderRadius: 4,
@@ -254,14 +288,13 @@ export default function UserProfileSection({
               width: 44,
               height: 44,
               borderRadius: 8,
-              backgroundColor: '#F8F9FA',
               justifyContent: 'center',
               alignItems: 'center',
               marginLeft: 12,
               alignSelf: 'flex-start',
             }}
           >
-            <Feather name="settings" size={20} color="#1D4732" />
+            <Feather name="settings" size={20} color={theme.colors.text} />
           </TouchableOpacity>
         </View>
 
@@ -279,7 +312,7 @@ export default function UserProfileSection({
               <Text
                 style={{
                   fontSize: 13,
-                  color: '#6C757D',
+                  color: theme.colors.textMuted,
                   marginLeft: 6,
                 }}
               >
@@ -289,7 +322,13 @@ export default function UserProfileSection({
           )}
 
           {isOrganization && organizationDescription && (
-            <Text style={{ fontSize: 13, color: '#495057', lineHeight: 18 }}>
+            <Text
+              style={{
+                fontSize: 13,
+                color: theme.colors.textMuted,
+                lineHeight: 18,
+              }}
+            >
               {organizationDescription}
             </Text>
           )}

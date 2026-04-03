@@ -1,5 +1,6 @@
 import React from 'react'
 import { View, Text, TextInput } from 'react-native'
+import { useTheme } from '@/theme'
 
 interface DescriptionInputProps {
   description: string
@@ -10,13 +11,15 @@ export default function DescriptionInput({
   description,
   setDescription,
 }: DescriptionInputProps) {
+  const { theme } = useTheme()
+
   return (
     <View style={{ marginBottom: 16 }}>
       <Text
         style={{
           fontSize: 14,
           fontWeight: '600',
-          color: '#1D4732',
+          color: theme.colors.text,
           marginBottom: 8,
         }}
       >
@@ -26,16 +29,16 @@ export default function DescriptionInput({
         value={description}
         onChangeText={setDescription}
         placeholder="Add timing, location, or supporting notes"
-        placeholderTextColor="#6C757D"
+        placeholderTextColor={theme.colors.textSoft}
         style={{
-          backgroundColor: '#F8F9FA',
+          backgroundColor: theme.colors.surfaceMuted,
           borderRadius: 8,
           borderWidth: 1,
-          borderColor: '#DEE2E6',
+          borderColor: theme.colors.border,
           paddingHorizontal: 12,
           paddingVertical: 10,
           fontSize: 15,
-          color: '#1D4732',
+          color: theme.colors.text,
           minHeight: 100,
           textAlignVertical: 'top',
         }}

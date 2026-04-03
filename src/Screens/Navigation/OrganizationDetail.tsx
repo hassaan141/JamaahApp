@@ -75,15 +75,15 @@ const OrganizationHeader = ({
   ): React.ComponentProps<typeof Feather>['name'] => {
     switch (t?.toLowerCase()) {
       case 'masjid':
-        return 'home'
+        return 'map-pin'
       case 'msa':
         return 'users'
       case 'islamic-school':
-        return 'book-open'
+        return 'bookmark'
       case 'sisters-group':
         return 'heart'
       case 'youth-group':
-        return 'user-plus'
+        return 'zap'
       case 'book-club':
         return 'book'
       case 'book-store':
@@ -143,20 +143,36 @@ const OrganizationHeader = ({
 
   return (
     <View style={styles.headerCard}>
+      <View
+        style={[
+          styles.headerAccent,
+          { backgroundColor: getOrgTypeColor(type).text },
+        ]}
+      />
       <View style={styles.headerContent}>
-        <View
-          style={[
-            styles.iconContainer,
-            { backgroundColor: getOrgTypeColor(type).bg },
-          ]}
-        >
-          <Feather
-            name={getOrgTypeIcon(type)}
-            size={32}
-            color={getOrgTypeColor(type).text}
-          />
-        </View>
         <View style={styles.headerTextContainer}>
+          {type ? (
+            <View
+              style={[
+                styles.headerTypeBadge,
+                { backgroundColor: getOrgTypeColor(type).bg },
+              ]}
+            >
+              <Feather
+                name={getOrgTypeIcon(type)}
+                size={12}
+                color={getOrgTypeColor(type).text}
+              />
+              <Text
+                style={[
+                  styles.headerTypeBadgeText,
+                  { color: getOrgTypeColor(type).text },
+                ]}
+              >
+                {getOrgTypeLabel(type)}
+              </Text>
+            </View>
+          ) : null}
           <Text style={styles.organizationName} numberOfLines={2}>
             {organizationName}
           </Text>
@@ -180,13 +196,6 @@ const OrganizationHeader = ({
                 </TouchableOpacity>
               )}
             </>
-          ) : null}
-          {type ? (
-            <Text
-              style={[styles.typeLabel, { color: getOrgTypeColor(type).text }]}
-            >
-              {getOrgTypeLabel(type)}
-            </Text>
           ) : null}
         </View>
       </View>
@@ -230,6 +239,25 @@ const OrganizationHeader = ({
     </View>
   )
 }
+
+const SectionHeader = ({
+  title,
+  icon,
+  compact = false,
+}: {
+  title: string
+  icon: React.ComponentProps<typeof Feather>['name']
+  compact?: boolean
+}) => (
+  <View
+    style={[styles.sectionHeaderRow, compact && styles.sectionHeaderRowCompact]}
+  >
+    <View style={styles.sectionIconBox}>
+      <Feather name={icon} size={16} color="#2D6A4F" />
+    </View>
+    <Text style={styles.sectionTitle}>{title}</Text>
+  </View>
+)
 
 const ContactInfoCard = ({ org }: { org: OrgParam }) => {
   const items: {
@@ -296,17 +324,34 @@ const ContactInfoCard = ({ org }: { org: OrgParam }) => {
 
   return (
     <View style={styles.card}>
-      <Text style={styles.cardTitle}>Contact & Links</Text>
-      <View style={styles.linksRow}>
+      <SectionHeader title="Contact & Links" icon="link-2" compact={true} />
+      <View style={styles.linksList}>
         {items.map((it) => (
           <TouchableOpacity
             key={it.key}
-            style={styles.linkPill}
+            style={styles.linkRow}
             onPress={it.onPress}
             activeOpacity={0.7}
           >
-            <MaterialCommunityIcons name={it.icon} size={14} color="#2D6A4F" />
-            <Text style={styles.linkPillLabel}>{it.value}</Text>
+            <View style={styles.linkIconBox}>
+              <MaterialCommunityIcons
+                name={it.icon}
+                size={16}
+                color="#2D6A4F"
+              />
+            </View>
+            <View style={styles.linkTextBlock}>
+              <Text style={styles.linkLabel}>{it.label}</Text>
+              <Text style={styles.linkValue} numberOfLines={1}>
+                {it.value}
+              </Text>
+            </View>
+            <Feather
+              name="arrow-up-right"
+              size={16}
+              color="#94A3B8"
+              style={styles.linkArrow}
+            />
           </TouchableOpacity>
         ))}
       </View>
@@ -338,7 +383,7 @@ const AmenitiesCard = ({ org }: { org: OrgParam }) => {
 
   return (
     <View style={styles.amenitiesCard}>
-      <Text style={styles.cardTitle}>Amenities</Text>
+      <SectionHeader title="Amenities" icon="grid" compact={true} />
       <View style={styles.amenitiesRow}>
         {items.map((it) => {
           const present = Boolean(
@@ -349,11 +394,18 @@ const AmenitiesCard = ({ org }: { org: OrgParam }) => {
               key={it.key}
               style={[styles.amenityPill, present && styles.amenityPillActive]}
             >
-              <MaterialCommunityIcons
-                name={it.icon}
-                size={14}
-                color={present ? '#FFFFFF' : '#475569'}
-              />
+              <View
+                style={[
+                  styles.amenityIconBox,
+                  present && styles.amenityIconBoxActive,
+                ]}
+              >
+                <MaterialCommunityIcons
+                  name={it.icon}
+                  size={14}
+                  color={present ? '#FFFFFF' : '#475569'}
+                />
+              </View>
               <Text
                 style={[
                   styles.amenityPillLabel,
@@ -362,12 +414,6 @@ const AmenitiesCard = ({ org }: { org: OrgParam }) => {
               >
                 {it.label}
               </Text>
-              <MaterialCommunityIcons
-                name={present ? 'check-circle' : 'close-circle'}
-                size={14}
-                color={present ? (present ? '#FFFFFF' : '#10B981') : '#94A3B8'}
-                style={styles.amenityStatusIcon}
-              />
             </View>
           )
         })}
@@ -754,7 +800,7 @@ export default function OrganizationDetail() {
         )}
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Recent Announcements</Text>
+        <SectionHeader title="Recent Announcements" icon="bell" />
         <AnnouncementsSection
           announcements={announcements}
           loading={loading}
@@ -793,27 +839,39 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 3,
     elevation: 2,
+    overflow: 'hidden',
   },
-  headerContent: { flexDirection: 'row', marginBottom: 16 },
-  iconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 12,
-    backgroundColor: '#E8F5E9',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 16,
+  headerAccent: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 3,
   },
+  headerContent: { marginBottom: 16 },
   headerTextContainer: { flex: 1 },
+  headerTypeBadge: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginBottom: 10,
+  },
+  headerTypeBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
   organizationName: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#1B4332',
-    marginBottom: 4,
+    color: '#1F2937',
+    marginBottom: 6,
     lineHeight: 28,
   },
-  organizationDescription: { fontSize: 14, color: '#52796F', lineHeight: 20 },
-  typeLabel: { marginTop: 6, fontSize: 12, fontWeight: '700' },
+  organizationDescription: { fontSize: 14, color: '#4B5563', lineHeight: 20 },
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -827,7 +885,7 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   readMoreText: {
-    color: '#2563EB',
+    color: '#2D6A4F',
     fontSize: 13,
     fontWeight: '600',
     marginTop: 2,
@@ -868,6 +926,24 @@ const styles = StyleSheet.create({
     color: '#1B4332',
     marginBottom: 16,
   },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 16,
+    marginBottom: 14,
+    gap: 10,
+  },
+  sectionHeaderRowCompact: {
+    marginHorizontal: 0,
+  },
+  sectionIconBox: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: '#E8F5E9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   infoRow: { flexDirection: 'row', marginBottom: 16 },
   infoIconContainer: {
     width: 32,
@@ -897,11 +973,9 @@ const styles = StyleSheet.create({
   infoLink: { color: '#2D6A4F', textDecorationLine: 'underline' },
   section: { marginTop: 24 },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '700',
-    color: '#1B4332',
-    marginHorizontal: 16,
-    marginBottom: 16,
+    color: '#1F2937',
   },
   announcementsList: { paddingHorizontal: 16, gap: 12 },
   loadingContainer: {
@@ -927,8 +1001,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginTop: 12,
     borderRadius: 12,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
     borderWidth: 1,
     borderColor: '#E8F5E9',
   },
@@ -941,14 +1015,25 @@ const styles = StyleSheet.create({
   amenityPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 6,
+    paddingVertical: 8,
     paddingHorizontal: 10,
-    borderRadius: 20,
+    borderRadius: 10,
     backgroundColor: '#F1F5F9',
     marginRight: 8,
     marginBottom: 8,
   },
   amenityPillActive: { backgroundColor: '#2D6A4F' },
+  amenityIconBox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    backgroundColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  amenityIconBoxActive: {
+    backgroundColor: 'rgba(255,255,255,0.18)',
+  },
   amenityPillLabel: {
     marginLeft: 8,
     fontSize: 12,
@@ -956,19 +1041,38 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   amenityPillLabelActive: { color: '#FFFFFF' },
-  amenityStatusIcon: { marginLeft: 8 },
-  linksRow: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 8 },
-  linkPill: {
+  linksList: { marginTop: 2, gap: 10 },
+  linkRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
     backgroundColor: '#F8FAFC',
-    marginRight: 8,
-    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#EDF2F7',
   },
-  linkPillLabel: { marginLeft: 8, fontSize: 13, color: '#1B4332' },
+  linkIconBox: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: '#E8F5E9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  linkTextBlock: { flex: 1, minWidth: 0 },
+  linkLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#6B7280',
+    marginBottom: 2,
+  },
+  linkValue: { fontSize: 14, color: '#1F2937' },
+  linkArrow: {
+    marginLeft: 8,
+    marginRight: 4,
+  },
   tabContainer: {
     flexDirection: 'row',
     marginBottom: 16,
@@ -977,7 +1081,7 @@ const styles = StyleSheet.create({
   tab: {
     paddingVertical: 6,
     paddingHorizontal: 12,
-    borderRadius: 20,
+    borderRadius: 8,
     backgroundColor: '#EDF2F7',
     marginRight: 8,
   },

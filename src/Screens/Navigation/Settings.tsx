@@ -17,7 +17,6 @@ type SettingsItem = {
   subtitle: string
   icon: React.ComponentProps<typeof Feather>['name']
   screen: string
-  color?: string
   orgOnly?: boolean
 }
 
@@ -69,8 +68,9 @@ export default function Settings() {
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.backButton}
+          activeOpacity={0.7}
         >
-          <Feather name="arrow-left" size={24} color="#1D4732" />
+          <Feather name="arrow-left" size={20} color="#1F2937" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Settings</Text>
       </View>
@@ -88,20 +88,18 @@ export default function Settings() {
                 index === filteredItems.length - 1 && styles.menuItemLast,
               ]}
               onPress={() => handleNavigate(item.screen)}
+              activeOpacity={0.75}
             >
-              <View
-                style={[
-                  styles.iconContainer,
-                  item.color && { backgroundColor: item.color },
-                ]}
-              >
-                <Feather name={item.icon} size={20} color="#2F855A" />
+              <View style={styles.iconContainer}>
+                <Feather name={item.icon} size={18} color="#2F855A" />
               </View>
               <View style={styles.menuTextContainer}>
                 <Text style={styles.menuTitle}>{item.title}</Text>
                 <Text style={styles.menuSubtitle}>{item.subtitle}</Text>
               </View>
-              <Feather name="chevron-right" size={20} color="#ADB5BD" />
+              <View style={styles.chevronWrap}>
+                <Feather name="chevron-right" size={18} color="#94A3B8" />
+              </View>
             </TouchableOpacity>
           ))}
         </View>
@@ -121,19 +119,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E9ECEF',
+    paddingTop: 8,
+    paddingBottom: 6,
   },
   backButton: {
-    padding: 8,
-    marginRight: 8,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+    marginTop: 2,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1D4732',
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#111827',
   },
   scrollContainer: {
     flex: 1,
@@ -141,44 +145,57 @@ const styles = StyleSheet.create({
   },
   section: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    marginTop: 16,
+    borderRadius: 10,
+    marginTop: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 1,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#E9ECEF',
+    borderBottomColor: '#EEF2F7',
   },
   menuItemLast: {
     borderBottomWidth: 0,
   },
   iconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: '#E8F5E9',
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#F0FDF4',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#DCFCE7',
   },
   menuTextContainer: {
     flex: 1,
     marginLeft: 12,
+    marginRight: 10,
   },
   menuTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    color: '#1D4732',
+    color: '#111827',
   },
   menuSubtitle: {
     fontSize: 13,
-    color: '#6C757D',
-    marginTop: 2,
+    color: '#6B7280',
+    marginTop: 3,
+    lineHeight: 18,
+  },
+  chevronWrap: {
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 })

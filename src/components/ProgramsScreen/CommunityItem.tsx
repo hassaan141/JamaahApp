@@ -90,15 +90,15 @@ export default function CommunityItem({ community }: Props) {
   ): React.ComponentProps<typeof Feather>['name'] => {
     switch (type?.toLowerCase()) {
       case 'masjid':
-        return 'home'
+        return 'map-pin'
       case 'msa':
         return 'users'
       case 'islamic-school':
-        return 'book-open'
+        return 'bookmark'
       case 'sisters-group':
         return 'heart'
       case 'youth-group':
-        return 'user-plus'
+        return 'zap'
       case 'book-club':
         return 'book'
       case 'book-store':
@@ -162,9 +162,19 @@ export default function CommunityItem({ community }: Props) {
       activeOpacity={0.85}
       onPress={handlePress}
     >
+      <View
+        style={[
+          styles.accentBar,
+          { backgroundColor: getOrgTypeColor(type).text },
+        ]}
+      />
       <View style={styles.headerRow}>
         <View style={styles.titleBlock}>
-          <Text style={styles.cardTitle}>{name}</Text>
+          <View style={styles.titleRow}>
+            <Text style={styles.cardTitle} numberOfLines={2}>
+              {name}
+            </Text>
+          </View>
           <View
             style={[
               styles.typeBadge,
@@ -199,7 +209,10 @@ export default function CommunityItem({ community }: Props) {
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator size="small" color="#38A169" />
+              <ActivityIndicator
+                size="small"
+                color={following ? '#2F855A' : '#FFFFFF'}
+              />
             ) : (
               <Text
                 style={[
@@ -238,70 +251,69 @@ export default function CommunityItem({ community }: Props) {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 10,
     padding: 14,
-    marginBottom: 12,
+    marginBottom: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
     borderWidth: 1,
     borderColor: '#E2E8F0',
+    overflow: 'hidden',
+  },
+  accentBar: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 3,
   },
   headerRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 8,
+    marginBottom: 10,
   },
-  titleBlock: { flex: 1, marginRight: 10 },
+  titleBlock: { flex: 1, minWidth: 0 },
+  titleRow: {
+    marginBottom: 6,
+  },
   cardTitle: {
-    fontWeight: 'bold',
     fontSize: 16,
+    fontWeight: '700',
     color: '#1A202C',
-    marginBottom: 3,
-    lineHeight: 20,
+    lineHeight: 21,
+    flex: 1,
   },
-  cardType: { fontSize: 13, color: '#38A169', marginBottom: 2 },
   cardDescription: {
     fontSize: 14,
     color: '#4A5568',
-    marginBottom: 8,
     lineHeight: 20,
   },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 6,
-    marginBottom: 3,
-  },
-  infoIcon: { marginRight: 10 },
-  infoText: { fontSize: 14, color: '#2D3748', flex: 1 },
-  linkText: { color: '#4299E1', textDecorationLine: 'underline' },
   followButton: {
-    backgroundColor: '#38A169',
+    marginLeft: 12,
+    minHeight: 34,
+    minWidth: 88,
+    paddingHorizontal: 14,
+    paddingVertical: 0,
+    backgroundColor: '#2F855A',
     borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 7,
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 90,
   },
   followingButton: {
-    backgroundColor: '#E3F5E9',
-    borderColor: '#38A169',
+    backgroundColor: '#FFFFFF',
+    borderColor: '#2F855A',
     borderWidth: 1,
   },
-  followButtonText: { color: '#FFF', fontWeight: '600', fontSize: 14 },
-  followingButtonText: { color: '#38A169' },
+  followButtonText: { color: '#FFF', fontWeight: '600', fontSize: 13 },
+  followingButtonText: { color: '#2F855A' },
   typeBadge: {
-    marginTop: 1,
     alignSelf: 'flex-start',
-    backgroundColor: '#F0FFF4',
-    borderRadius: 8,
+    borderRadius: 6,
     paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingVertical: 3,
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -309,7 +321,7 @@ const styles = StyleSheet.create({
   typeBadgeText: { fontSize: 12, color: '#2F855A', fontWeight: '600' },
   readMore: {
     marginTop: 8,
-    color: '#3182CE',
+    color: '#2F855A',
     fontWeight: '600',
     fontSize: 13,
   },

@@ -6,15 +6,20 @@ export type MapTab = 'masjids' | 'events'
 export default function MapTabs({
   selectedTab,
   onTabChange,
+  floating = false,
 }: {
   selectedTab: MapTab
   onTabChange: (tab: MapTab) => void
+  floating?: boolean
 }) {
   return (
-    <View style={styles.tabsContainer}>
+    <View
+      style={[styles.tabsContainer, floating && styles.floatingTabsContainer]}
+    >
       <TouchableOpacity
         style={[styles.tab, selectedTab === 'events' && styles.activeTab]}
         onPress={() => onTabChange('events')}
+        activeOpacity={0.9}
       >
         <Text
           style={[
@@ -29,6 +34,7 @@ export default function MapTabs({
       <TouchableOpacity
         style={[styles.tab, selectedTab === 'masjids' && styles.activeTab]}
         onPress={() => onTabChange('masjids')}
+        activeOpacity={0.9}
       >
         <Text
           style={[
@@ -46,26 +52,36 @@ export default function MapTabs({
 const styles = StyleSheet.create({
   tabsContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    gap: 12,
-    marginTop: 8,
+    gap: 8,
+  },
+  floatingTabsContainer: {
+    marginTop: 0,
+    paddingHorizontal: 0,
+    paddingBottom: 0,
+    gap: 8,
   },
   tab: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-    backgroundColor: '#F7FAFC',
+    minHeight: 40,
+    paddingVertical: 0,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.96)',
     borderWidth: 1,
     borderColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   activeTab: {
-    backgroundColor: '#48bb78ff',
+    backgroundColor: '#2F855A',
+    borderColor: '#2F855A',
   },
   tabText: {
     fontSize: 13,
-    fontWeight: '500',
-    color: '#718096',
+    lineHeight: 16,
+    fontWeight: '600',
+    color: '#4A5568',
+    textAlign: 'center',
+    includeFontPadding: false,
   },
   activeTabText: {
     color: '#FFFFFF',

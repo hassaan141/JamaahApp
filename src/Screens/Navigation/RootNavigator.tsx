@@ -1,7 +1,8 @@
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import Feather from '@expo/vector-icons/Feather'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { createStackNavigator } from '@react-navigation/stack'
+import { Animated, Easing, StyleSheet } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Home from '../BottomNav/Home'
 import Map from '../BottomNav/Map'
@@ -56,6 +57,114 @@ type TabParamList = {
 const Tab = createBottomTabNavigator<TabParamList>()
 const Stack = createStackNavigator<RootStackParamList>()
 
+const TAB_COLORS = {
+  background: '#FFFFFF',
+  border: '#E2E8F0',
+  active: '#2F855A',
+  indicator: '#48BB78',
+  inactive: '#6B7280',
+}
+
+const styles = StyleSheet.create({
+  tabBar: {
+    backgroundColor: TAB_COLORS.background,
+    borderTopWidth: 1,
+    borderTopColor: TAB_COLORS.border,
+    elevation: 0,
+    shadowOpacity: 0,
+    paddingTop: 5,
+  },
+  tabBarItem: {
+    paddingTop: 2,
+    paddingBottom: 2,
+  },
+  iconFrame: {
+    width: 44,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  indicator: {
+    position: 'absolute',
+    bottom: 0,
+    width: 18,
+    height: 3,
+    borderRadius: 999,
+    backgroundColor: TAB_COLORS.indicator,
+  },
+  label: {
+    fontSize: 11,
+    fontWeight: '600',
+    marginTop: 0,
+  },
+})
+
+function AnimatedTabIcon({
+  iconName,
+  color,
+  focused,
+}: {
+  iconName: React.ComponentProps<typeof Feather>['name']
+  color: string
+  focused: boolean
+}) {
+  const translateY = useRef(new Animated.Value(focused ? -1 : 0)).current
+  const scale = useRef(new Animated.Value(focused ? 1.06 : 1)).current
+  const indicatorOpacity = useRef(new Animated.Value(focused ? 1 : 0)).current
+  const indicatorScale = useRef(new Animated.Value(focused ? 1 : 0.7)).current
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(translateY, {
+        toValue: focused ? -1 : 0,
+        duration: 180,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(scale, {
+        toValue: focused ? 1.06 : 1,
+        duration: 180,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(indicatorOpacity, {
+        toValue: focused ? 1 : 0,
+        duration: 160,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: true,
+      }),
+      Animated.timing(indicatorScale, {
+        toValue: focused ? 1 : 0.7,
+        duration: 180,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start()
+  }, [focused, indicatorOpacity, indicatorScale, scale, translateY])
+
+  return (
+    <Animated.View
+      style={[
+        styles.iconFrame,
+        {
+          transform: [{ translateY }, { scale }],
+        },
+      ]}
+    >
+      <Feather name={iconName} size={21} color={color} />
+      <Animated.View
+        style={[
+          styles.indicator,
+          {
+            opacity: indicatorOpacity,
+            transform: [{ scaleX: indicatorScale }],
+          },
+        ]}
+      />
+    </Animated.View>
+  )
+}
+
 function TabNavigator() {
   const insets = useSafeAreaInsets()
 
@@ -64,30 +173,32 @@ function TabNavigator() {
       initialRouteName="Home"
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: '#22C55E',
-        tabBarInactiveTintColor: '#A3A3A3',
-        tabBarIcon: ({ color }) => {
+        tabBarActiveTintColor: TAB_COLORS.active,
+        tabBarInactiveTintColor: TAB_COLORS.inactive,
+        tabBarHideOnKeyboard: true,
+        tabBarIcon: ({ color, focused }) => {
           let iconName: React.ComponentProps<typeof Feather>['name'] = 'home'
           if (route.name === 'Home') iconName = 'home'
           else if (route.name === 'Map') iconName = 'map'
           else if (route.name === 'Organization') iconName = 'calendar'
           else if (route.name === 'Account') iconName = 'user'
-          return <Feather name={iconName} size={24} color={color} />
+          return (
+            <AnimatedTabIcon
+              iconName={iconName}
+              color={color}
+              focused={focused}
+            />
+          )
         },
-        tabBarStyle: {
-          backgroundColor: '#FFFFFF',
-          borderTopWidth: 1,
-          borderTopColor: '#E5E5E5',
-          elevation: 0,
-          shadowOpacity: 0,
-          paddingBottom: insets.bottom,
-          height: 45 + insets.bottom,
-        },
-        tabBarLabelStyle: {
-          fontSize: 10,
-          textTransform: 'none',
-          fontWeight: '500',
-        },
+        tabBarStyle: [
+          styles.tabBar,
+          {
+            paddingBottom: Math.max(insets.bottom, 8),
+            height: 56 + Math.max(insets.bottom, 8),
+          },
+        ],
+        tabBarItemStyle: styles.tabBarItem,
+        tabBarLabelStyle: styles.label,
       })}
     >
       <Tab.Screen name="Home" component={Home} />

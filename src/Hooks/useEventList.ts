@@ -7,6 +7,7 @@ const EVENT_FETCH_LIMIT = 20
 
 export function useEventList(
   location?: { latitude: number; longitude: number } | null,
+  opts?: { postType?: string | null },
 ) {
   const [events, setEvents] = useState<EventItem[]>([])
 
@@ -42,6 +43,7 @@ export function useEventList(
           coords.longitude,
           {
             query: query,
+            postType: opts?.postType ?? undefined,
             limit: EVENT_FETCH_LIMIT,
             offset: offsetRef.current,
           },
@@ -65,7 +67,7 @@ export function useEventList(
         setRefreshing(false)
       }
     },
-    [location],
+    [location, opts?.postType],
   )
 
   useEffect(() => {

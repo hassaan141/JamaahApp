@@ -16,7 +16,7 @@ export default function CompactMapView({
 
 const styles = StyleSheet.create({
   compactMap: {
-    height: 200,
+    height: 232,
     borderBottomLeftRadius: 12,
     borderBottomRightRadius: 12,
     overflow: 'hidden',

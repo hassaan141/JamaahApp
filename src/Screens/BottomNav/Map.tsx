@@ -9,11 +9,13 @@ import {
   RefreshControl,
 } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import DetailedMap from '@/components/Map/DetailedMap'
 import SearchBar from '@/components/SearchBar/SearchBar'
 import MapHeader from '@/components/Map/MapHeader'
 import MapTabs from '@/components/Map/MapTabs'
 import CompactMapView from '@/components/Map/CompactMapView'
+import EventFilterControl from '@/components/Map/EventFilterControl'
 import MasjidList from '@/components/Map/MasjidList'
 import EventList from '@/components/Map/EventList'
 import NoResults from '@/components/Map/NoResults'
@@ -30,6 +32,7 @@ import type { EventItem } from '@/Supabase/fetchEventsFromRPC' // <--- NEW: Impo
 type EventListEvent = Omit<EventItem, 'dist_km'>
 
 export default function MapScreen() {
+  const insets = useSafeAreaInsets()
   const [isExpanded, setIsExpanded] = useState(false)
   const [mapMode, setMapMode] = useState<'masjids' | 'events'>('events')
 
@@ -39,10 +42,15 @@ export default function MapScreen() {
   const fadeAnim = useRef(new Animated.Value(1)).current
   const slideAnim = useRef(new Animated.Value(0)).current
   const { location } = useLocation()
+  const [eventPostTypeFilter, setEventPostTypeFilter] = useState<string | null>(
+    null,
+  )
 
   // 3. Initialize BOTH hooks
   const masjidLogic = useMasjidList(location)
-  const eventLogic = useEventList(location) // <--- NEW: Init event logic
+  const eventLogic = useEventList(location, {
+    postType: eventPostTypeFilter,
+  }) // <--- NEW: Init event logic
 
   // 4. Create "Dynamic" variables based on the current mode
   // This acts as the "Traffic Controller" for your UI
@@ -175,18 +183,32 @@ export default function MapScreen() {
   if (isExpanded) {
     return (
       <Animated.View style={[styles.expandedContainer, { opacity: fadeAnim }]}>
-        <View style={styles.expandedHeader}>
-          <TouchableOpacity style={styles.backButton} onPress={collapseMap}>
-            <Feather name="chevron-left" size={24} color="#2D3748" />
-          </TouchableOpacity>
-          <Text style={styles.expandedTitle}>Map</Text>
-          <View style={styles.placeholder} />
-        </View>
-        <View style={{ backgroundColor: '#fff' }}>
-          <MapTabs selectedTab={mapMode} onTabChange={setMapMode} />
-        </View>
         <View style={styles.expandedMapContainer}>
           <DetailedMap mode={mapMode} />
+        </View>
+        <View
+          style={[
+            styles.expandedOverlayTop,
+            { paddingTop: Math.max(insets.top, 12) },
+          ]}
+          pointerEvents="box-none"
+        >
+          <View style={styles.expandedOverlayRow}>
+            <TouchableOpacity
+              style={styles.floatingBackButton}
+              onPress={collapseMap}
+              activeOpacity={0.9}
+            >
+              <Feather name="chevron-left" size={20} color="#1F2937" />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.expandedOverlayRow}>
+            <MapTabs
+              selectedTab={mapMode}
+              onTabChange={setMapMode}
+              floating={true}
+            />
+          </View>
         </View>
       </Animated.View>
     )
@@ -207,16 +229,26 @@ export default function MapScreen() {
       >
         <View style={styles.searchContainer}>
           {/* 5. Update Search Bar to use Unified Handlers */}
-          <SearchBar
-            value={currentSearchQuery}
-            onChangeText={handleUnifiedSearch}
-            onClear={handleUnifiedClear}
-            placeholder={
-              isMasjidMode
-                ? 'Search for masjids nearby...'
-                : "Search events ('Quran', 'Sisters')..."
-            }
-          />
+          <View style={styles.searchRow}>
+            <View style={styles.searchBarWrapper}>
+              <SearchBar
+                value={currentSearchQuery}
+                onChangeText={handleUnifiedSearch}
+                onClear={handleUnifiedClear}
+                placeholder={
+                  isMasjidMode
+                    ? 'Search for masjids nearby...'
+                    : "Search events ('Quran', 'Sisters')..."
+                }
+              />
+            </View>
+            {!isMasjidMode && (
+              <EventFilterControl
+                value={eventPostTypeFilter}
+                onChange={setEventPostTypeFilter}
+              />
+            )}
+          </View>
         </View>
 
         <View style={styles.compactMapContainer}>
@@ -281,8 +313,6 @@ export default function MapScreen() {
               <NoResults message="No events found" />
             ) : (
               <EventList
-                // We slice(0,3) because this is just the "Preview" list
-                // The full list would be in a separate "See All" screen or similar
                 items={eventLogic.events.slice(0, 3)}
                 onPress={handleEventPress}
                 onDirections={handleEventDirections}
@@ -300,6 +330,14 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F7FAFC' },
   content: { flex: 1 },
   searchContainer: { padding: 20, paddingBottom: 10, marginTop: 40 },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  searchBarWrapper: {
+    flex: 1,
+  },
   compactMapContainer: {
     backgroundColor: '#FFFFFF',
     marginHorizontal: 20,
@@ -385,17 +423,28 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 16,
   },
-  expandedContainer: { flex: 1, backgroundColor: '#F7FAFC' },
-  expandedHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    backgroundColor: '#FFFFFF',
-  },
-  backButton: { padding: 4 },
-  expandedTitle: { fontSize: 18, fontWeight: '600', color: '#2D3748' },
-  placeholder: { width: 32 },
+  expandedContainer: { flex: 1, backgroundColor: '#000000' },
   expandedMapContainer: { flex: 1 },
+  expandedOverlayTop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 16,
+    gap: 12,
+  },
+  expandedOverlayRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+  },
+  floatingBackButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.96)',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 })

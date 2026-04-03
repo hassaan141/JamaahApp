@@ -52,7 +52,7 @@ export default function LoadingScreen() {
     return () => clearInterval(interval)
   }, [])
 
-  // 2. Animate Progress Bar
+  // 2. Animate Progress Barr
   useEffect(() => {
     Animated.timing(progress, {
       toValue: 1,

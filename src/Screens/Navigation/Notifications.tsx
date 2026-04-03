@@ -32,13 +32,6 @@ export default function Notifications() {
   const { session } = useAuth()
   const { profile, loading: profileLoading, refetch } = useProfile()
   const { theme } = useTheme()
-
-  // Guest mode: Redirect to sign-in
-  useEffect(() => {
-    if (!session) {
-      navigation.replace('SignIn')
-    }
-  }, [session, navigation])
   const [loading, setLoading] = useState(false)
   const [notificationType, setNotificationType] =
     useState<NotificationPreference>('Event_Adhan')
@@ -147,6 +140,77 @@ export default function Notifications() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (!session) {
+    return (
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: theme.colors.background }]}
+      >
+        <View
+          style={[
+            styles.header,
+            {
+              backgroundColor: theme.colors.background,
+              borderBottomColor: theme.colors.border,
+            },
+          ]}
+        >
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={[
+              styles.backButton,
+              {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+              },
+            ]}
+          >
+            <Feather name="arrow-left" size={20} color={theme.colors.text} />
+          </TouchableOpacity>
+          <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
+            Notifications
+          </Text>
+        </View>
+
+        <View style={styles.guestContainer}>
+          <View
+            style={[
+              styles.guestCard,
+              {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+                shadowColor: theme.colors.shadow,
+              },
+            ]}
+          >
+            <View
+              style={[
+                styles.guestIconCircle,
+                { backgroundColor: theme.colors.primarySoft },
+              ]}
+            >
+              <Feather name="bell" size={22} color={theme.colors.primary} />
+            </View>
+            <Text style={[styles.guestTitle, { color: theme.colors.text }]}>
+              Sign in to get notifications
+            </Text>
+            <Text style={[styles.guestText, { color: theme.colors.textMuted }]}>
+              Create an account to enable prayer time and event alerts.
+            </Text>
+            <TouchableOpacity
+              style={[
+                styles.guestSignInButton,
+                { backgroundColor: theme.colors.primary },
+              ]}
+              onPress={() => navigation.navigate('SignIn')}
+            >
+              <Text style={styles.guestSignInButtonText}>Sign In</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </SafeAreaView>
+    )
   }
 
   if (profileLoading) {
@@ -520,6 +584,55 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  guestContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  },
+  guestCard: {
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingVertical: 28,
+    paddingHorizontal: 22,
+    alignItems: 'center',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    elevation: 3,
+  },
+  guestIconCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  guestTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  guestText: {
+    fontSize: 15,
+    lineHeight: 22,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  guestSignInButton: {
+    minWidth: 140,
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  guestSignInButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
   },
   loadingText: {
     marginTop: 12,

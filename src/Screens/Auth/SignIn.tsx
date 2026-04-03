@@ -245,10 +245,17 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
+      <View
+        pointerEvents="none"
+        style={[
+          styles.topBounceFill,
+          { backgroundColor: theme.colors.primary },
+        ]}
+      />
       <ScrollView
+        style={styles.scrollView}
         contentContainerStyle={[
           styles.scrollContent,
-          { backgroundColor: theme.colors.background },
           { paddingBottom: insets.bottom + 20 },
         ]}
         showsVerticalScrollIndicator={false}
@@ -256,7 +263,12 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
       >
         <AuthHeader />
 
-        <View style={styles.formContainer}>
+        <View
+          style={[
+            styles.formContainer,
+            { backgroundColor: theme.colors.background },
+          ]}
+        >
           <Text style={[styles.title, { color: theme.colors.text }]}>
             Welcome Back
           </Text>
@@ -446,13 +458,28 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F7FAFC' },
+  scrollView: {
+    flex: 1,
+  },
+  topBounceFill: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 420,
+  },
   scrollContent: {
     flexGrow: 1,
-    backgroundColor: '#F7FAFC',
     // Added static bottom padding for spacing instead of dynamic insets
     paddingBottom: 40,
   },
-  formContainer: { flex: 1, paddingHorizontal: 30, paddingTop: 40 },
+  formContainer: {
+    flex: 1,
+    paddingHorizontal: 30,
+    paddingTop: 40,
+    paddingBottom: 24,
+    marginTop: -1,
+  },
   title: {
     fontSize: 28,
     fontWeight: '600',

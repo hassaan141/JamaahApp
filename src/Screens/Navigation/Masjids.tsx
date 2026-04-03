@@ -68,7 +68,7 @@ const Masjids: React.FC<NavProps> = ({ navigation, route }) => {
         const list = await fetchNearbyMasjids(
           coords.latitude,
           coords.longitude,
-          { q: '', limit: 15 },
+          { q: '', limit: 100 },
         )
         setMasjids(list)
       } catch (err) {
@@ -90,7 +90,7 @@ const Masjids: React.FC<NavProps> = ({ navigation, route }) => {
         const list = await fetchNearbyMasjids(
           coords.latitude,
           coords.longitude,
-          { q: text, limit: 15 },
+          { q: text, limit: 100 },
         )
         setMasjids(list)
       } catch (e) {
@@ -105,7 +105,7 @@ const Masjids: React.FC<NavProps> = ({ navigation, route }) => {
       const coords = location || DEFAULT_LOCATION
       const list = await fetchNearbyMasjids(coords.latitude, coords.longitude, {
         q: '',
-        limit: 15,
+        limit: 100,
       })
       setMasjids(list)
     } catch (e) {
@@ -119,7 +119,7 @@ const Masjids: React.FC<NavProps> = ({ navigation, route }) => {
       const coords = location || DEFAULT_LOCATION
       const list = await fetchNearbyMasjids(coords.latitude, coords.longitude, {
         q,
-        limit: 15,
+        limit: 100,
       })
       setMasjids(list)
     } catch (e) {

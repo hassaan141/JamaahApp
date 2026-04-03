@@ -8,7 +8,7 @@ import {
   Animated,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import logo from '../../../assets/JamahProdNoBG.png'
+import logo from '../../../assets/JamahProdAndroidNoBG.png'
 import { useTheme } from '@/theme'
 
 const { width } = Dimensions.get('window')

@@ -1,6 +1,14 @@
-import React, { createContext, useContext, useMemo, useState } from 'react'
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
 import type { ReactNode } from 'react'
 import { useColorScheme } from 'react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { darkTheme } from './dark'
 import { lightTheme } from './light'
 import type { AppTheme, ThemeMode } from './tokens'
@@ -14,6 +22,8 @@ type ThemeContextValue = {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null)
 
+const THEME_MODE_STORAGE_KEY = '@jamaah_theme_mode'
+
 export function ThemeProvider({
   children,
   initialMode = 'system',
@@ -22,7 +32,50 @@ export function ThemeProvider({
   initialMode?: ThemeMode
 }) {
   const systemColorScheme = useColorScheme()
-  const [mode, setMode] = useState<ThemeMode>(initialMode)
+  const [mode, setModeState] = useState<ThemeMode>(initialMode)
+
+  useEffect(() => {
+    let mounted = true
+
+    const loadStoredMode = async () => {
+      try {
+        const storedMode = await AsyncStorage.getItem(THEME_MODE_STORAGE_KEY)
+        if (
+          mounted &&
+          (storedMode === 'light' ||
+            storedMode === 'dark' ||
+            storedMode === 'system')
+        ) {
+          setModeState(storedMode)
+        }
+      } catch (error) {
+        console.warn('[ThemeProvider] Failed to load theme mode:', error)
+      }
+    }
+
+    loadStoredMode()
+
+    return () => {
+      mounted = false
+    }
+  }, [])
+
+  const setMode = useCallback((nextMode: ThemeMode) => {
+    setModeState(nextMode)
+    AsyncStorage.setItem(THEME_MODE_STORAGE_KEY, nextMode).catch((error) => {
+      console.warn('[ThemeProvider] Failed to persist theme mode:', error)
+    })
+  }, [])
+
+  const toggleMode = useCallback(() => {
+    setModeState((prev) => {
+      const nextMode = prev === 'dark' ? 'light' : 'dark'
+      AsyncStorage.setItem(THEME_MODE_STORAGE_KEY, nextMode).catch((error) => {
+        console.warn('[ThemeProvider] Failed to persist theme mode:', error)
+      })
+      return nextMode
+    })
+  }, [])
 
   const value = useMemo<ThemeContextValue>(() => {
     const resolvedMode =
@@ -31,14 +84,14 @@ export function ThemeProvider({
           ? 'dark'
           : 'light'
         : mode
-    const theme: AppTheme = resolvedMode === 'dark' ? darkTheme : lightTheme
+
     return {
-      theme,
+      theme: resolvedMode === 'dark' ? darkTheme : lightTheme,
       mode,
       setMode,
-      toggleMode: () => setMode((prev) => (prev === 'dark' ? 'light' : 'dark')),
+      toggleMode,
     }
-  }, [mode, systemColorScheme])
+  }, [mode, setMode, systemColorScheme, toggleMode])
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
 }

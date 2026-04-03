@@ -449,7 +449,11 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
                   <Feather name={iconName} size={16} color="white" />
                 </View>
                 <Callout>
-                  <View style={styles.calloutContainer}>
+                  <TouchableOpacity
+                    style={styles.calloutContainer}
+                    activeOpacity={0.8}
+                    onPress={() => setSelectedEvent(event)}
+                  >
                     <Text style={styles.calloutTitle}>{event.title}</Text>
                     <Text style={styles.calloutSubtitle}>
                       {event.organizations?.name || ''}
@@ -457,12 +461,20 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
                     <Text style={styles.calloutSubtitle}>
                       {event.date || ''}
                     </Text>
-                  </View>
+                  </TouchableOpacity>
                 </Callout>
               </Marker>
             )
           })}
       </MapView>
+
+      {selectedEvent ? (
+        <AnnouncementModal
+          visible
+          onClose={() => setSelectedEvent(null)}
+          announcement={selectedEvent}
+        />
+      ) : null}
     </View>
   )
 }

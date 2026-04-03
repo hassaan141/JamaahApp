@@ -43,7 +43,15 @@ export default function WelcomeScreen() {
     <View
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
+      <View
+        pointerEvents="none"
+        style={[
+          styles.topBounceFill,
+          { backgroundColor: theme.colors.primary },
+        ]}
+      />
       <ScrollView
+        style={styles.scrollView}
         contentContainerStyle={[
           styles.scrollContent,
           { paddingBottom: insets.bottom + 20 },
@@ -52,7 +60,12 @@ export default function WelcomeScreen() {
       >
         <AuthHeader />
 
-        <View style={styles.contentContainer}>
+        <View
+          style={[
+            styles.contentContainer,
+            { backgroundColor: theme.colors.background },
+          ]}
+        >
           <Text style={[styles.title, { color: theme.colors.text }]}>
             Welcome to Jamaah
           </Text>
@@ -127,6 +140,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F7FAFC',
   },
+  scrollView: {
+    flex: 1,
+  },
+  topBounceFill: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 420,
+  },
   scrollContent: {
     flexGrow: 1,
   },
@@ -134,6 +157,8 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 30,
     paddingTop: 40,
+    paddingBottom: 24,
+    marginTop: -1,
   },
   title: {
     fontSize: 28,

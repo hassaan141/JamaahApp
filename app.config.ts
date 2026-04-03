@@ -49,7 +49,7 @@ export default () => ({
     splash: {
       image: './assets/JamahProdNoBG.png',
       resizeMode: 'contain',
-      backgroundColor: '#48BB78',
+      backgroundColor: '#245c43',
     },
 
     ios: {
@@ -95,7 +95,7 @@ export default () => ({
       ],
       adaptiveIcon: {
         foregroundImage: './assets/JamahProdAndroidNoBG.png',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: '#245c43',
       },
       icon: './assets/JamahProd.png',
       edgeToEdgeEnabled: true,

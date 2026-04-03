@@ -106,9 +106,23 @@ export default function AnnouncementModal({
             <View style={styles.badgesRow}>
               {announcement.post_type && (
                 <View
-                  style={[styles.badge, { backgroundColor: `${eventColor}15` }]}
+                  style={[
+                    styles.badge,
+                    {
+                      backgroundColor: `${eventColor}15`,
+                      borderColor: 'transparent',
+                    },
+                  ]}
                 >
-                  <Text style={[styles.badgeText, { color: eventColor }]}>
+                  <Text
+                    style={[
+                      styles.badgeText,
+                      {
+                        color: eventColor,
+                        textShadowColor: 'transparent',
+                      },
+                    ]}
+                  >
                     {announcement.post_type === 'Repeating_classes'
                       ? 'Classes'
                       : announcement.post_type === 'Volunteerng'

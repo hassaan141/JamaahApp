@@ -12,10 +12,12 @@ import {
 import Feather from '@expo/vector-icons/Feather'
 import { supabase } from '../../Supabase/supabaseClient'
 import { toast } from '@/components/Toast/toast'
+import { useTheme } from '@/theme'
 
 type Nav = { navigate: (route: string) => void; goBack: () => void }
 
 export default function ForgotPassword({ navigation }: { navigation: Nav }) {
+  const { theme } = useTheme()
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -46,10 +48,13 @@ export default function ForgotPassword({ navigation }: { navigation: Nav }) {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { backgroundColor: theme.colors.background },
+        ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
@@ -58,36 +63,52 @@ export default function ForgotPassword({ navigation }: { navigation: Nav }) {
             style={styles.backButton}
             onPress={() => navigation.goBack()}
           >
-            <Feather name="arrow-left" size={24} color="#2D3748" />
+            <Feather name="arrow-left" size={24} color={theme.colors.text} />
           </TouchableOpacity>
         </View>
 
         <View style={styles.formContainer}>
-          <Text style={styles.title}>Reset Password</Text>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.title, { color: theme.colors.text }]}>
+            Reset Password
+          </Text>
+          <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>
             Enter your email to receive a reset link
           </Text>
 
-          <View style={styles.inputContainer}>
+          <View
+            style={[
+              styles.inputContainer,
+              {
+                borderColor: theme.colors.border,
+                backgroundColor: theme.colors.surface,
+              },
+            ]}
+          >
             <Feather
               name="mail"
               size={20}
-              color="#48BB78"
+              color={theme.colors.primary}
               style={styles.inputIcon}
             />
             <TextInput
-              style={styles.input}
+              style={[styles.input, { color: theme.colors.text }]}
               placeholder="Email"
               value={email}
               onChangeText={setEmail}
               autoCapitalize="none"
               keyboardType="email-address"
-              placeholderTextColor="#A0AEC0"
+              placeholderTextColor={theme.colors.textSoft}
             />
           </View>
 
           <TouchableOpacity
-            style={styles.button}
+            style={[
+              styles.button,
+              {
+                backgroundColor: theme.colors.primary,
+                shadowColor: theme.colors.primary,
+              },
+            ]}
             onPress={handleResetPassword}
             disabled={loading}
           >

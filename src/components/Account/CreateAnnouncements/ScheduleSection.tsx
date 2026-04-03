@@ -2,6 +2,7 @@ import React from 'react'
 import { View, Text } from 'react-native'
 import DaySelector from './DaySelector'
 import DateInput from './DateInput'
+import { useTheme } from '@/theme'
 
 interface ScheduleSectionProps {
   postType: string | null
@@ -18,13 +19,14 @@ export default function ScheduleSection({
   date,
   setDate,
 }: ScheduleSectionProps) {
+  const { theme } = useTheme()
   return (
     <View style={{ marginBottom: 16 }}>
       <Text
         style={{
           fontSize: 14,
           fontWeight: '600',
-          color: '#1D4732',
+          color: theme.colors.text,
           marginBottom: 10,
         }}
       >

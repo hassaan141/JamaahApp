@@ -16,6 +16,7 @@ import { Country, State, City } from 'country-state-city'
 import { supabase } from '../../Supabase/supabaseClient'
 import type { Database } from '../../types'
 import { toast } from '@/components/Toast/toast'
+import { useTheme } from '@/theme'
 // Removed useSafeAreaInsets import
 
 type Nav = { navigate: (route: string) => void; goBack: () => void }
@@ -26,6 +27,7 @@ export default function OrganizationSignUp({
   navigation: Nav
 }) {
   // Removed insets hook
+  const { theme } = useTheme()
   const [loading, setLoading] = useState(false)
 
   const [email, setEmail] = useState('')
@@ -233,123 +235,164 @@ export default function OrganizationSignUp({
     }
   }
 
+  const themedInputContainerStyle = {
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
+  }
+  const themedInputStyle = { color: theme.colors.text }
+  const themedPlaceholderColor = theme.colors.textSoft
+  const themedDropdownMenuStyle = {
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
+    shadowColor: theme.colors.shadow,
+  }
+  const themedDropdownTextStyle = { color: theme.colors.text }
+  const themedDropdownPlaceholderStyle = { color: theme.colors.textSoft }
+  const themedSearchInputStyle = {
+    backgroundColor: theme.colors.background,
+    color: theme.colors.text,
+  }
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
-      <View style={styles.headerContainer}>
+      <View
+        style={[
+          styles.headerContainer,
+          { backgroundColor: theme.colors.background },
+        ]}
+      >
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Feather name="arrow-left" size={24} color="#2D3748" />
+          <Feather name="arrow-left" size={24} color={theme.colors.text} />
         </TouchableOpacity>
       </View>
 
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { backgroundColor: theme.colors.background },
+        ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.formContainer}>
-          <Text style={styles.title}>Register Organization</Text>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.title, { color: theme.colors.text }]}>
+            Register Organization
+          </Text>
+          <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>
             Create your account and register your masjid or Islamic organization
           </Text>
 
-          <Text style={styles.sectionTitle}>Account Information</Text>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+            Account Information
+          </Text>
 
-          <View style={styles.inputContainer}>
+          <View style={[styles.inputContainer, themedInputContainerStyle]}>
             <Feather
               name="mail"
               size={20}
-              color="#48BB78"
+              color={theme.colors.primary}
               style={styles.inputIcon}
             />
             <TextInput
-              style={styles.input}
+              style={[styles.input, themedInputStyle]}
               placeholder="Email Address *"
               value={email}
               onChangeText={setEmail}
               autoCapitalize="none"
               keyboardType="email-address"
-              placeholderTextColor="#A0AEC0"
+              placeholderTextColor={themedPlaceholderColor}
             />
           </View>
 
-          <View style={styles.inputContainer}>
+          <View style={[styles.inputContainer, themedInputContainerStyle]}>
             <Feather
               name="lock"
               size={20}
-              color="#48BB78"
+              color={theme.colors.primary}
               style={styles.inputIcon}
             />
             <TextInput
-              style={styles.input}
+              style={[styles.input, themedInputStyle]}
               placeholder="Password *"
               value={password}
               onChangeText={setPassword}
               secureTextEntry
-              placeholderTextColor="#A0AEC0"
+              placeholderTextColor={themedPlaceholderColor}
             />
           </View>
 
-          <View style={styles.inputContainer}>
+          <View style={[styles.inputContainer, themedInputContainerStyle]}>
             <Feather
               name="lock"
               size={20}
-              color="#48BB78"
+              color={theme.colors.primary}
               style={styles.inputIcon}
             />
             <TextInput
-              style={styles.input}
+              style={[styles.input, themedInputStyle]}
               placeholder="Confirm Password *"
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               secureTextEntry
-              placeholderTextColor="#A0AEC0"
+              placeholderTextColor={themedPlaceholderColor}
             />
           </View>
 
-          <Text style={styles.sectionTitle}>Organization Information</Text>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+            Organization Information
+          </Text>
 
-          <View style={styles.inputContainer}>
+          <View style={[styles.inputContainer, themedInputContainerStyle]}>
             <Feather
               name="home"
               size={20}
-              color="#48BB78"
+              color={theme.colors.primary}
               style={styles.inputIcon}
             />
             <TextInput
-              style={styles.input}
+              style={[styles.input, themedInputStyle]}
               placeholder="Organization Name *"
               value={name}
               onChangeText={setName}
               autoCapitalize="words"
-              placeholderTextColor="#A0AEC0"
+              placeholderTextColor={themedPlaceholderColor}
             />
           </View>
 
-          <View style={styles.inputContainer}>
+          <View style={[styles.inputContainer, themedInputContainerStyle]}>
             <Feather
               name="tag"
               size={20}
-              color="#48BB78"
+              color={theme.colors.primary}
               style={styles.inputIcon}
             />
             <Dropdown
               style={styles.dropdownInputBox}
-              containerStyle={styles.dropdownMenuContainer}
+              containerStyle={[
+                styles.dropdownMenuContainer,
+                themedDropdownMenuStyle,
+              ]}
               data={orgTypeOptions}
               labelField="label"
               valueField="value"
               placeholder="Select organization type"
               value={type}
               onChange={(item: Option) => setType(item.value)}
-              placeholderStyle={styles.dropdownPlaceholder}
-              selectedTextStyle={styles.dropdownSelectedText}
-              itemTextStyle={styles.dropdownItemText}
+              placeholderStyle={[
+                styles.dropdownPlaceholder,
+                themedDropdownPlaceholderStyle,
+              ]}
+              selectedTextStyle={[
+                styles.dropdownSelectedText,
+                themedDropdownTextStyle,
+              ]}
+              itemTextStyle={[styles.dropdownItemText, themedDropdownTextStyle]}
               iconStyle={styles.dropdownArrow}
             />
           </View>
@@ -358,35 +401,49 @@ export default function OrganizationSignUp({
           <View
             style={[
               styles.inputContainer,
+              themedInputContainerStyle,
               { height: 110, paddingVertical: 12 },
             ]}
           >
             <Feather
               name="align-left"
               size={20}
-              color="#48BB78"
+              color={theme.colors.primary}
               style={styles.inputIcon}
             />
             <TextInput
-              style={[styles.input, { textAlignVertical: 'top' }]}
+              style={[
+                styles.input,
+                themedInputStyle,
+                { textAlignVertical: 'top' },
+              ]}
               placeholder="Description (optional)"
               value={description}
               onChangeText={setDescription}
               multiline
               numberOfLines={4}
-              placeholderTextColor="#A0AEC0"
+              placeholderTextColor={themedPlaceholderColor}
             />
           </View>
 
           {/* Amenities: only show when organization type is masjid */}
           {type === 'masjid' && (
             <View style={{ marginBottom: 10 }}>
-              <Text style={[styles.sectionTitle, { marginBottom: 8 }]}>
+              <Text
+                style={[
+                  styles.sectionTitle,
+                  { marginBottom: 8, color: theme.colors.text },
+                ]}
+              >
                 Amenities (optional)
               </Text>
               {/* Each amenity is a row with label + switch */}
-              <View style={styles.switchRow}>
-                <Text style={styles.amenityLabel}>Street parking</Text>
+              <View style={[styles.switchRow, themedInputContainerStyle]}>
+                <Text
+                  style={[styles.amenityLabel, { color: theme.colors.text }]}
+                >
+                  Street parking
+                </Text>
                 <Switch
                   value={amenities.street_parking}
                   onValueChange={() =>
@@ -397,8 +454,12 @@ export default function OrganizationSignUp({
                   }
                 />
               </View>
-              <View style={styles.switchRow}>
-                <Text style={styles.amenityLabel}>Women washroom</Text>
+              <View style={[styles.switchRow, themedInputContainerStyle]}>
+                <Text
+                  style={[styles.amenityLabel, { color: theme.colors.text }]}
+                >
+                  Women washroom
+                </Text>
                 <Switch
                   value={amenities.women_washroom}
                   onValueChange={() =>
@@ -409,8 +470,12 @@ export default function OrganizationSignUp({
                   }
                 />
               </View>
-              <View style={styles.switchRow}>
-                <Text style={styles.amenityLabel}>On-site parking</Text>
+              <View style={[styles.switchRow, themedInputContainerStyle]}>
+                <Text
+                  style={[styles.amenityLabel, { color: theme.colors.text }]}
+                >
+                  On-site parking
+                </Text>
                 <Switch
                   value={amenities.on_site_parking}
                   onValueChange={() =>
@@ -421,8 +486,12 @@ export default function OrganizationSignUp({
                   }
                 />
               </View>
-              <View style={styles.switchRow}>
-                <Text style={styles.amenityLabel}>Women prayer space</Text>
+              <View style={[styles.switchRow, themedInputContainerStyle]}>
+                <Text
+                  style={[styles.amenityLabel, { color: theme.colors.text }]}
+                >
+                  Women prayer space
+                </Text>
                 <Switch
                   value={amenities.women_prayer_space}
                   onValueChange={() =>
@@ -433,8 +502,12 @@ export default function OrganizationSignUp({
                   }
                 />
               </View>
-              <View style={styles.switchRow}>
-                <Text style={styles.amenityLabel}>Wheelchair accessible</Text>
+              <View style={[styles.switchRow, themedInputContainerStyle]}>
+                <Text
+                  style={[styles.amenityLabel, { color: theme.colors.text }]}
+                >
+                  Wheelchair accessible
+                </Text>
                 <Switch
                   value={amenities.wheelchair_accessible}
                   onValueChange={() =>
@@ -448,35 +521,40 @@ export default function OrganizationSignUp({
             </View>
           )}
 
-          <Text style={styles.sectionTitle}>Location</Text>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+            Location
+          </Text>
 
-          <View style={styles.inputContainer}>
+          <View style={[styles.inputContainer, themedInputContainerStyle]}>
             <Feather
               name="map-pin"
               size={20}
-              color="#48BB78"
+              color={theme.colors.primary}
               style={styles.inputIcon}
             />
             <TextInput
-              style={styles.input}
+              style={[styles.input, themedInputStyle]}
               placeholder="Street Address *"
               value={address}
               onChangeText={setAddress}
               autoCapitalize="words"
-              placeholderTextColor="#A0AEC0"
+              placeholderTextColor={themedPlaceholderColor}
             />
           </View>
 
-          <View style={styles.inputContainer}>
+          <View style={[styles.inputContainer, themedInputContainerStyle]}>
             <Feather
               name="globe"
               size={20}
-              color="#48BB78"
+              color={theme.colors.primary}
               style={styles.inputIcon}
             />
             <Dropdown
               style={styles.dropdownInputBox}
-              containerStyle={styles.dropdownMenuContainer}
+              containerStyle={[
+                styles.dropdownMenuContainer,
+                themedDropdownMenuStyle,
+              ]}
               data={countryOptions}
               search
               maxHeight={250}
@@ -487,25 +565,37 @@ export default function OrganizationSignUp({
               value={countryCode}
               onChange={handleCountryChange}
               disable={false}
-              placeholderStyle={styles.dropdownPlaceholder}
-              selectedTextStyle={styles.dropdownSelectedText}
-              itemTextStyle={styles.dropdownItemText}
+              placeholderStyle={[
+                styles.dropdownPlaceholder,
+                themedDropdownPlaceholderStyle,
+              ]}
+              selectedTextStyle={[
+                styles.dropdownSelectedText,
+                themedDropdownTextStyle,
+              ]}
+              itemTextStyle={[styles.dropdownItemText, themedDropdownTextStyle]}
               iconStyle={styles.dropdownArrow}
-              inputSearchStyle={styles.dropdownSearchInput}
+              inputSearchStyle={[
+                styles.dropdownSearchInput,
+                themedSearchInputStyle,
+              ]}
             />
           </View>
 
           {stateOptions.length > 0 && (
-            <View style={styles.inputContainer}>
+            <View style={[styles.inputContainer, themedInputContainerStyle]}>
               <Feather
                 name="flag"
                 size={20}
-                color="#48BB78"
+                color={theme.colors.primary}
                 style={styles.inputIcon}
               />
               <Dropdown
                 style={styles.dropdownInputBox}
-                containerStyle={styles.dropdownMenuContainer}
+                containerStyle={[
+                  styles.dropdownMenuContainer,
+                  themedDropdownMenuStyle,
+                ]}
                 data={stateOptions}
                 search
                 maxHeight={250}
@@ -516,26 +606,41 @@ export default function OrganizationSignUp({
                 value={provinceStateCode}
                 onChange={handleStateChange}
                 disable={!countryCode}
-                placeholderStyle={styles.dropdownPlaceholder}
-                selectedTextStyle={styles.dropdownSelectedText}
-                itemTextStyle={styles.dropdownItemText}
+                placeholderStyle={[
+                  styles.dropdownPlaceholder,
+                  themedDropdownPlaceholderStyle,
+                ]}
+                selectedTextStyle={[
+                  styles.dropdownSelectedText,
+                  themedDropdownTextStyle,
+                ]}
+                itemTextStyle={[
+                  styles.dropdownItemText,
+                  themedDropdownTextStyle,
+                ]}
                 iconStyle={styles.dropdownArrow}
-                inputSearchStyle={styles.dropdownSearchInput}
+                inputSearchStyle={[
+                  styles.dropdownSearchInput,
+                  themedSearchInputStyle,
+                ]}
               />
             </View>
           )}
 
           {cityOptions.length > 0 && (
-            <View style={styles.inputContainer}>
+            <View style={[styles.inputContainer, themedInputContainerStyle]}>
               <Feather
                 name="map"
                 size={20}
-                color="#48BB78"
+                color={theme.colors.primary}
                 style={styles.inputIcon}
               />
               <Dropdown
                 style={styles.dropdownInputBox}
-                containerStyle={styles.dropdownMenuContainer}
+                containerStyle={[
+                  styles.dropdownMenuContainer,
+                  themedDropdownMenuStyle,
+                ]}
                 data={cityOptions}
                 search
                 maxHeight={250}
@@ -546,162 +651,184 @@ export default function OrganizationSignUp({
                 value={city}
                 onChange={handleCityChange}
                 disable={!provinceStateCode}
-                placeholderStyle={styles.dropdownPlaceholder}
-                selectedTextStyle={styles.dropdownSelectedText}
-                itemTextStyle={styles.dropdownItemText}
+                placeholderStyle={[
+                  styles.dropdownPlaceholder,
+                  themedDropdownPlaceholderStyle,
+                ]}
+                selectedTextStyle={[
+                  styles.dropdownSelectedText,
+                  themedDropdownTextStyle,
+                ]}
+                itemTextStyle={[
+                  styles.dropdownItemText,
+                  themedDropdownTextStyle,
+                ]}
                 iconStyle={styles.dropdownArrow}
-                inputSearchStyle={styles.dropdownSearchInput}
+                inputSearchStyle={[
+                  styles.dropdownSearchInput,
+                  themedSearchInputStyle,
+                ]}
               />
             </View>
           )}
 
-          <View style={styles.inputContainer}>
+          <View style={[styles.inputContainer, themedInputContainerStyle]}>
             <Feather
               name="hash"
               size={20}
-              color="#48BB78"
+              color={theme.colors.primary}
               style={styles.inputIcon}
             />
             <TextInput
-              style={styles.input}
+              style={[styles.input, themedInputStyle]}
               placeholder="Postal Code"
               value={postalCode}
               onChangeText={setPostalCode}
               autoCapitalize="characters"
-              placeholderTextColor="#A0AEC0"
+              placeholderTextColor={themedPlaceholderColor}
             />
           </View>
 
-          <Text style={styles.sectionTitle}>Contact Information</Text>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+            Contact Information
+          </Text>
 
-          <View style={styles.inputContainer}>
+          <View style={[styles.inputContainer, themedInputContainerStyle]}>
             <Feather
               name="user"
               size={20}
-              color="#48BB78"
+              color={theme.colors.primary}
               style={styles.inputIcon}
             />
             <TextInput
-              style={styles.input}
+              style={[styles.input, themedInputStyle]}
               placeholder="Contact Person Name *"
               value={contactName}
               onChangeText={setContactName}
               autoCapitalize="words"
-              placeholderTextColor="#A0AEC0"
+              placeholderTextColor={themedPlaceholderColor}
             />
           </View>
 
-          <View style={styles.inputContainer}>
+          <View style={[styles.inputContainer, themedInputContainerStyle]}>
             <Feather
               name="phone"
               size={20}
-              color="#48BB78"
+              color={theme.colors.primary}
               style={styles.inputIcon}
             />
             <TextInput
-              style={styles.input}
+              style={[styles.input, themedInputStyle]}
               placeholder="Contact Phone"
               value={contactPhone}
               onChangeText={setContactPhone}
               keyboardType="phone-pad"
-              placeholderTextColor="#A0AEC0"
+              placeholderTextColor={themedPlaceholderColor}
             />
           </View>
 
-          <Text style={styles.sectionTitle}>Online Presence (Optional)</Text>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+            Online Presence (Optional)
+          </Text>
 
-          <View style={styles.inputContainer}>
+          <View style={[styles.inputContainer, themedInputContainerStyle]}>
             <Feather
               name="globe"
               size={20}
-              color="#48BB78"
+              color={theme.colors.primary}
               style={styles.inputIcon}
             />
             <TextInput
-              style={styles.input}
+              style={[styles.input, themedInputStyle]}
               placeholder="Website URL"
               value={website}
               onChangeText={setWebsite}
               autoCapitalize="none"
               keyboardType="url"
-              placeholderTextColor="#A0AEC0"
+              placeholderTextColor={themedPlaceholderColor}
             />
           </View>
 
-          <View style={styles.inputContainer}>
+          <View style={[styles.inputContainer, themedInputContainerStyle]}>
             <Feather
               name="link-2"
               size={20}
-              color="#48BB78"
+              color={theme.colors.primary}
               style={styles.inputIcon}
             />
             <TextInput
-              style={styles.input}
+              style={[styles.input, themedInputStyle]}
               placeholder="Facebook Page URL"
               value={facebook}
               onChangeText={setFacebook}
               autoCapitalize="none"
               keyboardType="url"
-              placeholderTextColor="#A0AEC0"
+              placeholderTextColor={themedPlaceholderColor}
             />
           </View>
 
-          <View style={styles.inputContainer}>
+          <View style={[styles.inputContainer, themedInputContainerStyle]}>
             <Feather
               name="link-2"
               size={20}
-              color="#48BB78"
+              color={theme.colors.primary}
               style={styles.inputIcon}
             />
             <TextInput
-              style={styles.input}
+              style={[styles.input, themedInputStyle]}
               placeholder="Instagram URL"
               value={instagram}
               onChangeText={setInstagram}
               autoCapitalize="none"
               keyboardType="url"
-              placeholderTextColor="#A0AEC0"
+              placeholderTextColor={themedPlaceholderColor}
             />
           </View>
 
-          <View style={styles.inputContainer}>
+          <View style={[styles.inputContainer, themedInputContainerStyle]}>
             <Feather
               name="link-2"
               size={20}
-              color="#48BB78"
+              color={theme.colors.primary}
               style={styles.inputIcon}
             />
             <TextInput
-              style={styles.input}
+              style={[styles.input, themedInputStyle]}
               placeholder="Twitter URL"
               value={twitter}
               onChangeText={setTwitter}
               autoCapitalize="none"
               keyboardType="url"
-              placeholderTextColor="#A0AEC0"
+              placeholderTextColor={themedPlaceholderColor}
             />
           </View>
 
-          <View style={styles.inputContainer}>
+          <View style={[styles.inputContainer, themedInputContainerStyle]}>
             <Feather
               name="clock"
               size={20}
-              color="#48BB78"
+              color={theme.colors.primary}
               style={styles.inputIcon}
             />
             <TextInput
-              style={styles.input}
+              style={[styles.input, themedInputStyle]}
               placeholder="Donation Link URL"
               value={donateLink}
               onChangeText={setDonateLink}
               autoCapitalize="none"
               keyboardType="url"
-              placeholderTextColor="#A0AEC0"
+              placeholderTextColor={themedPlaceholderColor}
             />
           </View>
 
           <TouchableOpacity
-            style={styles.button}
+            style={[
+              styles.button,
+              {
+                backgroundColor: theme.colors.primary,
+                shadowColor: theme.colors.primary,
+              },
+            ]}
             onPress={handleSignUp}
             disabled={loading}
           >
@@ -716,9 +843,16 @@ export default function OrganizationSignUp({
             style={styles.switchContainer}
             onPress={() => navigation.navigate('SignIn')}
           >
-            <Text style={styles.switchText}>
+            <Text
+              style={[styles.switchText, { color: theme.colors.textMuted }]}
+            >
               Already have an account?{' '}
-              <Text style={styles.switchTextBold}> Login</Text>
+              <Text
+                style={[styles.switchTextBold, { color: theme.colors.primary }]}
+              >
+                {' '}
+                Login
+              </Text>
             </Text>
           </TouchableOpacity>
         </View>

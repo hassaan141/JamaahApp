@@ -1,5 +1,6 @@
 import React from 'react'
 import { View, Text, TextInput } from 'react-native'
+import { useTheme } from '@/theme'
 
 interface TitleInputProps {
   title: string
@@ -7,13 +8,15 @@ interface TitleInputProps {
 }
 
 export default function TitleInput({ title, setTitle }: TitleInputProps) {
+  const { theme } = useTheme()
+
   return (
     <View style={{ marginBottom: 16 }}>
       <Text
         style={{
           fontSize: 14,
           fontWeight: '600',
-          color: '#1D4732',
+          color: theme.colors.text,
           marginBottom: 8,
         }}
       >
@@ -23,16 +26,16 @@ export default function TitleInput({ title, setTitle }: TitleInputProps) {
         value={title}
         onChangeText={setTitle}
         placeholder="E.g. Ramadan night program"
-        placeholderTextColor="#6C757D"
+        placeholderTextColor={theme.colors.textSoft}
         style={{
-          backgroundColor: '#F8F9FA',
+          backgroundColor: theme.colors.surfaceMuted,
           borderRadius: 8,
           borderWidth: 1,
-          borderColor: '#DEE2E6',
+          borderColor: theme.colors.border,
           paddingHorizontal: 12,
           paddingVertical: 10,
           fontSize: 15,
-          color: '#1D4732',
+          color: theme.colors.text,
         }}
       />
     </View>

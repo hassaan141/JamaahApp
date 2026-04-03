@@ -861,13 +861,7 @@ export default function OrganizationDetail() {
         <View style={styles.headerRow}>
           <TouchableOpacity
             onPress={handleGoBack}
-            style={[
-              styles.backButton,
-              {
-                backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.border,
-              },
-            ]}
+            style={styles.backButton}
             activeOpacity={0.7}
           >
             <Feather name="arrow-left" size={22} color={theme.colors.primary} />

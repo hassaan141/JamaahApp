@@ -1,7 +1,7 @@
-export type ThemeMode = 'light' | 'dark'
+export type ThemeMode = 'light' | 'dark' | 'system'
 
 export type AppTheme = {
-  mode: ThemeMode
+  mode: 'light' | 'dark'
   colors: {
     background: string
     surface: string

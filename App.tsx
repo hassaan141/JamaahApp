@@ -5,6 +5,7 @@ import {
   Text,
   TouchableOpacity,
   ActivityIndicator,
+  useColorScheme,
 } from 'react-native'
 import { NavigationContainer, CommonActions } from '@react-navigation/native'
 import type { NavigationContainerRef } from '@react-navigation/native'
@@ -21,6 +22,7 @@ import ToastHost from './src/components/Toast/ToastHost'
 import ForceUpdateScreen from './src/Screens/Navigation/ForceUpdateScreen'
 import { checkForForcedUpdate } from './src/Utils/checkForForcedUpdate'
 import { ThemeProvider, useTheme } from './src/theme'
+import { darkTheme } from './src/theme/dark'
 import { lightTheme } from './src/theme/light'
 
 const ONBOARDING_COMPLETE_KEY = '@jamaah_onboarding_complete'
@@ -132,8 +134,10 @@ function AppNavigator() {
 }
 
 export default function App() {
+  const colorScheme = useColorScheme()
   const [checkingUpdate, setCheckingUpdate] = useState(true)
   const [forceUpdate, setForceUpdate] = useState(false)
+  const bootTheme = colorScheme === 'dark' ? darkTheme : lightTheme
 
   useEffect(() => {
     let didTimeout = false
@@ -167,10 +171,10 @@ export default function App() {
           flex: 1,
           justifyContent: 'center',
           alignItems: 'center',
-          backgroundColor: lightTheme.colors.background,
+          backgroundColor: bootTheme.colors.background,
         }}
       >
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color={bootTheme.colors.primary} />
       </View>
     )
   }

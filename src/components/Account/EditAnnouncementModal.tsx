@@ -10,6 +10,7 @@ import DescriptionInput from './CreateAnnouncements/DescriptionInput'
 import LocationSelector from './CreateAnnouncements/LocationSelector'
 import type { Organization, OrgPost } from '@/types'
 import { ENV } from '@/core/env'
+import { useTheme } from '@/theme'
 
 export default function EditAnnouncementModal({
   visible,
@@ -38,6 +39,7 @@ export default function EditAnnouncementModal({
   }) => Promise<void>
   onDelete: () => Promise<void>
 }) {
+  const { theme } = useTheme()
   const [announcementTitle, setAnnouncementTitle] = useState('')
   const [announcementBody, setAnnouncementBody] = useState('')
   const [startTime, setStartTime] = useState<string | null>(null)
@@ -191,7 +193,7 @@ export default function EditAnnouncementModal({
       <View
         style={{
           flex: 1,
-          backgroundColor: 'rgba(0,0,0,0.5)',
+          backgroundColor: theme.colors.overlay,
           justifyContent: 'center',
           alignItems: 'center',
           padding: 16,
@@ -199,13 +201,15 @@ export default function EditAnnouncementModal({
       >
         <View
           style={{
-            backgroundColor: '#FFFFFF',
+            backgroundColor: theme.colors.surface,
             borderRadius: 12,
             paddingTop: 16,
             width: '100%',
             maxWidth: 400,
             maxHeight: 600,
             overflow: 'hidden',
+            borderWidth: 1,
+            borderColor: theme.colors.border,
           }}
         >
           {/* Header */}
@@ -220,21 +224,31 @@ export default function EditAnnouncementModal({
             <Feather
               name="edit-3"
               size={24}
-              color="#2F855A"
+              color={theme.colors.primary}
               style={{ marginRight: 12 }}
             />
             <View style={{ flex: 1 }}>
               <Text
-                style={{ fontSize: 20, fontWeight: '600', color: '#1D4732' }}
+                style={{
+                  fontSize: 20,
+                  fontWeight: '600',
+                  color: theme.colors.text,
+                }}
               >
                 Edit Announcement
               </Text>
-              <Text style={{ fontSize: 13, color: '#6C757D', marginTop: 2 }}>
+              <Text
+                style={{
+                  fontSize: 13,
+                  color: theme.colors.textMuted,
+                  marginTop: 2,
+                }}
+              >
                 Update your announcement details
               </Text>
             </View>
             <TouchableOpacity onPress={onClose}>
-              <Feather name="x" size={24} color="#6C757D" />
+              <Feather name="x" size={24} color={theme.colors.textMuted} />
             </TouchableOpacity>
           </View>
 
@@ -300,7 +314,7 @@ export default function EditAnnouncementModal({
           >
             <TouchableOpacity
               style={{
-                backgroundColor: '#DC2626',
+                backgroundColor: theme.colors.danger,
                 borderRadius: 8,
                 paddingVertical: 10,
                 paddingHorizontal: 16,
@@ -323,18 +337,23 @@ export default function EditAnnouncementModal({
                   paddingHorizontal: 20,
                   borderRadius: 8,
                   marginRight: 10,
+                  backgroundColor: theme.colors.surfaceMuted,
                 }}
                 onPress={onClose}
               >
                 <Text
-                  style={{ color: '#6C757D', fontWeight: '600', fontSize: 15 }}
+                  style={{
+                    color: theme.colors.textMuted,
+                    fontWeight: '600',
+                    fontSize: 15,
+                  }}
                 >
                   Cancel
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={{
-                  backgroundColor: '#2F855A',
+                  backgroundColor: theme.colors.primary,
                   borderRadius: 8,
                   paddingVertical: 10,
                   paddingHorizontal: 20,

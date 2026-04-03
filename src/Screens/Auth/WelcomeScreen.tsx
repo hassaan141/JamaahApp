@@ -12,12 +12,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import AuthHeader from '../../components/Auth/AuthHeader'
 import type { RootStackParamList } from '@/Screens/Navigation/RootNavigator'
+import { useTheme } from '@/theme'
 
 const ONBOARDING_COMPLETE_KEY = '@jamaah_onboarding_complete'
 
 export default function WelcomeScreen() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>()
   const insets = useSafeAreaInsets()
+  const { theme } = useTheme()
 
   const handleSignIn = () => {
     navigation.navigate('SignIn')
@@ -38,7 +40,9 @@ export default function WelcomeScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
@@ -49,14 +53,22 @@ export default function WelcomeScreen() {
         <AuthHeader />
 
         <View style={styles.contentContainer}>
-          <Text style={styles.title}>Welcome to Jamaah</Text>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.title, { color: theme.colors.text }]}>
+            Welcome to Jamaah
+          </Text>
+          <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>
             Connect with your local Islamic community
           </Text>
 
           <View style={styles.buttonContainer}>
             <TouchableOpacity
-              style={styles.primaryButton}
+              style={[
+                styles.primaryButton,
+                {
+                  backgroundColor: theme.colors.primary,
+                  shadowColor: theme.colors.primary,
+                },
+              ]}
               onPress={handleSignIn}
               activeOpacity={0.8}
             >
@@ -64,11 +76,24 @@ export default function WelcomeScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.secondaryButton}
+              style={[
+                styles.secondaryButton,
+                {
+                  backgroundColor: theme.colors.surface,
+                  borderColor: theme.colors.primary,
+                },
+              ]}
               onPress={handleSignUp}
               activeOpacity={0.8}
             >
-              <Text style={styles.secondaryButtonText}>Sign Up</Text>
+              <Text
+                style={[
+                  styles.secondaryButtonText,
+                  { color: theme.colors.primary },
+                ]}
+              >
+                Sign Up
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -76,7 +101,14 @@ export default function WelcomeScreen() {
               onPress={handleContinueAsGuest}
               activeOpacity={0.7}
             >
-              <Text style={styles.guestButtonText}>Continue as Guest</Text>
+              <Text
+                style={[
+                  styles.guestButtonText,
+                  { color: theme.colors.textMuted },
+                ]}
+              >
+                Continue as Guest
+              </Text>
             </TouchableOpacity>
           </View>
 

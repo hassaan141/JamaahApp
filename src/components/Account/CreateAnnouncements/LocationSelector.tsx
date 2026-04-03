@@ -7,6 +7,7 @@ import {
   TextInput,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
+import { useTheme } from '@/theme'
 
 // Updated interface to explicitly allow nulls
 interface LocationData {
@@ -31,6 +32,7 @@ export default function LocationSelector({
   onLocationChange,
   initialLocationData,
 }: LocationSelectorProps) {
+  const { theme } = useTheme()
   // Determine initial state based on initial data
   const initialUseCurrentAddress = initialLocationData?.isCurrentAddress ?? true
   const initialCustomAddress =
@@ -102,7 +104,9 @@ export default function LocationSelector({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionTitle}>Event Location</Text>
+      <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+        Event Location
+      </Text>
 
       <View style={styles.radioContainer}>
         <TouchableOpacity
@@ -110,11 +114,26 @@ export default function LocationSelector({
           onPress={() => handleLocationTypeChange(true)}
         >
           <View
-            style={[styles.radio, useCurrentAddress && styles.radioSelected]}
+            style={[
+              styles.radio,
+              { borderColor: theme.colors.border },
+              useCurrentAddress && {
+                borderColor: theme.colors.primary,
+              },
+            ]}
           >
-            {useCurrentAddress && <View style={styles.radioInner} />}
+            {useCurrentAddress && (
+              <View
+                style={[
+                  styles.radioInner,
+                  { backgroundColor: theme.colors.primary },
+                ]}
+              />
+            )}
           </View>
-          <Text style={styles.radioText}>Current address</Text>
+          <Text style={[styles.radioText, { color: theme.colors.text }]}>
+            Current address
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -122,37 +141,69 @@ export default function LocationSelector({
           onPress={() => handleLocationTypeChange(false)}
         >
           <View
-            style={[styles.radio, !useCurrentAddress && styles.radioSelected]}
+            style={[
+              styles.radio,
+              { borderColor: theme.colors.border },
+              !useCurrentAddress && {
+                borderColor: theme.colors.primary,
+              },
+            ]}
           >
-            {!useCurrentAddress && <View style={styles.radioInner} />}
+            {!useCurrentAddress && (
+              <View
+                style={[
+                  styles.radioInner,
+                  { backgroundColor: theme.colors.primary },
+                ]}
+              />
+            )}
           </View>
-          <Text style={styles.radioText}>Custom address</Text>
+          <Text style={[styles.radioText, { color: theme.colors.text }]}>
+            Custom address
+          </Text>
         </TouchableOpacity>
       </View>
 
       {useCurrentAddress && orgAddress && (
-        <View style={styles.currentAddressContainer}>
-          <Feather name="map-pin" size={16} color="#48BB78" />
-          <Text style={styles.currentAddressText}>{orgAddress}</Text>
+        <View
+          style={[
+            styles.currentAddressContainer,
+            { backgroundColor: theme.colors.primarySoft },
+          ]}
+        >
+          <Feather name="map-pin" size={16} color={theme.colors.primary} />
+          <Text
+            style={[styles.currentAddressText, { color: theme.colors.text }]}
+          >
+            {orgAddress}
+          </Text>
         </View>
       )}
 
       {!useCurrentAddress && (
         <View>
-          <View style={styles.inputContainer}>
+          <View
+            style={[
+              styles.inputContainer,
+              {
+                borderColor: theme.colors.border,
+                backgroundColor: theme.colors.surfaceMuted,
+              },
+            ]}
+          >
             <Feather
               name="map-pin"
               size={18}
-              color="#48BB78"
+              color={theme.colors.primary}
               style={styles.inputIcon}
             />
             <TextInput
-              style={styles.customAddressInput}
+              style={[styles.customAddressInput, { color: theme.colors.text }]}
               placeholder="123 main st, city, province, country"
               value={customAddress}
               onChangeText={handleTextChange}
               returnKeyType="done"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={theme.colors.textSoft}
             />
           </View>
         </View>

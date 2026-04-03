@@ -8,11 +8,13 @@ import {
 } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
 import { useSafeAreaInsets } from 'react-native-safe-area-context' // Added import
+import { useTheme } from '@/theme'
 
 type Nav = { navigate: (route: string) => void; goBack: () => void }
 
 export default function UserTypeSelection({ navigation }: { navigation: Nav }) {
   const insets = useSafeAreaInsets() // Get safe area insets
+  const { theme } = useTheme()
 
   const handleUserSelection = (userType: 'user' | 'organization') => {
     if (userType === 'user') {
@@ -23,14 +25,16 @@ export default function UserTypeSelection({ navigation }: { navigation: Nav }) {
   }
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       {/* FIX: Header top padding based on safe area */}
       <View style={[styles.headerContainer, { paddingTop: insets.top + 10 }]}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Feather name="arrow-left" size={24} color="#2D3748" />
+          <Feather name="arrow-left" size={24} color={theme.colors.text} />
         </TouchableOpacity>
       </View>
 
@@ -43,33 +47,73 @@ export default function UserTypeSelection({ navigation }: { navigation: Nav }) {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>Join Our Community</Text>
-        <Text style={styles.subtitle}>Choose how you want to sign up</Text>
+        <Text style={[styles.title, { color: theme.colors.text }]}>
+          Join Our Community
+        </Text>
+        <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>
+          Choose how you want to sign up
+        </Text>
 
         <View style={styles.optionsContainer}>
           <TouchableOpacity
-            style={styles.optionCard}
+            style={[
+              styles.optionCard,
+              {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+              },
+            ]}
             onPress={() => handleUserSelection('user')}
           >
-            <View style={styles.iconContainer}>
-              <Feather name="user" size={30} color="#48BB78" />
+            <View
+              style={[
+                styles.iconContainer,
+                { backgroundColor: theme.colors.primarySoft },
+              ]}
+            >
+              <Feather name="user" size={30} color={theme.colors.primary} />
             </View>
-            <Text style={styles.optionTitle}>Individual</Text>
-            <Text style={styles.optionDescription}>
+            <Text style={[styles.optionTitle, { color: theme.colors.text }]}>
+              Individual
+            </Text>
+            <Text
+              style={[
+                styles.optionDescription,
+                { color: theme.colors.textMuted },
+              ]}
+            >
               Join as a community member to find nearby masjids, view prayer
               times, and stay connected with your local Islamic community.
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.optionCard}
+            style={[
+              styles.optionCard,
+              {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+              },
+            ]}
             onPress={() => handleUserSelection('organization')}
           >
-            <View style={styles.iconContainer}>
-              <Feather name="home" size={30} color="#48BB78" />
+            <View
+              style={[
+                styles.iconContainer,
+                { backgroundColor: theme.colors.primarySoft },
+              ]}
+            >
+              <Feather name="home" size={30} color={theme.colors.primary} />
             </View>
-            <Text style={styles.optionTitle}>Organization</Text>
-            <Text style={styles.optionDescription}>
+            <Text style={[styles.optionTitle, { color: theme.colors.text }]}>
+              Organization
+            </Text>
+            <Text
+              style={[
+                styles.optionDescription,
+                { color: theme.colors.textMuted },
+              ]}
+            >
               Register your masjid or Islamic organization to manage your
               community, share programs, and connect with local Muslims.
             </Text>
@@ -80,9 +124,14 @@ export default function UserTypeSelection({ navigation }: { navigation: Nav }) {
           style={styles.loginContainer}
           onPress={() => navigation.navigate('SignIn')}
         >
-          <Text style={styles.loginText}>
+          <Text style={[styles.loginText, { color: theme.colors.textMuted }]}>
             Already have an account?
-            <Text style={styles.loginTextBold}> Login</Text>
+            <Text
+              style={[styles.loginTextBold, { color: theme.colors.primary }]}
+            >
+              {' '}
+              Login
+            </Text>
           </Text>
         </TouchableOpacity>
       </ScrollView>

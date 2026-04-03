@@ -72,11 +72,21 @@ export default function AnnouncementCard({
           <View style={styles.announcementHeading}>
             <View style={styles.titleRow}>
               <View style={styles.leftContent}>
-                <Text style={styles.announcementTitle}>
+                <Text
+                  style={[
+                    styles.announcementTitle,
+                    { color: theme.colors.text },
+                  ]}
+                >
                   {announcement.title}
                 </Text>
                 {announcement.organizations?.name && (
-                  <Text style={styles.organizationName}>
+                  <Text
+                    style={[
+                      styles.organizationName,
+                      { color: theme.colors.textMuted },
+                    ]}
+                  >
                     {announcement.organizations.name}
                   </Text>
                 )}
@@ -85,7 +95,10 @@ export default function AnnouncementCard({
                     <View
                       style={[
                         styles.eventBadge,
-                        { backgroundColor: `${eventColor}15` },
+                        {
+                          backgroundColor: `${eventColor}15`,
+                          borderColor: 'transparent',
+                        },
                       ]}
                     >
                       <Text
@@ -103,7 +116,10 @@ export default function AnnouncementCard({
                     <View
                       style={[
                         styles.eventBadge,
-                        { backgroundColor: theme.colors.surfaceMuted },
+                        {
+                          backgroundColor: theme.colors.surfaceMuted,
+                          borderColor: theme.colors.borderSoft,
+                        },
                       ]}
                     >
                       <Text
@@ -120,10 +136,14 @@ export default function AnnouncementCard({
               </View>
               <View style={styles.rightContent}>
                 {eventDate && !recurringDays && (
-                  <Text style={styles.dateText}>{eventDate}</Text>
+                  <Text style={[styles.dateText, { color: theme.colors.text }]}>
+                    {eventDate}
+                  </Text>
                 )}
                 {(startTime || endTime) && (
-                  <Text style={styles.timeText}>
+                  <Text
+                    style={[styles.timeText, { color: theme.colors.textMuted }]}
+                  >
                     {startTime && endTime
                       ? `${startTime} - ${endTime}`
                       : startTime || endTime}
@@ -133,14 +153,22 @@ export default function AnnouncementCard({
                   recurringDayRows.map((row, idx) => (
                     <Text
                       key={idx}
-                      style={styles.recurringText}
+                      style={[
+                        styles.recurringText,
+                        { color: theme.colors.textMuted },
+                      ]}
                       numberOfLines={2}
                     >
                       {row}
                     </Text>
                   ))}
                 {showPublishedDate && announcement.created_at && (
-                  <Text style={styles.announcementPublished}>
+                  <Text
+                    style={[
+                      styles.announcementPublished,
+                      { color: theme.colors.textSoft },
+                    ]}
+                  >
                     {formatDate(announcement.created_at)}
                   </Text>
                 )}
@@ -148,8 +176,14 @@ export default function AnnouncementCard({
             </View>
           </View>
           {showEditButton && (
-            <TouchableOpacity style={styles.smallIconButton} onPress={onEdit}>
-              <Feather name="edit-3" size={16} color="#2F855A" />
+            <TouchableOpacity
+              style={[
+                styles.smallIconButton,
+                { backgroundColor: theme.colors.primarySoft },
+              ]}
+              onPress={onEdit}
+            >
+              <Feather name="edit-3" size={16} color={theme.colors.primary} />
             </TouchableOpacity>
           )}
         </View>

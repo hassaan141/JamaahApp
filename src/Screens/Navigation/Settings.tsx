@@ -21,6 +21,12 @@ type SettingsItem = {
   orgOnly?: boolean
 }
 
+const APPEARANCE_OPTIONS = [
+  { value: 'light', label: 'Light', icon: 'sun' },
+  { value: 'dark', label: 'Dark', icon: 'moon' },
+  { value: 'system', label: 'Auto', icon: 'smartphone' },
+] as const
+
 const SETTINGS_ITEMS: SettingsItem[] = [
   {
     title: 'Profile Settings',
@@ -52,7 +58,7 @@ const SETTINGS_ITEMS: SettingsItem[] = [
 export default function Settings() {
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
   const { profile } = useProfile()
-  const { theme, mode, toggleMode } = useTheme()
+  const { theme, mode, setMode } = useTheme()
 
   const isOrganization = profile?.is_org === true && !!profile?.org_id
 
@@ -85,34 +91,86 @@ export default function Settings() {
         <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
           Settings
         </Text>
-        <TouchableOpacity
-          onPress={toggleMode}
-          style={[
-            styles.modeButton,
-            {
-              backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.border,
-            },
-          ]}
-          activeOpacity={0.75}
-        >
-          <Feather
-            name={mode === 'dark' ? 'sun' : 'moon'}
-            size={16}
-            color={theme.colors.text}
-          />
-          <Text
-            style={[styles.modeButtonText, { color: theme.colors.textMuted }]}
-          >
-            {mode === 'dark' ? 'Light' : 'Dark'}
-          </Text>
-        </TouchableOpacity>
       </View>
 
       <ScrollView
         style={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
       >
+        <View
+          style={[
+            styles.appearanceSection,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+              shadowColor: theme.colors.shadow,
+            },
+          ]}
+        >
+          <Text style={[styles.appearanceTitle, { color: theme.colors.text }]}>
+            Appearance
+          </Text>
+          <Text
+            style={[
+              styles.appearanceSubtitle,
+              { color: theme.colors.textMuted },
+            ]}
+          >
+            Choose light, dark, or follow your device setting.
+          </Text>
+          <View
+            style={[
+              styles.appearanceControl,
+              {
+                backgroundColor: theme.colors.surfaceMuted,
+                borderColor: theme.colors.border,
+              },
+            ]}
+          >
+            {APPEARANCE_OPTIONS.map((option) => {
+              const selected = mode === option.value
+              return (
+                <TouchableOpacity
+                  key={option.value}
+                  style={[
+                    styles.appearanceOption,
+                    {
+                      backgroundColor: selected
+                        ? theme.colors.surface
+                        : 'transparent',
+                      borderColor: selected
+                        ? theme.colors.primaryBorder
+                        : 'transparent',
+                    },
+                  ]}
+                  onPress={() => setMode(option.value)}
+                  activeOpacity={0.8}
+                >
+                  <Feather
+                    name={option.icon}
+                    size={16}
+                    color={
+                      selected ? theme.colors.primary : theme.colors.textMuted
+                    }
+                  />
+                  <Text
+                    style={[
+                      styles.appearanceOptionText,
+                      {
+                        color: selected
+                          ? theme.colors.primary
+                          : theme.colors.textMuted,
+                      },
+                    ]}
+                  >
+                    {option.label}
+                  </Text>
+                </TouchableOpacity>
+              )
+            })}
+          </View>
+        </View>
+
         <View
           style={[
             styles.section,
@@ -215,6 +273,47 @@ const styles = StyleSheet.create({
   },
   modeButtonText: {
     fontSize: 12,
+    fontWeight: '600',
+  },
+  appearanceSection: {
+    borderRadius: 10,
+    marginTop: 14,
+    borderWidth: 1,
+    padding: 14,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  appearanceTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  appearanceSubtitle: {
+    fontSize: 13,
+    marginTop: 4,
+    marginBottom: 12,
+    lineHeight: 18,
+  },
+  appearanceControl: {
+    flexDirection: 'row',
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 4,
+    gap: 6,
+  },
+  appearanceOption: {
+    flex: 1,
+    minHeight: 42,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 6,
+  },
+  appearanceOptionText: {
+    fontSize: 13,
     fontWeight: '600',
   },
   headerTitle: {

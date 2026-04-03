@@ -342,7 +342,7 @@ export default function MapScreen() {
                   : 'Nearest Masjids'
                 : currentSearchQuery
                   ? `Search Results (${eventLogic.events.length})`
-                  : 'Upcoming Events & Classes'}
+                  : 'Upcoming Near You'}
             </Text>
 
             {/* 6. Render the Correct List based on mode */}

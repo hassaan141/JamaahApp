@@ -17,13 +17,14 @@ export default () => ({
     projectId: '738cfaa7-cbea-4042-b627-a2a351da154b',
     version: '1.0.0',
     orientation: 'portrait',
-    userInterfaceStyle: 'light',
+    userInterfaceStyle: 'automatic',
     newArchEnabled: false,
 
     plugins: [
       'expo-splash-screen',
       'expo-font',
       'expo-asset',
+      '@maplibre/maplibre-react-native',
       '@react-native-firebase/app',
       '@react-native-firebase/messaging',
       'expo-secure-store',
@@ -81,7 +82,7 @@ export default () => ({
 
     android: {
       package: getBundleId(),
-      userInterfaceStyle: 'light',
+      userInterfaceStyle: 'automatic',
       versionCode: 3,
       googleServicesFile: './google-services.json',
       permissions: [

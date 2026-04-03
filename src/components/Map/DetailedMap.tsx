@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
+import {
+  Camera as MapLibreCamera,
+  MapView as MapLibreMapView,
+  PointAnnotation,
+  UserLocation,
+} from '@maplibre/maplibre-react-native'
 import MapView, { Marker, Circle, Callout } from 'react-native-maps'
 import {
   StyleSheet,
@@ -10,13 +16,13 @@ import {
   ActivityIndicator,
 } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
-import { LeafletView } from 'react-native-leaflet-view'
 import Feather from '@expo/vector-icons/Feather'
 import { fetchNearbyMasjids } from '@/Supabase/fetchMasjidList'
 import { fetchAnnouncements } from '@/Supabase/fetchAllAnnouncements'
 import { useLocation } from '@/Utils/useLocation'
 import type { MasjidItem } from '@/Hooks/useMasjidList'
 import type { OrgPost } from '@/types'
+import AnnouncementModal from '@/components/Shared/AnnouncementModal'
 
 // Local import for iOS only
 import mosqueIcon from '../../../assets/mosque_new.png'
@@ -56,23 +62,47 @@ const getEventTypeColor = (postType: string | null) => {
   }
 }
 
-// Helper to generate SVG strings for Leaflet (Android)
-const getFeatherIconSVG = (iconName: string) => {
-  switch (iconName) {
-    case 'masjid':
-      return '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>'
-    case 'calendar':
-      return '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line>'
-    case 'book-open':
-      return '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>'
-    case 'heart':
-      return '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>'
-    case 'users':
-      return '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>'
-    default:
-      return '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line>'
-  }
-}
+const OPEN_STREET_MAP_STYLE = {
+  version: 8,
+  sources: {
+    openstreetmap: {
+      type: 'raster',
+      tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+      tileSize: 256,
+      attribution: '&copy; OpenStreetMap contributors',
+    },
+  },
+  layers: [
+    {
+      id: 'openstreetmap',
+      type: 'raster',
+      source: 'openstreetmap',
+    },
+  ],
+} as const
+
+const AndroidMapMarker = ({
+  iconName,
+  iconColor,
+  count,
+}: {
+  iconName: React.ComponentProps<typeof Feather>['name']
+  iconColor: string
+  count?: number
+}) => (
+  <View>
+    <View
+      style={[styles.androidMarkerContainer, { backgroundColor: iconColor }]}
+    >
+      <Feather name={iconName} size={16} color="white" />
+    </View>
+    {count && count > 1 ? (
+      <View style={styles.androidMarkerCountBadge}>
+        <Text style={styles.androidMarkerCountText}>{count}</Text>
+      </View>
+    ) : null}
+  </View>
+)
 
 const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
   mode = 'masjids',
@@ -84,6 +114,9 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
 
   const [nearbyMasjids, setNearbyMasjids] = useState<MasjidItem[]>([])
   const [events, setEvents] = useState<OrgPost[]>([])
+  const [selectedMasjid, setSelectedMasjid] = useState<MasjidItem | null>(null)
+  const [selectedEventGroup, setSelectedEventGroup] = useState<OrgPost[]>([])
+  const [selectedEvent, setSelectedEvent] = useState<OrgPost | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -93,7 +126,6 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
   } | null>(null)
 
   const mapRef = useRef<MapView>(null)
-  const hasInitialZoomed = useRef(false)
 
   useEffect(() => {
     if (location && !initialRegion) {
@@ -107,6 +139,8 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
       setLoading(true)
       try {
         setError(null)
+        setSelectedMasjid(null)
+        setSelectedEvent(null)
         if (mode === 'masjids') {
           // Use user location if available, otherwise use default
           const coords = location || DEFAULT_LOCATION
@@ -128,122 +162,28 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
     loadData()
   }, [location, mode])
 
-  useEffect(() => {
-    if (!mapRef.current || !location || hasInitialZoomed.current) return
-    const dataToCheck = mode === 'masjids' ? nearbyMasjids : events
-    if (dataToCheck.length === 0) return
-    hasInitialZoomed.current = true
-  }, [nearbyMasjids, events, mode, location])
+  const groupedAndroidEvents = useMemo(() => {
+    const groups = new Map<string, OrgPost[]>()
+    events
+      .filter((event) => event.lat && event.long)
+      .forEach((event) => {
+        const key = `${event.lat!.toFixed(5)}:${event.long!.toFixed(5)}`
+        const existing = groups.get(key) || []
+        existing.push(event)
+        groups.set(key, existing)
+      })
 
-  const mapLayers = React.useMemo(
-    () => [
-      {
-        attribution: '&copy; OpenStreetMap contributors',
-        baseLayerIsChecked: true,
-        baseLayerName: 'OpenStreetMap',
-        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-      },
-    ],
-    [],
-  )
-
-  const markers = React.useMemo(() => {
-    if (Platform.OS !== 'android') return []
-
-    const userLocationIcon = `
-      <div style="width: 20px; height: 20px; background: #007AFF; border: 3px solid white; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>
-    `
-    const transparentStyleOverride = `
-      <style>
-        .leaflet-div-icon {
-          background: transparent !important;
-          border: none !important;
-        }
-      </style>
-    `
-
-    const userMarker = location
-      ? [
-          {
-            id: 'user-location',
-            position: { lat: location.latitude, lng: location.longitude },
-            icon: userLocationIcon,
-            size: [24, 24],
-            iconAnchor: [12, 12],
-          },
-        ]
-      : []
-
-    return [
-      ...userMarker,
-      ...(mode === 'masjids'
-        ? nearbyMasjids
-            .filter((m) => m.latitude && m.longitude)
-            .map((m, index) => {
-              // --- FIXED: USE SVG PIN FOR ANDROID ---
-              // Instead of an image, we use a Green Circle with a Home Icon
-              const masjidIconHTML = `
-                ${transparentStyleOverride}
-                <div style="
-                  width: 32px; 
-                  height: 32px; 
-                  background: #2F855A; /* Masjid Green */
-                  border-radius: 50%; 
-                  display: flex; 
-                  align-items: center; 
-                  justify-content: center; 
-                  border: 2px solid white;
-                  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-                ">
-                  <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    ${getFeatherIconSVG('masjid')}
-                  </svg>
-                </div>
-              `
-
-              return {
-                id: `masjid-${index}`,
-                position: { lat: m.latitude!, lng: m.longitude! },
-                icon: masjidIconHTML,
-                size: [32, 32], // Matches the div size above
-                iconAnchor: [16, 16], // Centered
-                title: m.name,
-              }
-            })
-        : events
-            .filter((e) => e.lat && e.long)
-            .map((e, index) => {
-              const iconName = getEventTypeIcon(e.post_type)
-              const iconColor = getEventTypeColor(e.post_type)
-              const svgIcon = `
-                  ${transparentStyleOverride}
-                  <div style="
-                    width: 30px; 
-                    height: 30px; 
-                    background: ${iconColor}; 
-                    border-radius: 15px; 
-                    display: flex; 
-                    align-items: center; 
-                    justify-content: center; 
-                    border: 2px solid white;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-                  ">
-                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      ${getFeatherIconSVG(iconName)}
-                    </svg>
-                  </div>
-                `
-              return {
-                id: `event-${index}`,
-                position: { lat: e.lat!, lng: e.long! },
-                icon: svgIcon,
-                size: [30, 30],
-                iconAnchor: [15, 15],
-                title: e.title,
-              }
-            })),
-    ]
-  }, [mode, nearbyMasjids, events, location])
+    return Array.from(groups.entries()).map(([key, grouped]) => {
+      const [lat, lng] = key.split(':').map(Number)
+      return {
+        key,
+        lat,
+        lng,
+        events: grouped,
+        leadEvent: grouped[0],
+      }
+    })
+  }, [events])
 
   if (loading) {
     return (
@@ -272,12 +212,148 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
   if (Platform.OS === 'android') {
     return (
       <View style={styles.container}>
-        <LeafletView
-          mapLayers={mapLayers}
-          mapMarkers={markers}
-          mapCenterPosition={mapCenter}
-          zoom={15}
-        />
+        <MapLibreMapView
+          style={styles.map}
+          mapStyle={OPEN_STREET_MAP_STYLE}
+          logoEnabled={false}
+          attributionEnabled
+          compassEnabled
+          compassViewPosition={1}
+          rotateEnabled
+          pitchEnabled={false}
+        >
+          <MapLibreCamera
+            defaultSettings={{
+              centerCoordinate: [mapCenter.lng, mapCenter.lat],
+              zoomLevel: 14.5,
+            }}
+          />
+          {location ? (
+            <UserLocation visible animated androidRenderMode="normal" />
+          ) : null}
+
+          {mode === 'masjids' &&
+            nearbyMasjids
+              .filter((marker) => marker.latitude && marker.longitude)
+              .map((marker, index) => (
+                <PointAnnotation
+                  key={marker.id ?? index}
+                  id={`masjid-${marker.id ?? index}`}
+                  coordinate={[marker.longitude!, marker.latitude!]}
+                  title={marker.name}
+                  onSelected={() => {
+                    setSelectedMasjid(marker)
+                  }}
+                >
+                  <AndroidMapMarker iconName="map-pin" iconColor="#2F855A" />
+                </PointAnnotation>
+              ))}
+
+          {mode === 'events' &&
+            groupedAndroidEvents.map((group, index) => (
+              <PointAnnotation
+                key={group.leadEvent.id ?? index}
+                id={`event-${group.leadEvent.id ?? index}`}
+                coordinate={[group.lng, group.lat]}
+                title={group.leadEvent.title}
+                snippet={group.leadEvent.organizations?.name || ''}
+                onSelected={() => {
+                  if (group.events.length === 1) {
+                    setSelectedEventGroup([])
+                    setSelectedEvent(group.events[0])
+                    return
+                  }
+                  setSelectedEvent(null)
+                  setSelectedEventGroup(group.events)
+                }}
+              >
+                <AndroidMapMarker
+                  iconName={getEventTypeIcon(group.leadEvent.post_type)}
+                  iconColor={getEventTypeColor(group.leadEvent.post_type)}
+                  count={group.events.length}
+                />
+              </PointAnnotation>
+            ))}
+        </MapLibreMapView>
+
+        {selectedMasjid ? (
+          <View style={styles.androidMapCardWrap}>
+            <TouchableOpacity
+              activeOpacity={0.9}
+              style={styles.androidMapCard}
+              onPress={() => {
+                if (navigation?.navigate) {
+                  navigation.navigate('OrganizationDetail', {
+                    org: selectedMasjid,
+                  })
+                }
+              }}
+            >
+              <View style={styles.androidMapCardHeader}>
+                <Text style={styles.androidMapCardTitle} numberOfLines={1}>
+                  {selectedMasjid.name}
+                </Text>
+                <TouchableOpacity
+                  onPress={() => setSelectedMasjid(null)}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Feather name="x" size={18} color="#52796F" />
+                </TouchableOpacity>
+              </View>
+              <View style={styles.androidMapCardFooter}>
+                <Text style={styles.androidMapCardLink}>Open organization</Text>
+                <Feather name="arrow-up-right" size={14} color="#2F855A" />
+              </View>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
+        {selectedEventGroup.length > 1 ? (
+          <View style={styles.androidMapCardWrap}>
+            <View style={styles.androidEventGroupCard}>
+              <View style={styles.androidMapCardHeader}>
+                <Text style={styles.androidMapCardTitle}>
+                  {selectedEventGroup.length} events here
+                </Text>
+                <TouchableOpacity
+                  onPress={() => setSelectedEventGroup([])}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Feather name="x" size={18} color="#52796F" />
+                </TouchableOpacity>
+              </View>
+              {selectedEventGroup.slice(0, 4).map((event) => (
+                <TouchableOpacity
+                  key={event.id}
+                  style={styles.androidEventGroupRow}
+                  onPress={() => {
+                    setSelectedEventGroup([])
+                    setSelectedEvent(event)
+                  }}
+                >
+                  <View
+                    style={[
+                      styles.androidEventGroupDot,
+                      { backgroundColor: getEventTypeColor(event.post_type) },
+                    ]}
+                  />
+                  <Text style={styles.androidEventGroupTitle} numberOfLines={1}>
+                    {event.title}
+                  </Text>
+                  <Feather name="chevron-right" size={16} color="#52796F" />
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        ) : null}
+
+        {selectedEvent ? (
+          <AnnouncementModal
+            visible
+            onClose={() => setSelectedEvent(null)}
+            announcement={selectedEvent}
+          />
+        ) : null}
       </View>
     )
   }
@@ -395,6 +471,115 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   map: { flex: 1 },
   markerIcon: { width: 30, height: 30 },
+  androidMarkerContainer: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  androidMarkerCountBadge: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#111827',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 1,
+    borderColor: '#FFFFFF',
+  },
+  androidMarkerCountText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  androidMapCardWrap: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    bottom: 18,
+    alignItems: 'center',
+  },
+  androidMapCard: {
+    minWidth: 180,
+    maxWidth: 240,
+    backgroundColor: 'rgba(255,255,255,0.96)',
+    borderRadius: 999,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(226,232,240,0.9)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  androidMapCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  androidMapCardTitle: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1D4732',
+    marginRight: 8,
+  },
+  androidMapCardFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  androidMapCardLink: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#2F855A',
+  },
+  androidEventGroupCard: {
+    width: '100%',
+    maxWidth: 320,
+    backgroundColor: 'rgba(255,255,255,0.97)',
+    borderRadius: 18,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(226,232,240,0.9)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  androidEventGroupRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 9,
+  },
+  androidEventGroupDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 10,
+  },
+  androidEventGroupTitle: {
+    flex: 1,
+    fontSize: 13,
+    color: '#1D4732',
+    fontWeight: '500',
+    marginRight: 8,
+  },
   eventMarkerContainer: {
     width: 30,
     height: 30,

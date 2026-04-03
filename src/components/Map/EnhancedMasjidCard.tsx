@@ -2,6 +2,7 @@ import React from 'react'
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
 import type { MasjidItem } from '@/Hooks/useMasjidList'
+import { useTheme } from '@/theme'
 
 export default function EnhancedMasjidCard({
   item,
@@ -14,20 +15,36 @@ export default function EnhancedMasjidCard({
   onDirections?: (it: MasjidItem) => void
   onCall?: (it: MasjidItem) => void
 }) {
+  const { theme } = useTheme()
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress}>
+    <TouchableOpacity
+      style={[
+        styles.card,
+        {
+          backgroundColor: theme.colors.surface,
+          borderColor: theme.colors.border,
+          shadowColor: theme.colors.shadow,
+        },
+      ]}
+      onPress={onPress}
+    >
       <View style={styles.header}>
-        <Text style={styles.name}>{item.name}</Text>
+        <Text style={[styles.name, { color: theme.colors.text }]}>
+          {item.name}
+        </Text>
       </View>
 
       <View style={styles.infoRow}>
         <View style={styles.locationInfo}>
-          <Feather name="map-pin" size={12} color="#718096" />
-          <Text style={styles.address} numberOfLines={1}>
+          <Feather name="map-pin" size={12} color={theme.colors.textSoft} />
+          <Text
+            style={[styles.address, { color: theme.colors.textMuted }]}
+            numberOfLines={1}
+          >
             {item.address}
           </Text>
         </View>
-        <Text style={styles.distance}>
+        <Text style={[styles.distance, { color: theme.colors.textMuted }]}>
           {item?.distance_km != null
             ? `${item.distance_km.toFixed(1)} mi`
             : '— mi'}
@@ -36,7 +53,11 @@ export default function EnhancedMasjidCard({
 
       <View style={styles.actionButtons}>
         <TouchableOpacity
-          style={[styles.actionButton, styles.directionsButton]}
+          style={[
+            styles.actionButton,
+            styles.directionsButton,
+            { backgroundColor: theme.colors.primary },
+          ]}
           onPress={(e) => {
             e.stopPropagation()
             onDirections?.(item)
@@ -47,14 +68,23 @@ export default function EnhancedMasjidCard({
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.actionButton, styles.callButton]}
+          style={[
+            styles.actionButton,
+            styles.callButton,
+            {
+              backgroundColor: theme.colors.surfaceMuted,
+              borderColor: theme.colors.primaryBorder,
+            },
+          ]}
           onPress={(e) => {
             e.stopPropagation()
             onCall?.(item)
           }}
         >
-          <Feather name="phone" size={14} color="#48BB78" />
-          <Text style={styles.callText}>Call</Text>
+          <Feather name="phone" size={14} color={theme.colors.primary} />
+          <Text style={[styles.callText, { color: theme.colors.primary }]}>
+            Call
+          </Text>
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
@@ -85,7 +115,6 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#2D3748',
     flex: 1,
     marginRight: 8,
   },
@@ -103,13 +132,11 @@ const styles = StyleSheet.create({
   },
   address: {
     fontSize: 12,
-    color: '#718096',
     marginLeft: 4,
     flex: 1,
   },
   distance: {
     fontSize: 12,
-    color: '#718096',
     fontWeight: '500',
   },
   amenitiesContainer: {
@@ -143,13 +170,9 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     marginHorizontal: 4,
   },
-  directionsButton: {
-    backgroundColor: '#48BB78',
-  },
+  directionsButton: {},
   callButton: {
-    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#48BB78',
   },
   directionsText: {
     color: '#FFFFFF',
@@ -158,7 +181,6 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   callText: {
-    color: '#48BB78',
     fontWeight: '600',
     fontSize: 12,
     marginLeft: 4,

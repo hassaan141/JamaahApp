@@ -3,6 +3,7 @@ import { View, TouchableOpacity, StyleSheet } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
 import type { MapTab } from './MapTabs'
 import MapTabs from './MapTabs'
+import { useTheme } from '@/theme'
 
 export type { MapTab }
 
@@ -15,16 +16,29 @@ export default function MapHeader({
   selectedTab?: MapTab
   onTabChange?: (tab: MapTab) => void
 }) {
+  const { theme } = useTheme()
+
   return (
-    <View style={styles.container}>
+    <View
+      style={[styles.container, { borderBottomColor: theme.colors.border }]}
+    >
       <View style={styles.controlsRow}>
         <View style={styles.tabsWrap}>
           {onTabChange && (
             <MapTabs selectedTab={selectedTab} onTabChange={onTabChange} />
           )}
         </View>
-        <TouchableOpacity style={styles.expandButton} onPress={onExpand}>
-          <Feather name="maximize-2" size={20} color="#48BB78" />
+        <TouchableOpacity
+          style={[
+            styles.expandButton,
+            {
+              borderColor: theme.colors.border,
+              backgroundColor: theme.colors.surface,
+            },
+          ]}
+          onPress={onExpand}
+        >
+          <Feather name="maximize-2" size={20} color={theme.colors.primary} />
         </TouchableOpacity>
       </View>
     </View>

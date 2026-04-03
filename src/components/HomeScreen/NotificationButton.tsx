@@ -2,6 +2,7 @@ import React from 'react'
 import { View, TouchableOpacity, StyleSheet } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
 import { useAuth } from '@/Auth/AuthProvider'
+import { useTheme } from '@/theme'
 
 interface NotificationButtonProps {
   navigation: {
@@ -13,6 +14,7 @@ const NotificationButton: React.FC<NotificationButtonProps> = ({
   navigation,
 }) => {
   const { session } = useAuth()
+  const { theme } = useTheme()
 
   const handlePress = () => {
     // Guest mode: Navigate to sign-in instead of notifications
@@ -24,9 +26,19 @@ const NotificationButton: React.FC<NotificationButtonProps> = ({
   }
 
   return (
-    <TouchableOpacity style={styles.card} onPress={handlePress}>
+    <TouchableOpacity
+      style={[
+        styles.card,
+        {
+          backgroundColor: theme.colors.surface,
+          borderColor: theme.colors.border,
+          shadowColor: theme.colors.shadow,
+        },
+      ]}
+      onPress={handlePress}
+    >
       <View style={styles.iconContainer}>
-        <Feather name="bell" size={20} color="#2D3748" />
+        <Feather name="bell" size={20} color={theme.colors.text} />
         {/* Only show badge for logged-in users */}
         {session && <View style={styles.notificationBadge} />}
       </View>
@@ -36,12 +48,11 @@ const NotificationButton: React.FC<NotificationButtonProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
+    borderWidth: 1,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,

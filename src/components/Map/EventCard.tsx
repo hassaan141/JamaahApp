@@ -4,6 +4,7 @@ import Feather from '@expo/vector-icons/Feather'
 import type { EventItem } from '@/Supabase/fetchEventsFromRPC'
 import type { OrgPost } from '@/types'
 import AnnouncementModal from '@/components/Shared/AnnouncementModal'
+import { useTheme } from '@/theme'
 
 /**
  * Extended type to handle recurring days and organization name
@@ -90,6 +91,7 @@ export default function EventCard({
   onPress?: () => void
   onDirections?: (event: EventItem) => void
 }) {
+  const { theme } = useTheme()
   const [modalVisible, setModalVisible] = useState(false)
   const iconName = getEventTypeIcon(event.post_type)
   const iconColor = getEventTypeColor(event.post_type)
@@ -146,7 +148,14 @@ export default function EventCard({
   return (
     <>
       <TouchableOpacity
-        style={styles.card}
+        style={[
+          styles.card,
+          {
+            backgroundColor: theme.colors.surface,
+            borderColor: theme.colors.border,
+            shadowColor: theme.colors.shadow,
+          },
+        ]}
         onPress={() => setModalVisible(true)}
       >
         {/* Title Header */}
@@ -155,7 +164,10 @@ export default function EventCard({
             <View style={[styles.typeIcon, { backgroundColor: iconColor }]}>
               <Feather name={iconName} size={12} color="white" />
             </View>
-            <Text style={styles.title} numberOfLines={2}>
+            <Text
+              style={[styles.title, { color: theme.colors.text }]}
+              numberOfLines={2}
+            >
               {event.title}
             </Text>
           </View>
@@ -164,8 +176,13 @@ export default function EventCard({
         {/* 1. Organization Row (Moved before Address) */}
         {(event as EventWithExtras).organization_name && (
           <View style={styles.organizationRow}>
-            <Feather name="users" size={12} color="#718096" />
-            <Text style={styles.organizationText}>
+            <Feather name="users" size={12} color={theme.colors.textSoft} />
+            <Text
+              style={[
+                styles.organizationText,
+                { color: theme.colors.textMuted },
+              ]}
+            >
               {(event as EventWithExtras).organization_name}
             </Text>
           </View>
@@ -174,13 +191,21 @@ export default function EventCard({
         {/* 2. Location Row: Address (Left) and Distance (Right) */}
         <View style={styles.splitInfoRow}>
           <View style={styles.leftContainer}>
-            <Feather name="map-pin" size={12} color="#718096" />
-            <Text style={styles.infoText} numberOfLines={1}>
+            <Feather name="map-pin" size={12} color={theme.colors.textSoft} />
+            <Text
+              style={[styles.infoText, { color: theme.colors.textMuted }]}
+              numberOfLines={1}
+            >
               {event.location || 'Location TBD'}
             </Text>
           </View>
           {event.dist_km != null && (
-            <Text style={styles.rightHighlightText}>
+            <Text
+              style={[
+                styles.rightHighlightText,
+                { color: theme.colors.primary },
+              ]}
+            >
               {event.dist_km.toFixed(1)} km
             </Text>
           )}
@@ -190,18 +215,29 @@ export default function EventCard({
         {(event.date || recurringDisplay || event.start_time) && (
           <View style={styles.splitInfoRow}>
             <View style={styles.leftContainer}>
-              <Feather name="clock" size={12} color="#718096" />
+              <Feather name="clock" size={12} color={theme.colors.textSoft} />
               {event.start_time ? (
-                <Text style={styles.infoText}>
+                <Text
+                  style={[styles.infoText, { color: theme.colors.textMuted }]}
+                >
                   {formatTime(event.start_time)}
                   {event.end_time ? ` - ${formatTime(event.end_time)}` : ''}
                 </Text>
               ) : (
-                <Text style={styles.infoText}>Time TBD</Text>
+                <Text
+                  style={[styles.infoText, { color: theme.colors.textMuted }]}
+                >
+                  Time TBD
+                </Text>
               )}
             </View>
             {(recurringDisplay || event.date) && (
-              <Text style={styles.rightNormalText}>
+              <Text
+                style={[
+                  styles.rightNormalText,
+                  { color: theme.colors.textMuted },
+                ]}
+              >
                 {recurringDisplay || formatLegibleDate(event.date)}
               </Text>
             )}
@@ -210,7 +246,11 @@ export default function EventCard({
 
         <View style={styles.actionButtons}>
           <TouchableOpacity
-            style={[styles.actionButton, styles.directionsButton]}
+            style={[
+              styles.actionButton,
+              styles.directionsButton,
+              { backgroundColor: theme.colors.primary },
+            ]}
             onPress={(e) => {
               e.stopPropagation()
               onDirections?.(event)
@@ -265,7 +305,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#2D3748',
     flex: 1,
     lineHeight: 20,
   },
@@ -283,18 +322,14 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 13,
-    color: '#718096',
     marginLeft: 6,
   },
   rightHighlightText: {
     fontSize: 13,
     fontWeight: '600',
-    // color: '#48BB78', // Changed to green
-    color: '#718096',
   },
   rightNormalText: {
     fontSize: 13,
-    color: '#718096',
     fontWeight: '500',
   },
   organizationRow: {
@@ -304,7 +339,6 @@ const styles = StyleSheet.create({
   },
   organizationText: {
     fontSize: 13,
-    color: '#718096',
     marginLeft: 6,
     fontWeight: '500',
   },
@@ -320,9 +354,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 8,
   },
-  directionsButton: {
-    backgroundColor: '#48BB78',
-  },
+  directionsButton: {},
   directionsText: {
     color: '#FFFFFF',
     fontWeight: '600',

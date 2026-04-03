@@ -22,6 +22,7 @@ import NoResults from '@/components/Map/NoResults'
 import { useLocation } from '@/Utils/useLocation'
 import MiniLoading from '@/components/Loading/MiniLoading'
 import { openDirections, openCall } from '@/Utils/links'
+import { useTheme } from '@/theme'
 
 // 1. Import your new hooks and types
 import { useMasjidList, type MasjidItem } from '@/Hooks/useMasjidList'
@@ -33,6 +34,7 @@ type EventListEvent = Omit<EventItem, 'dist_km'>
 
 export default function MapScreen() {
   const insets = useSafeAreaInsets()
+  const { theme } = useTheme()
   const [isExpanded, setIsExpanded] = useState(false)
   const [mapMode, setMapMode] = useState<'masjids' | 'events'>('events')
 
@@ -182,7 +184,12 @@ export default function MapScreen() {
 
   if (isExpanded) {
     return (
-      <Animated.View style={[styles.expandedContainer, { opacity: fadeAnim }]}>
+      <Animated.View
+        style={[
+          styles.expandedContainer,
+          { opacity: fadeAnim, backgroundColor: theme.colors.background },
+        ]}
+      >
         <View style={styles.expandedMapContainer}>
           <DetailedMap mode={mapMode} />
         </View>
@@ -195,11 +202,21 @@ export default function MapScreen() {
         >
           <View style={styles.expandedOverlayRow}>
             <TouchableOpacity
-              style={styles.floatingBackButton}
+              style={[
+                styles.floatingBackButton,
+                {
+                  backgroundColor: theme.colors.surface,
+                  borderColor: theme.colors.border,
+                },
+              ]}
               onPress={collapseMap}
               activeOpacity={0.9}
             >
-              <Feather name="chevron-left" size={20} color="#1F2937" />
+              <Feather
+                name="chevron-left"
+                size={20}
+                color={theme.colors.text}
+              />
             </TouchableOpacity>
           </View>
           <View style={styles.expandedOverlayRow}>
@@ -215,7 +232,12 @@ export default function MapScreen() {
   }
 
   return (
-    <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
+    <Animated.View
+      style={[
+        styles.container,
+        { opacity: fadeAnim, backgroundColor: theme.colors.background },
+      ]}
+    >
       <ScrollView
         style={styles.content}
         refreshControl={
@@ -251,7 +273,15 @@ export default function MapScreen() {
           </View>
         </View>
 
-        <View style={styles.compactMapContainer}>
+        <View
+          style={[
+            styles.compactMapContainer,
+            {
+              backgroundColor: theme.colors.surface,
+              shadowColor: theme.colors.shadow,
+            },
+          ]}
+        >
           <MapHeader
             onExpand={expandMap}
             selectedTab={mapMode}
@@ -261,23 +291,51 @@ export default function MapScreen() {
         </View>
 
         {currentLoading && (
-          <View style={styles.loadingContainer}>
+          <View
+            style={[
+              styles.loadingContainer,
+              {
+                backgroundColor: theme.colors.surface,
+                shadowColor: theme.colors.shadow,
+              },
+            ]}
+          >
             <MiniLoading />
-            <Text style={styles.loadingText}>
+            <Text
+              style={[styles.loadingText, { color: theme.colors.textMuted }]}
+            >
               {isMasjidMode ? 'Loading masjids...' : 'Loading events...'}
             </Text>
           </View>
         )}
 
         {currentError && (
-          <View style={styles.errorContainer}>
+          <View
+            style={[
+              styles.errorContainer,
+              {
+                backgroundColor: theme.colors.surface,
+                shadowColor: theme.colors.shadow,
+              },
+            ]}
+          >
             <Text style={styles.errorText}>{currentError}</Text>
           </View>
         )}
 
         {!currentLoading && !currentError && (
-          <View style={styles.masjidListContainer}>
-            <Text style={styles.masjidListTitle}>
+          <View
+            style={[
+              styles.masjidListContainer,
+              {
+                backgroundColor: theme.colors.surface,
+                shadowColor: theme.colors.shadow,
+              },
+            ]}
+          >
+            <Text
+              style={[styles.masjidListTitle, { color: theme.colors.text }]}
+            >
               {isMasjidMode
                 ? currentSearchQuery
                   ? `Search Results (${masjidLogic.filteredMasjids.length})`

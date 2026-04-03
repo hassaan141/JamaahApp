@@ -15,6 +15,7 @@ import {
   type Announcement,
 } from '@/Supabase/fetchMyAnnouncements'
 import { useNavigation } from '@react-navigation/native'
+import { useTheme } from '@/theme'
 
 const TABS = [
   // { label: 'All', value: 'ALL' },
@@ -28,6 +29,7 @@ const NotificationList: React.FC<{ refreshKey?: boolean }> = ({
   refreshKey,
 }) => {
   const navigation = useNavigation()
+  const { theme } = useTheme()
   const [activeTab, setActiveTab] = useState('CLASSES')
   const [isExpanded, setIsExpanded] = useState(false)
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
@@ -115,11 +117,22 @@ const NotificationList: React.FC<{ refreshKey?: boolean }> = ({
   const handleCollapse = () => setIsExpanded(false)
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: theme.colors.surface,
+          borderColor: theme.colors.border,
+          shadowColor: theme.colors.shadow,
+        },
+      ]}
+    >
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <Feather name="bell" size={16} color="#4A5568" />
-          <Text style={styles.headerTitle}>Upcoming</Text>
+          <Feather name="bell" size={16} color={theme.colors.textMuted} />
+          <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
+            Upcoming
+          </Text>
         </View>
         {newAnnouncementCount > 0 && (
           <View style={styles.badge}>
@@ -136,12 +149,27 @@ const NotificationList: React.FC<{ refreshKey?: boolean }> = ({
               return (
                 <TouchableOpacity
                   key={tab.value}
-                  style={[styles.tab, isActive && styles.activeTab]}
+                  style={[
+                    styles.tab,
+                    {
+                      backgroundColor: theme.colors.surfaceMuted,
+                      borderColor: theme.colors.borderSoft,
+                    },
+                    isActive && styles.activeTab,
+                    isActive && {
+                      backgroundColor: theme.colors.primary,
+                      borderColor: theme.colors.primary,
+                    },
+                  ]}
                   onPress={() => setActiveTab(tab.value)}
                   activeOpacity={0.7}
                 >
                   <Text
-                    style={[styles.tabText, isActive && styles.activeTabText]}
+                    style={[
+                      styles.tabText,
+                      { color: theme.colors.textMuted },
+                      isActive && styles.activeTabText,
+                    ]}
                   >
                     {tab.label}
                   </Text>
@@ -162,7 +190,9 @@ const NotificationList: React.FC<{ refreshKey?: boolean }> = ({
         ]}
       >
         {loading ? (
-          <Text style={styles.loadingText}>Loading...</Text>
+          <Text style={[styles.loadingText, { color: theme.colors.textMuted }]}>
+            Loading...
+          </Text>
         ) : announcements.length === 0 ? (
           <TouchableOpacity
             style={styles.emptyStateContainer}
@@ -172,17 +202,17 @@ const NotificationList: React.FC<{ refreshKey?: boolean }> = ({
             <Feather
               name="plus-circle"
               size={40}
-              color="#48BB78"
+              color={theme.colors.primary}
               style={styles.emptyIcon}
             />
-            <Text style={styles.emptyText}>
-              Please start following an organization to get events and classes
-              notifications
+            <Text style={[styles.emptyText, { color: theme.colors.textMuted }]}>
+              Start following an organization to see upcoming events and classes
+              here.
             </Text>
           </TouchableOpacity>
         ) : filteredAnnouncements.length === 0 ? (
           <View style={styles.emptyStateContainer}>
-            <Text style={styles.emptyText}>
+            <Text style={[styles.emptyText, { color: theme.colors.textMuted }]}>
               No {activeTab.toLowerCase()} found.
             </Text>
           </View>
@@ -214,12 +244,26 @@ const NotificationList: React.FC<{ refreshKey?: boolean }> = ({
 
             {isExpanded && (
               <TouchableOpacity
-                style={styles.collapseButton}
+                style={[
+                  styles.collapseButton,
+                  { backgroundColor: theme.colors.surfaceMuted },
+                ]}
                 onPress={handleCollapse}
                 activeOpacity={0.7}
               >
-                <Text style={styles.collapseButtonText}>Show less</Text>
-                <Feather name="chevron-up" size={16} color="#718096" />
+                <Text
+                  style={[
+                    styles.collapseButtonText,
+                    { color: theme.colors.textMuted },
+                  ]}
+                >
+                  Show less
+                </Text>
+                <Feather
+                  name="chevron-up"
+                  size={16}
+                  color={theme.colors.textSoft}
+                />
               </TouchableOpacity>
             )}
           </>
@@ -231,12 +275,11 @@ const NotificationList: React.FC<{ refreshKey?: boolean }> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
     marginHorizontal: 20,
     marginBottom: 20,
-    shadowColor: '#000',
+    borderWidth: 1,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -255,7 +298,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#2D3748',
     marginLeft: 8,
   },
   tabContainer: {
@@ -265,17 +307,14 @@ const styles = StyleSheet.create({
   tab: {
     paddingVertical: 6,
     paddingHorizontal: 12,
-    borderRadius: 20,
-    backgroundColor: '#EDF2F7',
+    borderRadius: 10,
+    borderWidth: 1,
     marginRight: 8,
   },
-  activeTab: {
-    backgroundColor: '#48BB78',
-  },
+  activeTab: {},
   tabText: {
     fontSize: 13,
     fontWeight: '500',
-    color: '#718096',
   },
   activeTabText: {
     color: '#FFFFFF',
@@ -299,7 +338,6 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   loadingText: {
-    color: '#718096',
     textAlign: 'center',
     padding: 20,
   },

@@ -11,6 +11,7 @@ import {
   getEventTypeIcon,
   getEventTypeColor,
 } from './announcementUtils'
+import { useTheme } from '@/theme'
 
 interface AnnouncementCardProps {
   announcement: OrgPost & { organizations?: { name?: string } | null }
@@ -25,6 +26,7 @@ export default function AnnouncementCard({
   onEdit,
   showPublishedDate = true,
 }: AnnouncementCardProps) {
+  const { theme } = useTheme()
   const [expanded, setExpanded] = useState(false)
   const [textOverflowing, setTextOverflowing] = useState(false)
   const [modalVisible, setModalVisible] = useState(false)
@@ -47,7 +49,14 @@ export default function AnnouncementCard({
   return (
     <>
       <TouchableOpacity
-        style={styles.announcementCard}
+        style={[
+          styles.announcementCard,
+          {
+            backgroundColor: theme.colors.surface,
+            borderColor: theme.colors.border,
+            shadowColor: theme.colors.shadow,
+          },
+        ]}
         onPress={() => setModalVisible(true)}
         activeOpacity={0.9}
       >
@@ -94,11 +103,14 @@ export default function AnnouncementCard({
                     <View
                       style={[
                         styles.eventBadge,
-                        { backgroundColor: '#F7FAFC' },
+                        { backgroundColor: theme.colors.surfaceMuted },
                       ]}
                     >
                       <Text
-                        style={[styles.eventBadgeText, { color: '#4A5568' }]}
+                        style={[
+                          styles.eventBadgeText,
+                          { color: theme.colors.textMuted },
+                        ]}
                       >
                         {announcement.demographic}
                       </Text>
@@ -146,7 +158,10 @@ export default function AnnouncementCard({
         {!!announcement.body && (
           <>
             <Text
-              style={styles.announcementBody}
+              style={[
+                styles.announcementBody,
+                { color: theme.colors.textMuted },
+              ]}
               numberOfLines={expanded ? undefined : 2}
               onTextLayout={(e) => {
                 // only consider overflow when collapsed
@@ -162,7 +177,9 @@ export default function AnnouncementCard({
                 onPress={() => setExpanded((s) => !s)}
                 activeOpacity={0.7}
               >
-                <Text style={styles.readMore}>
+                <Text
+                  style={[styles.readMore, { color: theme.colors.primary }]}
+                >
                   {expanded ? 'Show less' : 'Read more'}
                 </Text>
               </TouchableOpacity>
@@ -228,7 +245,7 @@ const styles = StyleSheet.create({
   announcementTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#1D4732',
+    color: '#1F2937',
     marginBottom: 2,
     lineHeight: 20,
   },
@@ -256,7 +273,7 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 12,
-    color: '#1D4732',
+    color: '#1F2937',
     fontWeight: '600',
     textAlign: 'right',
     marginBottom: 2,

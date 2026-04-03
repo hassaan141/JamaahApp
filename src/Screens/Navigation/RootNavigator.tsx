@@ -18,6 +18,7 @@ import AccountSettings from './Settings/AccountSettings'
 import OurMission from './Settings/OurMission'
 import HelpSupport from './Settings/HelpSupport'
 import type { Organization } from '@/types'
+import { useTheme } from '@/theme'
 
 // Auth screens for guest mode navigation
 import WelcomeScreen from '@/Screens/Auth/WelcomeScreen'
@@ -57,19 +58,9 @@ type TabParamList = {
 const Tab = createBottomTabNavigator<TabParamList>()
 const Stack = createStackNavigator<RootStackParamList>()
 
-const TAB_COLORS = {
-  background: '#FFFFFF',
-  border: '#E2E8F0',
-  active: '#2F855A',
-  indicator: '#48BB78',
-  inactive: '#6B7280',
-}
-
 const styles = StyleSheet.create({
   tabBar: {
-    backgroundColor: TAB_COLORS.background,
     borderTopWidth: 1,
-    borderTopColor: TAB_COLORS.border,
     elevation: 0,
     shadowOpacity: 0,
     paddingTop: 5,
@@ -90,7 +81,6 @@ const styles = StyleSheet.create({
     width: 18,
     height: 3,
     borderRadius: 999,
-    backgroundColor: TAB_COLORS.indicator,
   },
   label: {
     fontSize: 11,
@@ -103,10 +93,12 @@ function AnimatedTabIcon({
   iconName,
   color,
   focused,
+  indicatorColor,
 }: {
   iconName: React.ComponentProps<typeof Feather>['name']
   color: string
   focused: boolean
+  indicatorColor: string
 }) {
   const translateY = useRef(new Animated.Value(focused ? -1 : 0)).current
   const scale = useRef(new Animated.Value(focused ? 1.06 : 1)).current
@@ -156,6 +148,7 @@ function AnimatedTabIcon({
         style={[
           styles.indicator,
           {
+            backgroundColor: indicatorColor,
             opacity: indicatorOpacity,
             transform: [{ scaleX: indicatorScale }],
           },
@@ -167,14 +160,15 @@ function AnimatedTabIcon({
 
 function TabNavigator() {
   const insets = useSafeAreaInsets()
+  const { theme } = useTheme()
 
   return (
     <Tab.Navigator
       initialRouteName="Home"
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: TAB_COLORS.active,
-        tabBarInactiveTintColor: TAB_COLORS.inactive,
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.textMuted,
         tabBarHideOnKeyboard: true,
         tabBarIcon: ({ color, focused }) => {
           let iconName: React.ComponentProps<typeof Feather>['name'] = 'home'
@@ -187,12 +181,15 @@ function TabNavigator() {
               iconName={iconName}
               color={color}
               focused={focused}
+              indicatorColor={theme.colors.primary}
             />
           )
         },
         tabBarStyle: [
           styles.tabBar,
           {
+            backgroundColor: theme.colors.surface,
+            borderTopColor: theme.colors.border,
             paddingBottom: Math.max(insets.bottom, 8),
             height: 56 + Math.max(insets.bottom, 8),
           },

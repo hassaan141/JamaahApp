@@ -14,6 +14,7 @@ import NotificationList from '@/components/HomeScreen/NotificationList'
 import JummahCard from '@/components/HomeScreen/JummahCard'
 import { usePrayerTimes } from '@/Hooks/usePrayerTimes'
 import MiniLoading from '@/components/Loading/MiniLoading'
+import { useTheme } from '@/theme'
 
 type HomeRouteParams = { refreshPrayerTimes?: boolean }
 type NavigationLike = {
@@ -22,6 +23,7 @@ type NavigationLike = {
 }
 
 export default function Home({ navigation }: { navigation: NavigationLike }) {
+  const { theme } = useTheme()
   const {
     org,
     distance_m,
@@ -71,10 +73,14 @@ export default function Home({ navigation }: { navigation: NavigationLike }) {
 
   return (
     <ScrollView
-      style={{ flex: 1, backgroundColor: '#F7FAFC' }}
+      style={{ flex: 1, backgroundColor: theme.colors.background }}
       contentContainerStyle={{ paddingBottom: 16 }}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={theme.colors.primary}
+        />
       }
     >
       <View style={{ height: 56 }} />

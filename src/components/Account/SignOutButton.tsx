@@ -3,6 +3,7 @@ import { TouchableOpacity, Text, StyleSheet } from 'react-native'
 import { useNavigation, CommonActions } from '@react-navigation/native'
 import type { StackNavigationProp } from '@react-navigation/stack'
 import type { RootStackParamList } from '@/Screens/Navigation/RootNavigator'
+import { useTheme } from '@/theme'
 
 export default function SignOutButton({
   onLogout,
@@ -10,6 +11,7 @@ export default function SignOutButton({
   onLogout: () => Promise<void>
 }) {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>()
+  const { theme } = useTheme()
 
   const handleLogout = async () => {
     console.log('[SignOutButton] Logout button pressed')
@@ -47,8 +49,19 @@ export default function SignOutButton({
   })
 
   return (
-    <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-      <Text style={styles.logoutText}>Sign Out</Text>
+    <TouchableOpacity
+      style={[
+        styles.logoutButton,
+        {
+          backgroundColor: theme.colors.surface,
+          borderColor: theme.colors.danger,
+        },
+      ]}
+      onPress={handleLogout}
+    >
+      <Text style={[styles.logoutText, { color: theme.colors.danger }]}>
+        Sign Out
+      </Text>
     </TouchableOpacity>
   )
 }

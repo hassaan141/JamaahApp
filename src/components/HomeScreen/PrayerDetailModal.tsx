@@ -11,6 +11,7 @@ import {
 import Feather from '@expo/vector-icons/Feather'
 import { BlurView } from 'expo-blur'
 import type { Database } from '@/types/supabase'
+import { useTheme } from '@/theme'
 
 type PrayerTimeRow = Database['public']['Tables']['daily_prayer_times']['Row']
 
@@ -52,38 +53,52 @@ const PrayerRow = ({
   iqamah,
   singleTime,
   icon,
+  theme,
 }: {
   name: string
   azan?: string
   iqamah?: string
   singleTime?: string
   icon?: keyof typeof Feather.glyphMap
+  theme: ReturnType<typeof useTheme>['theme']
 }) => {
   return (
-    <View style={styles.row}>
+    <View style={[styles.row, { borderBottomColor: theme.colors.borderSoft }]}>
       <View style={styles.nameContainer}>
         {icon && (
           <Feather
             name={icon}
             size={18}
-            color="#9CA3AF"
+            color={theme.colors.textSoft}
             style={styles.rowIcon}
           />
         )}
-        <Text style={styles.cellName}>{name}</Text>
+        <Text style={[styles.cellName, { color: theme.colors.text }]}>
+          {name}
+        </Text>
       </View>
 
       {singleTime ? (
         <View style={styles.singleTimeContainer}>
-          <Text style={styles.cellTimeSingle}>{formatTime(singleTime)}</Text>
+          <Text style={[styles.cellTimeSingle, { color: theme.colors.text }]}>
+            {formatTime(singleTime)}
+          </Text>
         </View>
       ) : (
         <View style={styles.timeContainer}>
           <View style={styles.timeColumn}>
-            <Text style={styles.cellTime}>{formatTime(azan)}</Text>
+            <Text style={[styles.cellTime, { color: theme.colors.textMuted }]}>
+              {formatTime(azan)}
+            </Text>
           </View>
           <View style={styles.timeColumn}>
-            <Text style={[styles.cellTime, styles.iqamahTime]}>
+            <Text
+              style={[
+                styles.cellTime,
+                styles.iqamahTime,
+                { color: theme.colors.primary },
+              ]}
+            >
               {formatTime(iqamah)}
             </Text>
           </View>
@@ -93,7 +108,13 @@ const PrayerRow = ({
   )
 }
 
-const JummahRow = ({ prayerTimes }: { prayerTimes: PrayerTimeRow }) => {
+const JummahRow = ({
+  prayerTimes,
+  theme,
+}: {
+  prayerTimes: PrayerTimeRow
+  theme: ReturnType<typeof useTheme>['theme']
+}) => {
   const jummahTimes = [
     { label: '1st', time: prayerTimes.jumah_time_1 },
     { label: '2nd', time: prayerTimes.jumah_time_2 },
@@ -103,13 +124,38 @@ const JummahRow = ({ prayerTimes }: { prayerTimes: PrayerTimeRow }) => {
   if (jummahTimes.length === 0) return null
 
   return (
-    <View style={styles.jummahContainer}>
-      <Text style={styles.sectionHeader}>Jummah Prayers</Text>
+    <View
+      style={[
+        styles.jummahContainer,
+        {
+          backgroundColor: theme.colors.surfaceMuted,
+          borderColor: theme.colors.border,
+        },
+      ]}
+    >
+      <Text style={[styles.sectionHeader, { color: theme.colors.primary }]}>
+        Jummah Prayers
+      </Text>
       <View style={styles.jummahRow}>
         {jummahTimes.map((j, index) => (
-          <View key={index} style={styles.jummahBlock}>
-            <Text style={styles.jummahLabel}>{j.label}</Text>
-            <Text style={styles.jummahTime}>{formatTime(j.time)}</Text>
+          <View
+            key={index}
+            style={[
+              styles.jummahBlock,
+              {
+                backgroundColor: theme.colors.surfaceElevated,
+                borderColor: theme.colors.borderSoft,
+              },
+            ]}
+          >
+            <Text
+              style={[styles.jummahLabel, { color: theme.colors.textSoft }]}
+            >
+              {j.label}
+            </Text>
+            <Text style={[styles.jummahTime, { color: theme.colors.text }]}>
+              {formatTime(j.time)}
+            </Text>
           </View>
         ))}
       </View>
@@ -128,6 +174,7 @@ const PrayerDetailModal: React.FC<PrayerDetailModalProps> = ({
   canNextDay = false,
   canPrevDay = false,
 }) => {
+  const { theme } = useTheme()
   if (!prayerTimes) return null
 
   // Force check for Jummah existence
@@ -144,7 +191,9 @@ const PrayerDetailModal: React.FC<PrayerDetailModalProps> = ({
       visible={visible}
       onRequestClose={onClose}
     >
-      <View style={styles.centeredView}>
+      <View
+        style={[styles.centeredView, { backgroundColor: theme.colors.overlay }]}
+      >
         <TouchableOpacity
           style={styles.backdrop}
           activeOpacity={1}
@@ -155,46 +204,102 @@ const PrayerDetailModal: React.FC<PrayerDetailModalProps> = ({
           )}
         </TouchableOpacity>
 
-        <View style={styles.modalView}>
+        <View
+          style={[
+            styles.modalView,
+            {
+              backgroundColor: theme.colors.surfaceElevated,
+              borderColor: theme.colors.border,
+              shadowColor: theme.colors.shadow,
+            },
+          ]}
+        >
           {/* Header */}
           <View style={styles.header}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.orgName} numberOfLines={1}>
+              <Text
+                style={[styles.orgName, { color: theme.colors.text }]}
+                numberOfLines={1}
+              >
                 {orgName || 'Masjid'}
               </Text>
             </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Feather name="x" size={24} color="#374151" />
+            <TouchableOpacity
+              onPress={onClose}
+              style={[
+                styles.closeButton,
+                {
+                  backgroundColor: theme.colors.surfaceMuted,
+                  borderColor: theme.colors.borderSoft,
+                },
+              ]}
+            >
+              <Feather name="x" size={24} color={theme.colors.textMuted} />
             </TouchableOpacity>
           </View>
 
           {/* Date Navigator */}
-          <View style={styles.dateNav}>
+          <View
+            style={[
+              styles.dateNav,
+              {
+                backgroundColor: theme.colors.primarySoft,
+                borderColor: theme.colors.primaryBorder,
+              },
+            ]}
+          >
             <TouchableOpacity
               onPress={canPrevDay ? onPrevDay : undefined}
               style={[styles.navArrow, { opacity: canPrevDay ? 1 : 0 }]}
               disabled={!canPrevDay}
             >
-              <Feather name="chevron-left" size={24} color="#50b962" />
+              <Feather
+                name="chevron-left"
+                size={24}
+                color={theme.colors.primary}
+              />
             </TouchableOpacity>
 
-            <Text style={styles.dateText}>{formatDatePretty(currentDate)}</Text>
+            <Text style={[styles.dateText, { color: theme.colors.text }]}>
+              {formatDatePretty(currentDate)}
+            </Text>
 
             <TouchableOpacity
               onPress={canNextDay ? onNextDay : undefined}
               style={[styles.navArrow, { opacity: canNextDay ? 1 : 0 }]}
               disabled={!canNextDay}
             >
-              <Feather name="chevron-right" size={24} color="#50b962" />
+              <Feather
+                name="chevron-right"
+                size={24}
+                color={theme.colors.primary}
+              />
             </TouchableOpacity>
           </View>
 
           {/* Table Headers */}
-          <View style={styles.tableHeaderRow}>
-            <Text style={styles.headerCellName}>Prayer</Text>
+          <View
+            style={[
+              styles.tableHeaderRow,
+              { borderBottomColor: theme.colors.border },
+            ]}
+          >
+            <Text
+              style={[styles.headerCellName, { color: theme.colors.textSoft }]}
+            >
+              Prayer
+            </Text>
             <View style={styles.timeContainer}>
-              <Text style={styles.headerCell}>Adhan</Text>
-              <Text style={styles.headerCell}>Iqamah</Text>
+              <Text
+                style={[styles.headerCell, { color: theme.colors.textSoft }]}
+              >
+                Adhan
+              </Text>
+              <Text
+                style={[styles.headerCell, { color: theme.colors.textSoft }]}
+              >
+                Iqamah
+              </Text>
             </View>
           </View>
 
@@ -207,6 +312,7 @@ const PrayerDetailModal: React.FC<PrayerDetailModalProps> = ({
                 name="Fajr"
                 azan={prayerTimes.fajr_azan}
                 iqamah={prayerTimes.fajr_iqamah}
+                theme={theme}
               />
 
               {/* Added Icon for Sunrise */}
@@ -214,6 +320,7 @@ const PrayerDetailModal: React.FC<PrayerDetailModalProps> = ({
                 name="Sunrise"
                 singleTime={prayerTimes.sunrise}
                 icon="sunrise"
+                theme={theme}
               />
 
               {/* Added Icon for Zawal */}
@@ -222,6 +329,7 @@ const PrayerDetailModal: React.FC<PrayerDetailModalProps> = ({
                   name="Zawal"
                   singleTime={prayerTimes.zawal}
                   icon="sun"
+                  theme={theme}
                 />
               ) : null}
 
@@ -229,26 +337,30 @@ const PrayerDetailModal: React.FC<PrayerDetailModalProps> = ({
                 name="Dhuhr"
                 azan={prayerTimes.dhuhr_azan}
                 iqamah={prayerTimes.dhuhr_iqamah}
+                theme={theme}
               />
               <PrayerRow
                 name="Asr"
                 azan={prayerTimes.asr_azan}
                 iqamah={prayerTimes.asr_iqamah}
+                theme={theme}
               />
               <PrayerRow
                 name="Maghrib"
                 azan={prayerTimes.maghrib_azan}
                 iqamah={prayerTimes.maghrib_iqamah}
+                theme={theme}
               />
               <PrayerRow
                 name="Isha"
                 azan={prayerTimes.isha_azan}
                 iqamah={prayerTimes.isha_iqamah}
+                theme={theme}
               />
             </View>
 
             {/* JUMMAH SECTION */}
-            {hasJummah && <JummahRow prayerTimes={prayerTimes} />}
+            {hasJummah && <JummahRow prayerTimes={prayerTimes} theme={theme} />}
           </ScrollView>
         </View>
       </View>
@@ -260,19 +372,17 @@ const styles = StyleSheet.create({
   centeredView: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
   },
   modalView: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
     padding: 24,
     paddingBottom: 40,
     maxHeight: '85%',
-    shadowColor: '#000',
+    borderWidth: 1,
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
     shadowRadius: 10,
@@ -287,25 +397,22 @@ const styles = StyleSheet.create({
   orgName: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#111827',
     marginRight: 10,
   },
   closeButton: {
-    backgroundColor: '#F3F4F6',
-    borderRadius: 20,
+    borderRadius: 12,
     padding: 6,
+    borderWidth: 1,
   },
   dateNav: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#ecfdf5',
     borderRadius: 12,
     paddingVertical: 10,
     paddingHorizontal: 12,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: '#d1fae5',
   },
   navArrow: {
     padding: 4,
@@ -313,27 +420,23 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#065f46',
   },
   tableHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
     marginBottom: 8,
   },
   headerCellName: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#9CA3AF',
     textTransform: 'uppercase',
     flex: 1,
   },
   headerCell: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#9CA3AF',
     textTransform: 'uppercase',
     width: 70,
     textAlign: 'center',
@@ -347,7 +450,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
   },
   nameContainer: {
     flex: 1,
@@ -360,7 +462,6 @@ const styles = StyleSheet.create({
   cellName: {
     fontSize: 17,
     fontWeight: '600',
-    color: '#374151',
   },
   singleTimeContainer: {
     flex: 1,
@@ -370,7 +471,6 @@ const styles = StyleSheet.create({
   cellTimeSingle: {
     fontSize: 17,
     fontWeight: '500',
-    color: '#4B5563',
   },
   timeContainer: {
     flexDirection: 'row',
@@ -383,11 +483,9 @@ const styles = StyleSheet.create({
   cellTime: {
     fontSize: 17,
     fontWeight: '500',
-    color: '#4B5563',
   },
   iqamahTime: {
     fontWeight: '700',
-    color: '#50b962',
   },
   scrollContent: {
     paddingBottom: 20,
@@ -395,13 +493,14 @@ const styles = StyleSheet.create({
   jummahContainer: {
     marginTop: 10,
     paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    paddingHorizontal: 14,
+    paddingBottom: 14,
+    borderWidth: 1,
+    borderRadius: 12,
   },
   sectionHeader: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#50b962',
     marginBottom: 12,
     textAlign: 'center',
     textTransform: 'uppercase',
@@ -413,23 +512,19 @@ const styles = StyleSheet.create({
   },
   jummahBlock: {
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
   },
   jummahLabel: {
     fontSize: 12,
-    color: '#6B7280',
     marginBottom: 4,
     fontWeight: '600',
   },
   jummahTime: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#111827',
   },
 })
 

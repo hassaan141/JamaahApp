@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
 import PrayerDetailModal from './PrayerDetailModal'
 import type { Database } from '@/types/supabase'
+import { useTheme } from '@/theme'
 
 type PrayerTimeRow = Database['public']['Tables']['daily_prayer_times']['Row']
 
@@ -27,7 +28,36 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
   canNextDay = false,
   canPrevDay = false,
 }) => {
+  const { theme } = useTheme()
   const [modalVisible, setModalVisible] = useState(false)
+  const isDark = theme.mode === 'dark'
+  const cardColors = isDark
+    ? {
+        background: '#EEF3EA',
+        border: '#D8E3D6',
+        text: '#1F2A24',
+        textMuted: '#5F6D65',
+        textSoft: '#7E8C84',
+        timerBackground: '#DDE8DA',
+        detailsBackground: '#E3ECE0',
+        divider: '#C4D3C3',
+        gridBackground: '#E7EFE4',
+        gridBorder: '#D2DED0',
+        chevron: '#2F855A',
+      }
+    : {
+        background: theme.colors.primary,
+        border: 'transparent',
+        text: '#FFFFFF',
+        textMuted: 'rgba(255,255,255,0.9)',
+        textSoft: 'rgba(255,255,255,0.8)',
+        timerBackground: 'rgba(0,0,0,0.1)',
+        detailsBackground: 'rgba(255,255,255,0.15)',
+        divider: 'rgba(255,255,255,0.4)',
+        gridBackground: 'rgba(0, 0, 0, 0.08)',
+        gridBorder: 'rgba(255,255,255,0.1)',
+        chevron: '#FFFFFF',
+      }
 
   const [nextEvent, setNextEvent] = useState<{
     name: string
@@ -166,8 +196,19 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
 
   if (!prayerTimes) {
     return (
-      <View style={[styles.container, styles.loadingContainer]}>
-        <Text style={styles.headerTitle}>Loading...</Text>
+      <View
+        style={[
+          styles.container,
+          styles.loadingContainer,
+          {
+            backgroundColor: cardColors.background,
+            borderColor: cardColors.border,
+          },
+        ]}
+      >
+        <Text style={[styles.headerTitle, { color: cardColors.text }]}>
+          Loading...
+        </Text>
       </View>
     )
   }
@@ -175,7 +216,14 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
   return (
     <>
       <TouchableOpacity
-        style={styles.container}
+        style={[
+          styles.container,
+          {
+            backgroundColor: cardColors.background,
+            borderColor: cardColors.border,
+            shadowColor: theme.colors.shadow,
+          },
+        ]}
         activeOpacity={0.9}
         onPress={() => setModalVisible(true)}
       >
@@ -183,52 +231,67 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
           <View style={styles.headerRow}>
             {/* LEFT: Title */}
             <View>
-              <Text style={styles.nextLabel}>NEXT PRAYER</Text>
-              <Text style={styles.prayerTitle}>{nextEvent.name}</Text>
+              <Text style={[styles.nextLabel, { color: cardColors.textSoft }]}>
+                NEXT PRAYER
+              </Text>
+              <Text style={[styles.prayerTitle, { color: cardColors.text }]}>
+                {nextEvent.name}
+              </Text>
             </View>
 
             {/* RIGHT: Timer + Chevron */}
             <View style={styles.rightHeaderGroup}>
-              <View style={styles.timerWrapper}>
-                <Text style={styles.timerLabel}>
+              <View
+                style={[
+                  styles.timerWrapper,
+                  { backgroundColor: cardColors.timerBackground },
+                ]}
+              >
+                <Text
+                  style={[styles.timerLabel, { color: cardColors.textMuted }]}
+                >
                   {nextEvent.type === 'Iqamah' ? 'IQAMAH IN' : 'ADHAN IN'}
                 </Text>
-                <Text style={styles.timerText}>{timeRemaining}</Text>
+                <Text style={[styles.timerText, { color: cardColors.text }]}>
+                  {timeRemaining}
+                </Text>
               </View>
               {/* Chevron moved here */}
               <Feather
                 name="chevron-right"
                 size={24}
-                color="#FFFFFF"
+                color={cardColors.chevron}
                 style={styles.headerChevron}
               />
             </View>
           </View>
 
           {/* Details Row: Adhan | Iqamah */}
-          <View style={styles.detailsRow}>
+          <View
+            style={[
+              styles.detailsRow,
+              { backgroundColor: cardColors.detailsBackground },
+            ]}
+          >
             <View style={styles.detailItem}>
-              <Feather
-                name="volume-2"
-                size={14}
-                color="rgba(255,255,255,0.8)"
-              />
+              <Feather name="volume-2" size={14} color={cardColors.textSoft} />
               {/* Using formatTime to show AM/PM */}
-              <Text style={styles.detailText}>
+              <Text style={[styles.detailText, { color: cardColors.text }]}>
                 Adhan: {formatTime(nextEvent.adhanTime)}
               </Text>
             </View>
 
             {nextEvent.name !== 'Sunrise' && (
               <>
-                <View style={styles.verticalDivider} />
+                <View
+                  style={[
+                    styles.verticalDivider,
+                    { backgroundColor: cardColors.divider },
+                  ]}
+                />
                 <View style={styles.detailItem}>
-                  <Feather
-                    name="users"
-                    size={14}
-                    color="rgba(255,255,255,0.8)"
-                  />
-                  <Text style={styles.detailText}>
+                  <Feather name="users" size={14} color={cardColors.textSoft} />
+                  <Text style={[styles.detailText, { color: cardColors.text }]}>
                     Iqamah: {formatTime(nextEvent.iqamahTime)}
                   </Text>
                 </View>
@@ -237,7 +300,15 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
           </View>
         </View>
 
-        <View style={styles.prayerGrid}>
+        <View
+          style={[
+            styles.prayerGrid,
+            {
+              backgroundColor: cardColors.gridBackground,
+              borderTopColor: cardColors.gridBorder,
+            },
+          ]}
+        >
           {[
             {
               label: 'Fajr',
@@ -266,9 +337,17 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
             },
           ].map((p, i) => (
             <View key={i} style={styles.prayerColumn}>
-              <Text style={styles.prayerName}>{p.label}</Text>
-              <Text style={styles.adhanTime}>{formatTime(p.azan)}</Text>
-              <Text style={styles.iqamahTime}>{formatTime(p.iq)}</Text>
+              <Text style={[styles.prayerName, { color: cardColors.textSoft }]}>
+                {p.label}
+              </Text>
+              <Text style={[styles.adhanTime, { color: cardColors.text }]}>
+                {formatTime(p.azan)}
+              </Text>
+              <Text
+                style={[styles.iqamahTime, { color: cardColors.textMuted }]}
+              >
+                {formatTime(p.iq)}
+              </Text>
             </View>
           ))}
         </View>
@@ -291,11 +370,11 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#50b962ff',
     marginHorizontal: 20,
     marginBottom: 20,
     borderRadius: 16,
     overflow: 'hidden',
+    borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,

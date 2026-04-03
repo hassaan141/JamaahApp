@@ -5,52 +5,100 @@ import type { NavigationProp, ParamListBase } from '@react-navigation/native'
 import { useNavigation } from '@react-navigation/native'
 import { TouchableOpacity } from 'react-native'
 import { Feather } from '@expo/vector-icons'
+import { useTheme } from '@/theme'
 
 export default function OurMission() {
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
+  const { theme } = useTheme()
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
+      <View
+        style={[
+          styles.header,
+          {
+            backgroundColor: theme.colors.background,
+            borderBottomColor: theme.colors.border,
+          },
+        ]}
+      >
         <TouchableOpacity
           onPress={() => navigation.goBack()}
-          style={styles.backButton}
+          style={[
+            styles.backButton,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+            },
+          ]}
         >
-          <Feather name="arrow-left" size={24} color="#1D4732" />
+          <Feather name="arrow-left" size={20} color={theme.colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Our Mission</Text>
+        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
+          Our Mission
+        </Text>
       </View>
 
       <ScrollView
         style={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.section}>
-          <View style={styles.iconContainer}>
-            <Feather name="heart" size={48} color="#2F855A" />
+        <View
+          style={[
+            styles.section,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+              shadowColor: theme.colors.shadow,
+            },
+          ]}
+        >
+          <View
+            style={[
+              styles.iconContainer,
+              {
+                backgroundColor: theme.colors.primarySoft,
+                borderColor: theme.colors.primaryBorder,
+              },
+            ]}
+          >
+            <Feather name="heart" size={32} color={theme.colors.primary} />
           </View>
 
-          <Text style={styles.title}>Connecting the Ummah</Text>
+          <Text style={[styles.title, { color: theme.colors.text }]}>
+            Connecting the Ummah
+          </Text>
 
-          <Text style={styles.paragraph}>
+          <Text style={[styles.paragraph, { color: theme.colors.textMuted }]}>
             Jamaah is built with a simple yet powerful mission: to strengthen
             the connection between Muslims and their local communities.
           </Text>
 
-          <Text style={styles.paragraph}>
+          <Text style={[styles.paragraph, { color: theme.colors.textMuted }]}>
             We believe that every Muslim deserves easy access to accurate prayer
             times, local events, and community announcements. Our app bridges
             the gap between masjids, Islamic organizations, and the people they
             serve.
           </Text>
 
-          <Text style={styles.subTitle}>What We Stand For</Text>
+          <Text style={[styles.subTitle, { color: theme.colors.text }]}>
+            What We Stand For
+          </Text>
 
           <View style={styles.valueItem}>
-            <Feather name="users" size={20} color="#2F855A" />
+            <Feather name="users" size={20} color={theme.colors.primary} />
             <View style={styles.valueText}>
-              <Text style={styles.valueTitle}>Community First</Text>
-              <Text style={styles.valueDescription}>
+              <Text style={[styles.valueTitle, { color: theme.colors.text }]}>
+                Community First
+              </Text>
+              <Text
+                style={[
+                  styles.valueDescription,
+                  { color: theme.colors.textMuted },
+                ]}
+              >
                 We prioritize the needs of local Islamic communities and work to
                 make their voices heard.
               </Text>
@@ -58,10 +106,17 @@ export default function OurMission() {
           </View>
 
           <View style={styles.valueItem}>
-            <Feather name="bell" size={20} color="#2F855A" />
+            <Feather name="bell" size={20} color={theme.colors.primary} />
             <View style={styles.valueText}>
-              <Text style={styles.valueTitle}>Adhan Notifications</Text>
-              <Text style={styles.valueDescription}>
+              <Text style={[styles.valueTitle, { color: theme.colors.text }]}>
+                Adhan Notifications
+              </Text>
+              <Text
+                style={[
+                  styles.valueDescription,
+                  { color: theme.colors.textMuted },
+                ]}
+              >
                 Receive adhan notifications from the masjid closest to you, or
                 pin your favorite masjid to always stay connected to their
                 prayer times.
@@ -70,10 +125,17 @@ export default function OurMission() {
           </View>
 
           <View style={styles.valueItem}>
-            <Feather name="rss" size={20} color="#2F855A" />
+            <Feather name="rss" size={20} color={theme.colors.primary} />
             <View style={styles.valueText}>
-              <Text style={styles.valueTitle}>Follow Organizations</Text>
-              <Text style={styles.valueDescription}>
+              <Text style={[styles.valueTitle, { color: theme.colors.text }]}>
+                Follow Organizations
+              </Text>
+              <Text
+                style={[
+                  styles.valueDescription,
+                  { color: theme.colors.textMuted },
+                ]}
+              >
                 Follow your favorite masjids and Islamic organizations to
                 receive their announcements, events, and updates directly in
                 your feed.
@@ -82,10 +144,17 @@ export default function OurMission() {
           </View>
 
           <View style={styles.valueItem}>
-            <Feather name="clock" size={20} color="#2F855A" />
+            <Feather name="clock" size={20} color={theme.colors.primary} />
             <View style={styles.valueText}>
-              <Text style={styles.valueTitle}>Accurate Prayer Times</Text>
-              <Text style={styles.valueDescription}>
+              <Text style={[styles.valueTitle, { color: theme.colors.text }]}>
+                Accurate Prayer Times
+              </Text>
+              <Text
+                style={[
+                  styles.valueDescription,
+                  { color: theme.colors.textMuted },
+                ]}
+              >
                 We provide precise prayer times based on your location, ensuring
                 you never miss a prayer.
               </Text>
@@ -93,10 +162,17 @@ export default function OurMission() {
           </View>
 
           <View style={styles.valueItem}>
-            <Feather name="globe" size={20} color="#2F855A" />
+            <Feather name="globe" size={20} color={theme.colors.primary} />
             <View style={styles.valueText}>
-              <Text style={styles.valueTitle}>Accessibility</Text>
-              <Text style={styles.valueDescription}>
+              <Text style={[styles.valueTitle, { color: theme.colors.text }]}>
+                Accessibility
+              </Text>
+              <Text
+                style={[
+                  styles.valueDescription,
+                  { color: theme.colors.textMuted },
+                ]}
+              >
                 Making Islamic community resources accessible to everyone,
                 everywhere.
               </Text>
@@ -104,10 +180,17 @@ export default function OurMission() {
           </View>
 
           <View style={styles.valueItem}>
-            <Feather name="shield" size={20} color="#2F855A" />
+            <Feather name="shield" size={20} color={theme.colors.primary} />
             <View style={styles.valueText}>
-              <Text style={styles.valueTitle}>Privacy & Trust</Text>
-              <Text style={styles.valueDescription}>
+              <Text style={[styles.valueTitle, { color: theme.colors.text }]}>
+                Privacy & Trust
+              </Text>
+              <Text
+                style={[
+                  styles.valueDescription,
+                  { color: theme.colors.textMuted },
+                ]}
+              >
                 Your data is sacred to us. We never sell or share your personal
                 information.
               </Text>
@@ -131,12 +214,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#E9ECEF',
   },
   backButton: {
-    padding: 8,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 8,
   },
   headerTitle: {
@@ -149,10 +235,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   section: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 20,
     marginTop: 16,
+    borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -161,6 +247,12 @@ const styles = StyleSheet.create({
   },
   iconContainer: {
     alignItems: 'center',
+    justifyContent: 'center',
+    width: 72,
+    height: 72,
+    borderRadius: 16,
+    borderWidth: 1,
+    alignSelf: 'center',
     marginBottom: 20,
   },
   title: {

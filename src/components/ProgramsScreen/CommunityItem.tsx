@@ -14,12 +14,14 @@ import { followEventEmitter } from '@/Utils/followEventEmitter'
 import type { NavigationProp } from '@react-navigation/native'
 import type { RootStackParamList } from '@/Screens/Navigation/RootNavigator'
 import { useAuth } from '@/Auth/AuthProvider'
+import { useTheme } from '@/theme'
 
 type Props = { community: Organization & { is_following?: boolean } }
 
 export default function CommunityItem({ community }: Props) {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>()
   const { session } = useAuth()
+  const { theme } = useTheme()
   const isGuest = !session
   const [following, setFollowing] = useState(!!community.is_following)
   const [loading, setLoading] = useState(false)
@@ -158,7 +160,14 @@ export default function CommunityItem({ community }: Props) {
 
   return (
     <TouchableOpacity
-      style={[styles.card]}
+      style={[
+        styles.card,
+        {
+          backgroundColor: theme.colors.surface,
+          borderColor: theme.colors.border,
+          shadowColor: theme.colors.shadow,
+        },
+      ]}
       activeOpacity={0.85}
       onPress={handlePress}
     >
@@ -171,7 +180,10 @@ export default function CommunityItem({ community }: Props) {
       <View style={styles.headerRow}>
         <View style={styles.titleBlock}>
           <View style={styles.titleRow}>
-            <Text style={styles.cardTitle} numberOfLines={2}>
+            <Text
+              style={[styles.cardTitle, { color: theme.colors.text }]}
+              numberOfLines={2}
+            >
               {name}
             </Text>
           </View>
@@ -202,7 +214,12 @@ export default function CommunityItem({ community }: Props) {
           <TouchableOpacity
             style={[
               styles.followButton,
+              { backgroundColor: theme.colors.primary },
               following && styles.followingButton,
+              following && {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.primaryBorder,
+              },
               loading && { opacity: 0.6 },
             ]}
             onPress={handleFollowToggle}
@@ -211,13 +228,14 @@ export default function CommunityItem({ community }: Props) {
             {loading ? (
               <ActivityIndicator
                 size="small"
-                color={following ? '#2F855A' : '#FFFFFF'}
+                color={following ? theme.colors.primary : '#FFFFFF'}
               />
             ) : (
               <Text
                 style={[
                   styles.followButtonText,
                   following && styles.followingButtonText,
+                  following && { color: theme.colors.primary },
                 ]}
               >
                 {following ? 'Following' : 'Follow'}
@@ -228,7 +246,7 @@ export default function CommunityItem({ community }: Props) {
       </View>
 
       <Text
-        style={styles.cardDescription}
+        style={[styles.cardDescription, { color: theme.colors.textMuted }]}
         numberOfLines={expanded ? undefined : 2}
         ellipsizeMode="tail"
       >
@@ -239,7 +257,7 @@ export default function CommunityItem({ community }: Props) {
           onPress={() => setExpanded((s) => !s)}
           activeOpacity={0.7}
         >
-          <Text style={styles.readMore}>
+          <Text style={[styles.readMore, { color: theme.colors.primary }]}>
             {expanded ? 'Show less' : 'Read more'}
           </Text>
         </TouchableOpacity>
@@ -282,7 +300,6 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1A202C',
     lineHeight: 21,
     flex: 1,
   },
@@ -297,14 +314,11 @@ const styles = StyleSheet.create({
     minWidth: 88,
     paddingHorizontal: 14,
     paddingVertical: 0,
-    backgroundColor: '#2F855A',
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
   followingButton: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#2F855A',
     borderWidth: 1,
   },
   followButtonText: { color: '#FFF', fontWeight: '600', fontSize: 13 },

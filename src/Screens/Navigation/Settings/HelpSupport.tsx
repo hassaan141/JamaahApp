@@ -5,9 +5,11 @@ import type { NavigationProp, ParamListBase } from '@react-navigation/native'
 import { useNavigation } from '@react-navigation/native'
 import { TouchableOpacity } from 'react-native'
 import { Feather } from '@expo/vector-icons'
+import { useTheme } from '@/theme'
 
 export default function HelpSupport() {
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
+  const { theme } = useTheme()
 
   const handleEmailSupport = () => {
     Linking.openURL('mailto:jamahcommunityapp@gmail.com')
@@ -18,62 +20,95 @@ export default function HelpSupport() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
+      <View
+        style={[
+          styles.header,
+          {
+            backgroundColor: theme.colors.background,
+            borderBottomColor: theme.colors.border,
+          },
+        ]}
+      >
         <TouchableOpacity
           onPress={() => navigation.goBack()}
-          style={styles.backButton}
+          style={[
+            styles.backButton,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+            },
+          ]}
         >
-          <Feather name="arrow-left" size={24} color="#1D4732" />
+          <Feather name="arrow-left" size={20} color={theme.colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Help & Support</Text>
+        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
+          Help & Support
+        </Text>
       </View>
 
       <ScrollView
         style={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.section}>
+        <View
+          style={[
+            styles.section,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+              shadowColor: theme.colors.shadow,
+            },
+          ]}
+        >
           <View style={styles.sectionHeader}>
-            <Feather name="help-circle" size={20} color="#2F855A" />
-            <Text style={styles.sectionTitle}>Frequently Asked Questions</Text>
+            <Feather
+              name="help-circle"
+              size={20}
+              color={theme.colors.primary}
+            />
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+              Frequently Asked Questions
+            </Text>
           </View>
 
           <View style={styles.faqItem}>
-            <Text style={styles.faqQuestion}>
+            <Text style={[styles.faqQuestion, { color: theme.colors.text }]}>
               How do I find masjids near me?
             </Text>
-            <Text style={styles.faqAnswer}>
+            <Text style={[styles.faqAnswer, { color: theme.colors.textMuted }]}>
               Go to the Map tab and enable location services. The app will
               automatically show nearby masjids and their prayer times.
             </Text>
           </View>
 
           <View style={styles.faqItem}>
-            <Text style={styles.faqQuestion}>
+            <Text style={[styles.faqQuestion, { color: theme.colors.text }]}>
               How do I follow an organization?
             </Text>
-            <Text style={styles.faqAnswer}>
+            <Text style={[styles.faqAnswer, { color: theme.colors.textMuted }]}>
               Navigate to the Communities tab, find the organization you want to
               follow, and tap the Follow button on their profile.
             </Text>
           </View>
 
           <View style={styles.faqItem}>
-            <Text style={styles.faqQuestion}>
+            <Text style={[styles.faqQuestion, { color: theme.colors.text }]}>
               How do I enable prayer notifications?
             </Text>
-            <Text style={styles.faqAnswer}>
+            <Text style={[styles.faqAnswer, { color: theme.colors.textMuted }]}>
               Make sure notifications are enabled in your device settings. Then
               follow the organizations you want to receive notifications from.
             </Text>
           </View>
 
           <View style={styles.faqItem}>
-            <Text style={styles.faqQuestion}>
+            <Text style={[styles.faqQuestion, { color: theme.colors.text }]}>
               How do I register my organization?
             </Text>
-            <Text style={styles.faqAnswer}>
+            <Text style={[styles.faqAnswer, { color: theme.colors.textMuted }]}>
               Visit our organization application portal to apply. Once approved,
               you'll be able to manage your masjid or organization through our
               dashboard.
@@ -81,59 +116,139 @@ export default function HelpSupport() {
           </View>
         </View>
 
-        <View style={styles.section}>
+        <View
+          style={[
+            styles.section,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+              shadowColor: theme.colors.shadow,
+            },
+          ]}
+        >
           <View style={styles.sectionHeader}>
-            <Feather name="mail" size={20} color="#2F855A" />
-            <Text style={styles.sectionTitle}>Contact Us</Text>
+            <Feather name="mail" size={20} color={theme.colors.primary} />
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+              Contact Us
+            </Text>
           </View>
 
           <TouchableOpacity
-            style={styles.contactItem}
+            style={[
+              styles.contactItem,
+              { borderBottomColor: theme.colors.borderSoft },
+            ]}
             onPress={handleEmailSupport}
           >
-            <View style={styles.contactIcon}>
-              <Feather name="mail" size={20} color="#2F855A" />
+            <View
+              style={[
+                styles.contactIcon,
+                {
+                  backgroundColor: theme.colors.primarySoft,
+                  borderColor: theme.colors.primaryBorder,
+                },
+              ]}
+            >
+              <Feather name="mail" size={20} color={theme.colors.primary} />
             </View>
             <View style={styles.contactText}>
-              <Text style={styles.contactTitle}>Email Support</Text>
-              <Text style={styles.contactDescription}>
+              <Text style={[styles.contactTitle, { color: theme.colors.text }]}>
+                Email Support
+              </Text>
+              <Text
+                style={[
+                  styles.contactDescription,
+                  { color: theme.colors.textMuted },
+                ]}
+              >
                 jamahcommunityapp@gmail.com
               </Text>
             </View>
-            <Feather name="chevron-right" size={20} color="#ADB5BD" />
+            <Feather
+              name="chevron-right"
+              size={20}
+              color={theme.colors.textSoft}
+            />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.contactItem}
             onPress={handleApplyOrganization}
           >
-            <View style={styles.contactIcon}>
-              <Feather name="briefcase" size={20} color="#2F855A" />
+            <View
+              style={[
+                styles.contactIcon,
+                {
+                  backgroundColor: theme.colors.primarySoft,
+                  borderColor: theme.colors.primaryBorder,
+                },
+              ]}
+            >
+              <Feather
+                name="briefcase"
+                size={20}
+                color={theme.colors.primary}
+              />
             </View>
             <View style={styles.contactText}>
-              <Text style={styles.contactTitle}>Apply as Organization</Text>
-              <Text style={styles.contactDescription}>
+              <Text style={[styles.contactTitle, { color: theme.colors.text }]}>
+                Apply as Organization
+              </Text>
+              <Text
+                style={[
+                  styles.contactDescription,
+                  { color: theme.colors.textMuted },
+                ]}
+              >
                 Register your masjid or organization
               </Text>
             </View>
-            <Feather name="chevron-right" size={20} color="#ADB5BD" />
+            <Feather
+              name="chevron-right"
+              size={20}
+              color={theme.colors.textSoft}
+            />
           </TouchableOpacity>
         </View>
 
-        <View style={styles.section}>
+        <View
+          style={[
+            styles.section,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+              shadowColor: theme.colors.shadow,
+            },
+          ]}
+        >
           <View style={styles.sectionHeader}>
-            <Feather name="info" size={20} color="#2F855A" />
-            <Text style={styles.sectionTitle}>App Information</Text>
+            <Feather name="info" size={20} color={theme.colors.primary} />
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+              App Information
+            </Text>
+          </View>
+
+          <View
+            style={[
+              styles.infoRow,
+              { borderBottomColor: theme.colors.borderSoft },
+            ]}
+          >
+            <Text style={[styles.infoLabel, { color: theme.colors.textMuted }]}>
+              Version
+            </Text>
+            <Text style={[styles.infoValue, { color: theme.colors.text }]}>
+              1.0.0
+            </Text>
           </View>
 
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Version</Text>
-            <Text style={styles.infoValue}>1.0.0</Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Build</Text>
-            <Text style={styles.infoValue}>3</Text>
+            <Text style={[styles.infoLabel, { color: theme.colors.textMuted }]}>
+              Build
+            </Text>
+            <Text style={[styles.infoValue, { color: theme.colors.text }]}>
+              3
+            </Text>
           </View>
         </View>
 
@@ -153,12 +268,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#E9ECEF',
   },
   backButton: {
-    padding: 8,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 8,
   },
   headerTitle: {
@@ -171,10 +289,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   section: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
     marginTop: 16,
+    borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -196,7 +314,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E9ECEF',
   },
   faqQuestion: {
     fontSize: 15,
@@ -214,13 +331,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#E9ECEF',
   },
   contactIcon: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: '#E8F5E9',
+    borderRadius: 12,
+    borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -243,7 +359,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#E9ECEF',
   },
   infoLabel: {
     fontSize: 15,

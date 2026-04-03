@@ -14,6 +14,7 @@ import { getUserId } from '@/Utils/getUserID'
 import { setAuto } from '@/Utils/switchMasjidMode'
 import { formatDistance } from '@/Utils/formatDistance'
 import { useAuth } from '@/Auth/AuthProvider'
+import { useTheme } from '@/theme'
 
 interface Props {
   visible: boolean
@@ -35,6 +36,7 @@ const MasjidDetailsModal: React.FC<Props> = ({
   activeMode = 'pinned',
 }) => {
   const { session } = useAuth()
+  const { theme } = useTheme()
   const [loading, setLoading] = useState(false)
   const [locationPermissionGranted, setLocationPermissionGranted] =
     useState(true)
@@ -107,12 +109,37 @@ const MasjidDetailsModal: React.FC<Props> = ({
       visible={visible}
       onRequestClose={onClose}
     >
-      <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
+      <View
+        style={[
+          styles.modalContainer,
+          { backgroundColor: theme.colors.overlay },
+        ]}
+      >
+        <View
+          style={[
+            styles.modalContent,
+            {
+              backgroundColor: theme.colors.surfaceElevated,
+              borderColor: theme.colors.border,
+              shadowColor: theme.colors.shadow,
+            },
+          ]}
+        >
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Masjid Settings</Text>
-            <TouchableOpacity style={styles.closeIconButton} onPress={onClose}>
-              <Feather name="x" size={24} color="#718096" />
+            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
+              Masjid Settings
+            </Text>
+            <TouchableOpacity
+              style={[
+                styles.closeIconButton,
+                {
+                  backgroundColor: theme.colors.surfaceMuted,
+                  borderColor: theme.colors.borderSoft,
+                },
+              ]}
+              onPress={onClose}
+            >
+              <Feather name="x" size={24} color={theme.colors.textMuted} />
             </TouchableOpacity>
           </View>
 
@@ -120,18 +147,39 @@ const MasjidDetailsModal: React.FC<Props> = ({
             // Guest mode: Show sign-up prompt
             <>
               <View style={styles.guestPromptContainer}>
-                <View style={styles.guestIconCircle}>
-                  <Feather name="user" size={24} color="#2F855A" />
+                <View
+                  style={[
+                    styles.guestIconCircle,
+                    {
+                      backgroundColor: theme.colors.primarySoft,
+                      borderColor: theme.colors.primaryBorder,
+                    },
+                  ]}
+                >
+                  <Feather name="user" size={24} color={theme.colors.primary} />
                 </View>
-                <Text style={styles.guestPromptTitle}>
+                <Text
+                  style={[
+                    styles.guestPromptTitle,
+                    { color: theme.colors.text },
+                  ]}
+                >
                   Sign up to customize
                 </Text>
-                <Text style={styles.guestPromptText}>
+                <Text
+                  style={[
+                    styles.guestPromptText,
+                    { color: theme.colors.textMuted },
+                  ]}
+                >
                   Create an account to pin your favorite masjid and get
                   personalized prayer notifications
                 </Text>
                 <TouchableOpacity
-                  style={styles.guestSignUpButton}
+                  style={[
+                    styles.guestSignUpButton,
+                    { backgroundColor: theme.colors.primary },
+                  ]}
                   onPress={handleGuestSignIn}
                   activeOpacity={0.8}
                 >
@@ -140,14 +188,35 @@ const MasjidDetailsModal: React.FC<Props> = ({
               </View>
 
               <View style={styles.currentMasjidSection}>
-                <Text style={styles.currentLabel}>Currently showing:</Text>
+                <Text
+                  style={[
+                    styles.currentLabel,
+                    { color: theme.colors.textMuted },
+                  ]}
+                >
+                  Currently showing:
+                </Text>
                 <View style={styles.currentMasjidInfo}>
-                  <Feather name="map-pin" size={16} color="#48BB78" />
-                  <Text style={styles.currentMasjidName}>
+                  <Feather
+                    name="map-pin"
+                    size={16}
+                    color={theme.colors.primary}
+                  />
+                  <Text
+                    style={[
+                      styles.currentMasjidName,
+                      { color: theme.colors.text },
+                    ]}
+                  >
                     {masjidData?.org?.name || 'Nearest Masjid'}
                   </Text>
                   {masjidData?.distance_m != null && (
-                    <Text style={styles.currentDistance}>
+                    <Text
+                      style={[
+                        styles.currentDistance,
+                        { color: theme.colors.textMuted },
+                      ]}
+                    >
                       • {formatDistance(masjidData?.distance_m)}
                     </Text>
                   )}
@@ -157,7 +226,9 @@ const MasjidDetailsModal: React.FC<Props> = ({
           ) : (
             // Logged-in user: Show normal options
             <>
-              <Text style={styles.subtitle}>
+              <Text
+                style={[styles.subtitle, { color: theme.colors.textMuted }]}
+              >
                 Choose how you'd like to receive prayer times and notifications
               </Text>
 
@@ -165,24 +236,61 @@ const MasjidDetailsModal: React.FC<Props> = ({
               <TouchableOpacity
                 style={[
                   styles.optionButton,
+                  {
+                    backgroundColor: theme.colors.surfaceMuted,
+                    borderColor: theme.colors.border,
+                  },
                   isPinnedActive && styles.activeOptionPinned,
+                  isPinnedActive && {
+                    backgroundColor: theme.colors.primarySoft,
+                    borderColor: theme.colors.primaryBorder,
+                  },
                 ]}
                 onPress={handleChooseSpecificMasjid}
                 disabled={loading}
               >
-                <View style={styles.optionIcon}>
-                  <Feather name="map-pin" size={20} color="#48BB78" />
+                <View
+                  style={[
+                    styles.optionIcon,
+                    {
+                      backgroundColor: theme.colors.surface,
+                      borderColor: theme.colors.borderSoft,
+                    },
+                  ]}
+                >
+                  <Feather
+                    name="map-pin"
+                    size={20}
+                    color={theme.colors.primary}
+                  />
                 </View>
                 <View style={styles.optionContent}>
-                  <Text style={styles.optionTitle}>Choose Specific Masjid</Text>
-                  <Text style={styles.optionDescription}>
+                  <Text
+                    style={[styles.optionTitle, { color: theme.colors.text }]}
+                  >
+                    Choose Specific Masjid
+                  </Text>
+                  <Text
+                    style={[
+                      styles.optionDescription,
+                      { color: theme.colors.textMuted },
+                    ]}
+                  >
                     Select a masjid to always get its prayer times
                   </Text>
                 </View>
                 {isPinnedActive ? (
-                  <Feather name="chevron-right" size={20} color="#48BB78" />
+                  <Feather
+                    name="chevron-right"
+                    size={20}
+                    color={theme.colors.primary}
+                  />
                 ) : (
-                  <Feather name="chevron-right" size={20} color="#CBD5E0" />
+                  <Feather
+                    name="chevron-right"
+                    size={20}
+                    color={theme.colors.textSoft}
+                  />
                 )}
               </TouchableOpacity>
 
@@ -190,13 +298,29 @@ const MasjidDetailsModal: React.FC<Props> = ({
               <TouchableOpacity
                 style={[
                   styles.optionButton,
+                  {
+                    backgroundColor: theme.colors.surfaceMuted,
+                    borderColor: theme.colors.border,
+                  },
                   isAutoActive && styles.activeOptionAuto,
+                  isAutoActive && {
+                    backgroundColor: '#4C3A1F',
+                    borderColor: '#7A5A2A',
+                  },
                   !locationPermissionGranted && styles.disabledOption,
                 ]}
                 onPress={handleUseNearestMasjid}
                 disabled={loading}
               >
-                <View style={styles.optionIcon}>
+                <View
+                  style={[
+                    styles.optionIcon,
+                    {
+                      backgroundColor: theme.colors.surface,
+                      borderColor: theme.colors.borderSoft,
+                    },
+                  ]}
+                >
                   <Feather
                     name="navigation"
                     size={20}
@@ -207,12 +331,18 @@ const MasjidDetailsModal: React.FC<Props> = ({
                   <Text
                     style={[
                       styles.optionTitle,
+                      { color: theme.colors.text },
                       !locationPermissionGranted && styles.disabledText,
                     ]}
                   >
                     Use Nearest Masjid
                   </Text>
-                  <Text style={styles.optionDescription}>
+                  <Text
+                    style={[
+                      styles.optionDescription,
+                      { color: theme.colors.textMuted },
+                    ]}
+                  >
                     {locationPermissionGranted
                       ? 'Always show the closest masjid to your location'
                       : 'Location permission required'}
@@ -227,13 +357,20 @@ const MasjidDetailsModal: React.FC<Props> = ({
                   <Feather
                     name="chevron-right"
                     size={20}
-                    color={isAutoActive ? '#F6AD55' : '#CBD5E0'}
+                    color={isAutoActive ? '#F6AD55' : theme.colors.textSoft}
                   />
                 )}
               </TouchableOpacity>
 
               <View style={styles.currentMasjidSection}>
-                <Text style={styles.currentLabel}>Currently using:</Text>
+                <Text
+                  style={[
+                    styles.currentLabel,
+                    { color: theme.colors.textMuted },
+                  ]}
+                >
+                  Currently using:
+                </Text>
                 <View style={styles.currentMasjidInfo}>
                   <Feather
                     name={
@@ -242,10 +379,20 @@ const MasjidDetailsModal: React.FC<Props> = ({
                     size={16}
                     color={isAutoActive || isGuestMode ? '#F6AD55' : '#48BB78'}
                   />
-                  <Text style={styles.currentMasjidName}>
+                  <Text
+                    style={[
+                      styles.currentMasjidName,
+                      { color: theme.colors.text },
+                    ]}
+                  >
                     {masjidData?.org?.name || 'Loading...'}
                   </Text>
-                  <Text style={styles.currentDistance}>
+                  <Text
+                    style={[
+                      styles.currentDistance,
+                      { color: theme.colors.textMuted },
+                    ]}
+                  >
                     • {formatDistance(masjidData?.distance_m)}
                   </Text>
                 </View>
@@ -266,10 +413,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 24,
-    shadowColor: '#000',
+    borderWidth: 1,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
@@ -290,6 +436,8 @@ const styles = StyleSheet.create({
   },
   closeIconButton: {
     padding: 4,
+    borderWidth: 1,
+    borderRadius: 10,
   },
   subtitle: {
     fontSize: 14,
@@ -327,11 +475,11 @@ const styles = StyleSheet.create({
   optionIcon: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
+    borderWidth: 1,
   },
   optionContent: {
     flex: 1,

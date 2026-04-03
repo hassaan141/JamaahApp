@@ -7,6 +7,7 @@ import { toast } from '@/components/Toast/toast'
 import { supabase } from '@/Supabase/supabaseClient'
 import { ENV } from '@/core/env'
 import { notifyFollowersOfPost } from '@/Supabase/sendPushNotification'
+import { useTheme } from '@/theme'
 
 type Organization = Database['public']['Tables']['organizations']['Row']
 type LocationData = {
@@ -21,6 +22,7 @@ export default function CreateAnnouncementSection({
 }: {
   profile: Partial<Profile> | null
 }) {
+  const { theme } = useTheme()
   const [showAnnouncementModal, setShowAnnouncementModal] = useState(false)
   const [announcementTitle, setAnnouncementTitle] = useState('')
   const [announcementBody, setAnnouncementBody] = useState('')
@@ -175,7 +177,6 @@ export default function CreateAnnouncementSection({
 
   const styles = StyleSheet.create({
     primaryButton: {
-      backgroundColor: '#2F855A',
       borderRadius: 8,
       paddingVertical: 14,
       alignItems: 'center',
@@ -217,7 +218,10 @@ export default function CreateAnnouncementSection({
       />
 
       <TouchableOpacity
-        style={styles.primaryButton}
+        style={[
+          styles.primaryButton,
+          { backgroundColor: theme.colors.primary },
+        ]}
         onPress={() => setShowAnnouncementModal(true)}
       >
         <Text style={styles.buttonText}>+ Create Announcement</Text>

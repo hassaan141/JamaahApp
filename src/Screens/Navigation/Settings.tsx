@@ -11,6 +11,7 @@ import type { NavigationProp, ParamListBase } from '@react-navigation/native'
 import { useNavigation } from '@react-navigation/native'
 import { Feather } from '@expo/vector-icons'
 import { useProfile } from '@/Auth/fetchProfile'
+import { useTheme } from '@/theme'
 
 type SettingsItem = {
   title: string
@@ -51,6 +52,7 @@ const SETTINGS_ITEMS: SettingsItem[] = [
 export default function Settings() {
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
   const { profile } = useProfile()
+  const { theme, mode, toggleMode } = useTheme()
 
   const isOrganization = profile?.is_org === true && !!profile?.org_id
 
@@ -63,42 +65,109 @@ export default function Settings() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
-          style={styles.backButton}
+          style={[
+            styles.backButton,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+            },
+          ]}
           activeOpacity={0.7}
         >
-          <Feather name="arrow-left" size={20} color="#1F2937" />
+          <Feather name="arrow-left" size={20} color={theme.colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Settings</Text>
+        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
+          Settings
+        </Text>
+        <TouchableOpacity
+          onPress={toggleMode}
+          style={[
+            styles.modeButton,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+            },
+          ]}
+          activeOpacity={0.75}
+        >
+          <Feather
+            name={mode === 'dark' ? 'sun' : 'moon'}
+            size={16}
+            color={theme.colors.text}
+          />
+          <Text
+            style={[styles.modeButtonText, { color: theme.colors.textMuted }]}
+          >
+            {mode === 'dark' ? 'Light' : 'Dark'}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView
         style={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.section}>
+        <View
+          style={[
+            styles.section,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+              shadowColor: theme.colors.shadow,
+            },
+          ]}
+        >
           {filteredItems.map((item, index) => (
             <TouchableOpacity
               key={item.screen}
               style={[
                 styles.menuItem,
                 index === filteredItems.length - 1 && styles.menuItemLast,
+                { borderBottomColor: theme.colors.borderSoft },
               ]}
               onPress={() => handleNavigate(item.screen)}
               activeOpacity={0.75}
             >
-              <View style={styles.iconContainer}>
-                <Feather name={item.icon} size={18} color="#2F855A" />
+              <View
+                style={[
+                  styles.iconContainer,
+                  {
+                    backgroundColor: theme.colors.primarySoft,
+                    borderColor: theme.colors.primaryBorder,
+                  },
+                ]}
+              >
+                <Feather
+                  name={item.icon}
+                  size={18}
+                  color={theme.colors.primary}
+                />
               </View>
               <View style={styles.menuTextContainer}>
-                <Text style={styles.menuTitle}>{item.title}</Text>
-                <Text style={styles.menuSubtitle}>{item.subtitle}</Text>
+                <Text style={[styles.menuTitle, { color: theme.colors.text }]}>
+                  {item.title}
+                </Text>
+                <Text
+                  style={[
+                    styles.menuSubtitle,
+                    { color: theme.colors.textMuted },
+                  ]}
+                >
+                  {item.subtitle}
+                </Text>
               </View>
               <View style={styles.chevronWrap}>
-                <Feather name="chevron-right" size={18} color="#94A3B8" />
+                <Feather
+                  name="chevron-right"
+                  size={18}
+                  color={theme.colors.textSoft}
+                />
               </View>
             </TouchableOpacity>
           ))}
@@ -133,6 +202,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 12,
     marginTop: 2,
+  },
+  modeButton: {
+    marginLeft: 'auto',
+    minHeight: 36,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  modeButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   headerTitle: {
     fontSize: 20,

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
+import { useTheme } from '@/theme'
 
 const EVENT_FILTER_OPTIONS = [
   { label: 'All', value: null },
@@ -17,30 +18,54 @@ export default function EventFilterControl({
   value: string | null
   onChange: (value: string | null) => void
 }) {
+  const { theme } = useTheme()
   const [visible, setVisible] = useState(false)
 
   return (
     <>
       <TouchableOpacity
-        style={styles.filterButton}
+        style={[
+          styles.filterButton,
+          {
+            backgroundColor: theme.colors.surface,
+            borderColor: theme.colors.border,
+          },
+        ]}
         onPress={() => setVisible(true)}
         activeOpacity={0.7}
       >
-        <Feather name="sliders" size={20} color="#2D3748" />
+        <Feather name="sliders" size={20} color={theme.colors.text} />
         {!!value && (
-          <View style={styles.badge}>
+          <View
+            style={[styles.badge, { backgroundColor: theme.colors.danger }]}
+          >
             <Text style={styles.badgeText}>1</Text>
           </View>
         )}
       </TouchableOpacity>
 
       <Modal visible={visible} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+        <View
+          style={[
+            styles.modalOverlay,
+            { backgroundColor: theme.colors.overlay },
+          ]}
+        >
+          <View
+            style={[
+              styles.modalContent,
+              {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+              },
+            ]}
+          >
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Filter Events</Text>
+              <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
+                Filter Events
+              </Text>
               <TouchableOpacity onPress={() => setVisible(false)}>
-                <Feather name="x" size={24} color="#4A5568" />
+                <Feather name="x" size={24} color={theme.colors.textMuted} />
               </TouchableOpacity>
             </View>
 
@@ -52,7 +77,15 @@ export default function EventFilterControl({
                     key={String(opt.value ?? 'all')}
                     style={[
                       styles.filterOption,
+                      {
+                        backgroundColor: theme.colors.surfaceMuted,
+                        borderColor: theme.colors.border,
+                      },
                       isActive && styles.filterOptionActive,
+                      isActive && {
+                        backgroundColor: theme.colors.primary,
+                        borderColor: theme.colors.primary,
+                      },
                     ]}
                     onPress={() => onChange(opt.value)}
                     activeOpacity={0.7}
@@ -60,6 +93,7 @@ export default function EventFilterControl({
                     <Text
                       style={[
                         styles.filterText,
+                        { color: theme.colors.text },
                         isActive && styles.filterTextActive,
                       ]}
                     >
@@ -75,14 +109,30 @@ export default function EventFilterControl({
 
             <View style={styles.modalFooter}>
               <TouchableOpacity
-                style={styles.resetButton}
+                style={[
+                  styles.resetButton,
+                  {
+                    borderColor: theme.colors.border,
+                    backgroundColor: theme.colors.surface,
+                  },
+                ]}
                 onPress={() => onChange(null)}
                 activeOpacity={0.7}
               >
-                <Text style={styles.resetButtonText}>Reset</Text>
+                <Text
+                  style={[
+                    styles.resetButtonText,
+                    { color: theme.colors.textMuted },
+                  ]}
+                >
+                  Reset
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.applyButton}
+                style={[
+                  styles.applyButton,
+                  { backgroundColor: theme.colors.primary },
+                ]}
                 onPress={() => setVisible(false)}
                 activeOpacity={0.7}
               >
@@ -132,13 +182,13 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#FFF',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingHorizontal: 16,
     paddingTop: 14,
     paddingBottom: 24,
     maxHeight: '70%',
+    borderWidth: 1,
   },
   modalHeader: {
     flexDirection: 'row',

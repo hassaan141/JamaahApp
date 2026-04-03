@@ -26,8 +26,10 @@ import AnnouncementsList from '@/components/Account/AnnouncementsList'
 import FollowedOrgsList from '@/components/Account/FollowedOrgsList'
 import SignOutButton from '@/components/Account/SignOutButton'
 // import VersionFooter from '@/components/Account/VersionFooter'
+import { useTheme } from '@/theme'
 
 export default function Account() {
+  const { theme } = useTheme()
   const { logout } = useAuth()
   const { isLoggedIn, isVerified } = useAuthStatus()
   const { profile, loading, error, refetch } = useProfile()
@@ -78,17 +80,40 @@ export default function Account() {
   // Guest mode: Show sign-up prompt
   if (!isLoggedIn) {
     return (
-      <View style={styles.guestContainer}>
+      <View
+        style={[
+          styles.guestContainer,
+          { backgroundColor: theme.colors.background },
+        ]}
+      >
         <View style={styles.guestContent}>
-          <View style={styles.iconCircle}>
-            <Feather name="user" size={48} color="#2F855A" />
+          <View
+            style={[
+              styles.iconCircle,
+              {
+                backgroundColor: theme.colors.primarySoft,
+                borderColor: theme.colors.primaryBorder,
+              },
+            ]}
+          >
+            <Feather name="user" size={48} color={theme.colors.primary} />
           </View>
-          <Text style={styles.guestTitle}>Create an Account</Text>
-          <Text style={styles.guestSubtitle}>
+          <Text style={[styles.guestTitle, { color: theme.colors.text }]}>
+            Create an Account
+          </Text>
+          <Text
+            style={[styles.guestSubtitle, { color: theme.colors.textMuted }]}
+          >
             Sign up to follow masjids, get prayer notifications, and more
           </Text>
           <TouchableOpacity
-            style={styles.signUpButton}
+            style={[
+              styles.signUpButton,
+              {
+                backgroundColor: theme.colors.primary,
+                shadowColor: theme.colors.shadow,
+              },
+            ]}
             onPress={() => navigation.navigate('UserTypeSelection')}
             activeOpacity={0.8}
           >
@@ -98,9 +123,15 @@ export default function Account() {
             style={styles.signInLink}
             onPress={() => navigation.navigate('SignIn')}
           >
-            <Text style={styles.signInLinkText}>
+            <Text
+              style={[styles.signInLinkText, { color: theme.colors.textMuted }]}
+            >
               Already have an account?{' '}
-              <Text style={styles.signInBold}>Sign In</Text>
+              <Text
+                style={[styles.signInBold, { color: theme.colors.primary }]}
+              >
+                Sign In
+              </Text>
             </Text>
           </TouchableOpacity>
         </View>
@@ -120,16 +151,21 @@ export default function Account() {
           alignItems: 'center',
           justifyContent: 'center',
           padding: 16,
+          backgroundColor: theme.colors.background,
         }}
       >
-        <Text>Error loading profile: {error.message}</Text>
+        <Text style={{ color: theme.colors.text }}>
+          Error loading profile: {error.message}
+        </Text>
       </View>
     )
   }
 
   return (
     // We now use a standard View instead of SafeAreaView
-    <View style={styles.container}>
+    <View
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       <ScrollView
         style={styles.scrollContainer}
         contentContainerStyle={styles.scrollContent}
@@ -137,7 +173,7 @@ export default function Account() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#2F855A"
+            tintColor={theme.colors.primary}
           />
         }
       >
@@ -184,7 +220,6 @@ const styles = StyleSheet.create({
   // Guest mode styles
   guestContainer: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 32,
@@ -197,7 +232,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#E8F5E9',
+    borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,

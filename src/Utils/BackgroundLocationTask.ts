@@ -1,9 +1,13 @@
 import * as TaskManager from 'expo-task-manager'
 import * as Location from 'expo-location'
+import { Platform } from 'react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { supabase } from '@/Supabase/supabaseClient'
 import { resolveOrgForTimes } from '@/Utils/organizationResolver'
 
 export const BACKGROUND_LOCATION_TASK = 'BACKGROUND_PRAYER_UPDATES'
+const BACKGROUND_LOCATION_DISCLOSURE_KEY =
+  '@jamaah_background_location_disclosure_accepted'
 
 interface LocationTaskPayload {
   data?: {
@@ -99,6 +103,16 @@ TaskManager.defineTask(
  */
 export const startBackgroundTracking = async () => {
   try {
+    if (Platform.OS === 'android') {
+      const disclosureAccepted = await AsyncStorage.getItem(
+        BACKGROUND_LOCATION_DISCLOSURE_KEY,
+      )
+      if (disclosureAccepted !== 'true') {
+        console.warn('[Background] Disclosure not accepted, skipping request')
+        return
+      }
+    }
+
     const { status: fgStatus } =
       await Location.requestForegroundPermissionsAsync()
     if (fgStatus !== 'granted') {
@@ -134,6 +148,15 @@ export const startBackgroundTracking = async () => {
   } catch (e) {
     console.error('[Background] Start Error:', e)
   }
+}
+
+export const hasAcceptedBackgroundLocationDisclosure = async () => {
+  const value = await AsyncStorage.getItem(BACKGROUND_LOCATION_DISCLOSURE_KEY)
+  return value === 'true'
+}
+
+export const acceptBackgroundLocationDisclosure = async () => {
+  await AsyncStorage.setItem(BACKGROUND_LOCATION_DISCLOSURE_KEY, 'true')
 }
 
 /**

@@ -16,6 +16,7 @@ import EditAnnouncementModal from './EditAnnouncementModal'
 import { toast } from '@/components/Toast/toast'
 import MiniLoading from '@/components/Loading/MiniLoading'
 import { useTheme } from '@/theme'
+import { announcementEventEmitter } from '@/Utils/announcementEventEmitter'
 
 const TABS = [
   { label: 'Classes', value: 'CLASSES' },
@@ -41,22 +42,30 @@ export default function AnnouncementsList({
   const [activeTab, setActiveTab] = useState('CLASSES')
   const [isExpanded, setIsExpanded] = useState(false)
 
-  useEffect(() => {
-    const loadAnnouncements = async () => {
-      if (!profile?.org_id) return
-      setLoading(true)
-      try {
-        const postsData = await fetchMyOrgPosts()
-        setAnnouncements(postsData)
-      } catch (error) {
-        console.error('[AnnouncementsList] Failed to load announcements', error)
-      } finally {
-        setLoading(false)
-      }
+  const loadAnnouncements = React.useCallback(async () => {
+    if (!profile?.org_id) return
+    setLoading(true)
+    try {
+      const postsData = await fetchMyOrgPosts()
+      setAnnouncements(postsData)
+    } catch (error) {
+      console.error('[AnnouncementsList] Failed to load announcements', error)
+    } finally {
+      setLoading(false)
     }
+  }, [profile?.org_id])
 
+  useEffect(() => {
     loadAnnouncements()
-  }, [profile?.org_id, refreshKey])
+  }, [loadAnnouncements, refreshKey])
+
+  useEffect(() => {
+    const unsubscribe = announcementEventEmitter.subscribe(() => {
+      loadAnnouncements()
+    })
+
+    return unsubscribe
+  }, [loadAnnouncements])
 
   const handleEdit = (announcement: OrgPost) => {
     setEditingAnnouncement(announcement)
@@ -86,6 +95,11 @@ export default function AnnouncementsList({
       toast.success('Announcement updated successfully!', 'Success')
       const postsData = await fetchMyOrgPosts()
       setAnnouncements(postsData)
+      announcementEventEmitter.emit({
+        type: 'updated',
+        announcementId: editingAnnouncement.id,
+        organizationId: editingAnnouncement.organization_id,
+      })
     } else {
       toast.error(error || 'Failed to update announcement', 'Error')
     }
@@ -99,6 +113,11 @@ export default function AnnouncementsList({
       toast.success('Announcement deleted successfully!', 'Success')
       const postsData = await fetchMyOrgPosts()
       setAnnouncements(postsData)
+      announcementEventEmitter.emit({
+        type: 'deleted',
+        announcementId: editingAnnouncement.id,
+        organizationId: editingAnnouncement.organization_id,
+      })
     } else {
       toast.error(error || 'Failed to delete announcement', 'Error')
     }

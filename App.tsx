@@ -164,6 +164,12 @@ export default function App() {
     return () => clearTimeout(timeoutId)
   }, [])
 
+  useEffect(() => {
+    if (!checkingUpdate && forceUpdate) {
+      SplashScreen.hideAsync().catch(() => {})
+    }
+  }, [checkingUpdate, forceUpdate])
+
   if (checkingUpdate) {
     return (
       <View

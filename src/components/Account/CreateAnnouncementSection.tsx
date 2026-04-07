@@ -8,6 +8,7 @@ import { supabase } from '@/Supabase/supabaseClient'
 import { ENV } from '@/core/env'
 import { notifyFollowersOfPost } from '@/Supabase/sendPushNotification'
 import { useTheme } from '@/theme'
+import { announcementEventEmitter } from '@/Utils/announcementEventEmitter'
 
 type Organization = Database['public']['Tables']['organizations']['Row']
 type LocationData = {
@@ -160,6 +161,11 @@ export default function CreateAnnouncementSection({
         'Your announcement has been shared.',
         'Announcement posted!',
       )
+      announcementEventEmitter.emit({
+        type: 'created',
+        announcementId: data.id,
+        organizationId: profile.org_id,
+      })
       setAnnouncementTitle('')
       setAnnouncementBody('')
       setStartTime(null)

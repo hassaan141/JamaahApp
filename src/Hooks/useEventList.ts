@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import type { EventItem } from '@/Supabase/fetchEventsFromRPC'
 import { fetchNearbyEvents } from '@/Supabase/fetchEventsFromRPC'
 import { DEFAULT_LOCATION } from '@/Utils/constants'
+import { announcementEventEmitter } from '@/Utils/announcementEventEmitter'
 
 const EVENT_FETCH_LIMIT = 20
 
@@ -73,6 +74,14 @@ export function useEventList(
   useEffect(() => {
     fetchEvents('')
   }, [location, fetchEvents])
+
+  useEffect(() => {
+    const unsubscribe = announcementEventEmitter.subscribe(() => {
+      fetchEvents(searchQuery, false)
+    })
+
+    return unsubscribe
+  }, [fetchEvents, searchQuery])
 
   const handleSearch = (text: string) => {
     setSearchQuery(text)

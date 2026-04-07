@@ -40,16 +40,16 @@ const NotificationButton: React.FC<NotificationButtonProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 12,
-    padding: 12,
+    borderRadius: 10,
+    height: 58,
+    width: 58,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
-    width: 48,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 3,
   },
   iconContainer: {
     position: 'relative',

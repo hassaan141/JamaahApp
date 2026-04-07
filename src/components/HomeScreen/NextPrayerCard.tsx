@@ -223,7 +223,9 @@ const NextPrayerCard: React.FC<NextPrayerCardProps> = ({ prayerTimes }) => {
         <Feather name="clock" size={20} color="#FFFFFF" />
       </View>
       <View style={styles.centerSection}>
-        <Text style={styles.nextPrayerName}>{nextPrayer.name}</Text>
+        <Text style={styles.nextPrayerName}>
+          {nextPrayer.name.toUpperCase()}
+        </Text>
         <View style={styles.timesRow}>
           <Text style={styles.prayerTime}>
             Adhan: {formatTime(nextPrayer.adhan, nextPrayer.name)}

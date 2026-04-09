@@ -128,9 +128,10 @@ const NotificationList: React.FC<{ refreshKey?: boolean }> = ({
 
   const hiddenCount = Math.max(0, filteredAnnouncements.length - 2)
 
-  const newAnnouncementCount = upcomingAnnouncements.filter((a) =>
-    isNewAnnouncement(a.created_at),
-  ).length
+  const newAnnouncementCount = upcomingAnnouncements.filter((a) => {
+    if (a.post_type === 'Janazah') return false
+    return isNewAnnouncement(a.created_at)
+  }).length
 
   const handleExpand = () => setIsExpanded(true)
   const handleCollapse = () => setIsExpanded(false)

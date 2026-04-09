@@ -46,8 +46,8 @@ export default function EnhancedMasjidCard({
         </View>
         <Text style={[styles.distance, { color: theme.colors.textMuted }]}>
           {item?.distance_km != null
-            ? `${item.distance_km.toFixed(1)} mi`
-            : '— mi'}
+            ? `${item.distance_km.toFixed(1)} KM`
+            : '—'}
         </Text>
       </View>
 

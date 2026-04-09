@@ -83,7 +83,7 @@ export async function sendPushToFollowers(payload: NotificationPayload) {
 
     return {
       success: true,
-      message: `Notifications sent to ${fcmTokens.length} devices`,
+      message: `Notifications sent.`,
       data,
     }
   } catch (error) {

@@ -171,36 +171,32 @@ export default function App() {
     }
   }, [checkingUpdate, forceUpdate])
 
-  if (checkingUpdate) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: bootTheme.colors.background,
-        }}
-      >
-        <ActivityIndicator size="large" color={bootTheme.colors.primary} />
-      </View>
-    )
-  }
-
-  if (forceUpdate) {
-    return <ForceUpdateScreen />
-  }
-
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <ErrorBoundary FallbackComponent={CustomFallback}>
-          <DistanceUnitProvider>
-            <AuthProvider>
-              <AppNavigator />
-              <ToastHost />
-            </AuthProvider>
-          </DistanceUnitProvider>
-        </ErrorBoundary>
+        {checkingUpdate ? (
+          <View
+            style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor: bootTheme.colors.background,
+            }}
+          >
+            <ActivityIndicator size="large" color={bootTheme.colors.primary} />
+          </View>
+        ) : forceUpdate ? (
+          <ForceUpdateScreen />
+        ) : (
+          <ErrorBoundary FallbackComponent={CustomFallback}>
+            <DistanceUnitProvider>
+              <AuthProvider>
+                <AppNavigator />
+                <ToastHost />
+              </AuthProvider>
+            </DistanceUnitProvider>
+          </ErrorBoundary>
+        )}
       </ThemeProvider>
     </SafeAreaProvider>
   )

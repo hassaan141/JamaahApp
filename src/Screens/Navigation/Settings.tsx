@@ -10,7 +10,9 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import type { NavigationProp, ParamListBase } from '@react-navigation/native'
 import { useNavigation } from '@react-navigation/native'
 import { Feather } from '@expo/vector-icons'
+import { useAuth } from '@/Auth/AuthProvider'
 import { useProfile } from '@/Auth/fetchProfile'
+import SignOutButton from '@/components/Account/SignOutButton'
 import { useTheme } from '@/theme'
 import { useDistanceUnit } from '@/preferences'
 
@@ -63,6 +65,7 @@ const SETTINGS_ITEMS: SettingsItem[] = [
 
 export default function Settings() {
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
+  const { logout } = useAuth()
   const { profile } = useProfile()
   const { theme, mode, setMode } = useTheme()
   const { unit, setUnit } = useDistanceUnit()
@@ -311,6 +314,8 @@ export default function Settings() {
             </TouchableOpacity>
           ))}
         </View>
+
+        <SignOutButton onLogout={logout} />
 
         <View style={{ height: 40 }} />
       </ScrollView>

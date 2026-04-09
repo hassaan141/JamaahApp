@@ -235,7 +235,7 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
                 NEXT PRAYER
               </Text>
               <Text style={[styles.prayerTitle, { color: cardColors.text }]}>
-                {nextEvent.name}
+                {nextEvent.name.toUpperCase()}
               </Text>
             </View>
 

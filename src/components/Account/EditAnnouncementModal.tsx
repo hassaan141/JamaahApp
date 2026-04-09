@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react'
-import { Modal, View, Text, TouchableOpacity, ScrollView } from 'react-native'
+import {
+  Modal,
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+} from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import TitleInput from './CreateAnnouncements/TitleInput'
 import TypeSelector from './CreateAnnouncements/TypeSelector'
@@ -11,6 +18,113 @@ import LocationSelector from './CreateAnnouncements/LocationSelector'
 import type { Organization, OrgPost } from '@/types'
 import { ENV } from '@/core/env'
 import { useTheme } from '@/theme'
+
+function isPastAnnouncementDate(date: string | null) {
+  if (!date) return false
+
+  const [year, month, day] = date.split('-').map(Number)
+  if (!year || !month || !day) return false
+
+  const selectedDate = new Date(year, month - 1, day)
+  const today = new Date()
+  const todayStart = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate(),
+  )
+
+  return selectedDate.getTime() < todayStart.getTime()
+}
+
+function formatAnnouncementDate(date: string) {
+  const [year, month, day] = date.split('-').map(Number)
+  if (!year || !month || !day) return date
+
+  return new Date(year, month - 1, day).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
+function getAnnouncementValidationError(input: {
+  announcementBody: string
+  postType: string | null
+  startTime: string | null
+  endTime: string | null
+  demographic: string | null
+  recurringDays: number[]
+  date: string | null
+  locationAddress: string | null
+}) {
+  if (!input.announcementBody.trim()) {
+    return {
+      title: 'Add details',
+      message: 'Announcement details cannot be empty.',
+    }
+  }
+
+  if (!input.postType) {
+    return {
+      title: 'Post type required',
+      message: 'Select a post type before saving.',
+    }
+  }
+
+  if (
+    input.postType === 'Repeating_classes' &&
+    input.recurringDays.length === 0
+  ) {
+    return {
+      title: 'Schedule required',
+      message: 'Select at least one recurring day for classes.',
+    }
+  }
+
+  if (input.postType !== 'Repeating_classes' && !input.date) {
+    return {
+      title: 'Date required',
+      message: 'Choose a date for this announcement before saving.',
+    }
+  }
+
+  if (input.date && isPastAnnouncementDate(input.date)) {
+    return {
+      title: 'Invalid date',
+      message: `${formatAnnouncementDate(input.date)} is in the past. Choose today or a future date.`,
+    }
+  }
+
+  if (!input.startTime) {
+    return {
+      title: 'Start time required',
+      message: 'Choose a start time before saving.',
+    }
+  }
+
+  if (!input.endTime) {
+    return {
+      title: 'End time required',
+      message: 'Choose an end time before saving.',
+    }
+  }
+
+  if (!input.demographic) {
+    return {
+      title: 'Audience required',
+      message: 'Select an audience before saving.',
+    }
+  }
+
+  if (!input.locationAddress?.trim()) {
+    return {
+      title: 'Location required',
+      message: 'Choose an event location before saving.',
+    }
+  }
+
+  return null
+}
 
 export default function EditAnnouncementModal({
   visible,
@@ -106,7 +220,20 @@ export default function EditAnnouncementModal({
   )
 
   const handleUpdate = async () => {
-    if (!announcementBody.trim()) return
+    const validationError = getAnnouncementValidationError({
+      announcementBody,
+      postType,
+      startTime,
+      endTime,
+      demographic,
+      recurringDays,
+      date,
+      locationAddress: locationData?.address ?? null,
+    })
+    if (validationError) {
+      Alert.alert(validationError.title, validationError.message)
+      return
+    }
 
     setUpdating(true)
     try {
@@ -307,6 +434,7 @@ export default function EditAnnouncementModal({
             style={{
               flexDirection: 'row',
               justifyContent: 'space-between',
+              paddingTop: 8,
               paddingHorizontal: 20,
               paddingBottom: 16,
               marginTop: 10,

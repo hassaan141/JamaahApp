@@ -210,6 +210,7 @@ export default function AnnouncementModal({
             style={{
               flexDirection: 'row',
               justifyContent: 'flex-end',
+              paddingTop: 8,
               paddingHorizontal: 20,
               paddingBottom: 16,
             }}

@@ -3,23 +3,37 @@ import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
 import { useTheme } from '@/theme'
 
-const EVENT_FILTER_OPTIONS = [
-  { label: 'All', value: null },
+export const EVENT_FILTER_OPTIONS = [
   { label: 'Event', value: 'Event' },
   { label: 'Repeating Classes', value: 'Repeating_classes' },
   { label: 'Janazah', value: 'Janazah' },
   { label: 'Volunteering', value: 'Volunteerng' },
 ] as const
 
+export type EventFilterValue = (typeof EVENT_FILTER_OPTIONS)[number]['value']
+
 export default function EventFilterControl({
-  value,
+  values,
   onChange,
 }: {
-  value: string | null
-  onChange: (value: string | null) => void
+  values: EventFilterValue[]
+  onChange: (values: EventFilterValue[]) => void
 }) {
   const { theme } = useTheme()
   const [visible, setVisible] = useState(false)
+  const selectedCount = values.length
+
+  const toggleValue = (nextValue: EventFilterValue) => {
+    const isSelected = values.includes(nextValue)
+
+    if (isSelected) {
+      if (values.length === 1) return
+      onChange(values.filter((value) => value !== nextValue))
+      return
+    }
+
+    onChange([...values, nextValue])
+  }
 
   return (
     <>
@@ -35,11 +49,11 @@ export default function EventFilterControl({
         activeOpacity={0.7}
       >
         <Feather name="sliders" size={20} color={theme.colors.text} />
-        {!!value && (
+        {selectedCount > 0 && (
           <View
             style={[styles.badge, { backgroundColor: theme.colors.danger }]}
           >
-            <Text style={styles.badgeText}>1</Text>
+            <Text style={styles.badgeText}>{selectedCount}</Text>
           </View>
         )}
       </TouchableOpacity>
@@ -71,10 +85,10 @@ export default function EventFilterControl({
 
             <View style={styles.filterList}>
               {EVENT_FILTER_OPTIONS.map((opt) => {
-                const isActive = value === opt.value
+                const isActive = values.includes(opt.value)
                 return (
                   <TouchableOpacity
-                    key={String(opt.value ?? 'all')}
+                    key={opt.value}
                     style={[
                       styles.filterOption,
                       {
@@ -87,7 +101,7 @@ export default function EventFilterControl({
                         borderColor: theme.colors.primary,
                       },
                     ]}
-                    onPress={() => onChange(opt.value)}
+                    onPress={() => toggleValue(opt.value)}
                     activeOpacity={0.7}
                   >
                     <Text
@@ -116,7 +130,9 @@ export default function EventFilterControl({
                     backgroundColor: theme.colors.surface,
                   },
                 ]}
-                onPress={() => onChange(null)}
+                onPress={() =>
+                  onChange(EVENT_FILTER_OPTIONS.map((option) => option.value))
+                }
                 activeOpacity={0.7}
               >
                 <Text
@@ -125,7 +141,7 @@ export default function EventFilterControl({
                     { color: theme.colors.textMuted },
                   ]}
                 >
-                  Reset
+                  Select All
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity

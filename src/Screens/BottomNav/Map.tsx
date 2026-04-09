@@ -15,7 +15,10 @@ import SearchBar from '@/components/SearchBar/SearchBar'
 import MapHeader from '@/components/Map/MapHeader'
 import MapTabs from '@/components/Map/MapTabs'
 import CompactMapView from '@/components/Map/CompactMapView'
-import EventFilterControl from '@/components/Map/EventFilterControl'
+import EventFilterControl, {
+  EVENT_FILTER_OPTIONS,
+  type EventFilterValue,
+} from '@/components/Map/EventFilterControl'
 import MasjidList from '@/components/Map/MasjidList'
 import EventList from '@/components/Map/EventList'
 import NoResults from '@/components/Map/NoResults'
@@ -44,14 +47,14 @@ export default function MapScreen() {
   const fadeAnim = useRef(new Animated.Value(1)).current
   const slideAnim = useRef(new Animated.Value(0)).current
   const { location } = useLocation()
-  const [eventPostTypeFilter, setEventPostTypeFilter] = useState<string | null>(
-    null,
-  )
+  const [eventPostTypeFilters, setEventPostTypeFilters] = useState<
+    EventFilterValue[]
+  >(EVENT_FILTER_OPTIONS.map((option) => option.value))
 
   // 3. Initialize BOTH hooks
   const masjidLogic = useMasjidList(location)
   const eventLogic = useEventList(location, {
-    postType: eventPostTypeFilter,
+    postTypes: eventPostTypeFilters,
   }) // <--- NEW: Init event logic
 
   // 4. Create "Dynamic" variables based on the current mode
@@ -266,8 +269,8 @@ export default function MapScreen() {
             </View>
             {!isMasjidMode && (
               <EventFilterControl
-                value={eventPostTypeFilter}
-                onChange={setEventPostTypeFilter}
+                values={eventPostTypeFilters}
+                onChange={setEventPostTypeFilters}
               />
             )}
           </View>

@@ -68,22 +68,24 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
     }
 
     if (isGoogle || isApple) {
-      if (user.user_metadata?.user_type !== 'individual') {
-        needsAuthUpdate = true
-        updateData.user_type = 'individual'
-      }
-
       const { data: profile } = await supabase
         .from('profiles')
         .select('is_org')
         .eq('id', user.id)
         .single()
 
-      if (profile?.is_org === true) {
-        await supabase
-          .from('profiles')
-          .update({ is_org: false })
-          .eq('id', user.id)
+      const isOrganizationUser =
+        profile?.is_org === true ||
+        user.user_metadata?.user_type === 'organization'
+
+      if (isOrganizationUser) {
+        if (user.user_metadata?.user_type !== 'organization') {
+          needsAuthUpdate = true
+          updateData.user_type = 'organization'
+        }
+      } else if (user.user_metadata?.user_type !== 'individual') {
+        needsAuthUpdate = true
+        updateData.user_type = 'individual'
       }
     } else {
       if (!user.user_metadata?.user_type) {

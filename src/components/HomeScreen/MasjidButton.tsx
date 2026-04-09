@@ -4,6 +4,7 @@ import Feather from '@expo/vector-icons/Feather'
 import MasjidDetailsModal from './MasjidDetailsModal'
 import { formatDistance } from '@/Utils/formatDistance'
 import { useTheme } from '@/theme'
+import { useDistanceUnit } from '@/preferences'
 
 export type PrayerTimesWithOrg = {
   org?: { id?: string; name?: string; address?: string }
@@ -29,6 +30,7 @@ const MasjidButton: React.FC<Props> = ({
 }) => {
   const [modalVisible, setModalVisible] = useState(false)
   const { theme } = useTheme()
+  const { unit } = useDistanceUnit()
 
   const handlePress = () => setModalVisible(true)
   const handleCloseModal = () => setModalVisible(false)
@@ -77,7 +79,7 @@ const MasjidButton: React.FC<Props> = ({
             >
               {(prayerTimes?.org?.address ?? '') +
                 (prayerTimes?.distance_m != null
-                  ? ` • ${formatDistance(prayerTimes?.distance_m)}`
+                  ? ` • ${formatDistance(prayerTimes?.distance_m, unit)}`
                   : '')}
             </Text>
           </View>

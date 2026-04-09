@@ -24,6 +24,7 @@ import { checkForForcedUpdate } from './src/Utils/checkForForcedUpdate'
 import { ThemeProvider, useTheme } from './src/theme'
 import { darkTheme } from './src/theme/dark'
 import { lightTheme } from './src/theme/light'
+import { DistanceUnitProvider } from './src/preferences'
 
 const ONBOARDING_COMPLETE_KEY = '@jamaah_onboarding_complete'
 
@@ -193,10 +194,12 @@ export default function App() {
     <SafeAreaProvider>
       <ThemeProvider>
         <ErrorBoundary FallbackComponent={CustomFallback}>
-          <AuthProvider>
-            <AppNavigator />
-            <ToastHost />
-          </AuthProvider>
+          <DistanceUnitProvider>
+            <AuthProvider>
+              <AppNavigator />
+              <ToastHost />
+            </AuthProvider>
+          </DistanceUnitProvider>
         </ErrorBoundary>
       </ThemeProvider>
     </SafeAreaProvider>

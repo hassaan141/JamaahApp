@@ -2,6 +2,8 @@ import React from 'react'
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
 import { useTheme } from '@/theme'
+import { useDistanceUnit } from '@/preferences'
+import { formatDistanceFromKm } from '@/Utils/distance'
 
 export default function MasjidListItem({
   item,
@@ -11,6 +13,7 @@ export default function MasjidListItem({
   onPress: () => void
 }) {
   const { theme } = useTheme()
+  const { unit } = useDistanceUnit()
   return (
     <TouchableOpacity
       style={[
@@ -39,9 +42,7 @@ export default function MasjidListItem({
           style={styles.icon}
         />
         <Text style={[styles.distText, { color: theme.colors.textMuted }]}>
-          {item?.distance_km != null
-            ? `${item.distance_km.toFixed(1)} KM`
-            : '—'}
+          {formatDistanceFromKm(item?.distance_km, unit)}
         </Text>
       </View>
     </TouchableOpacity>

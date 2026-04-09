@@ -16,6 +16,7 @@ import { setAuto } from '@/Utils/switchMasjidMode'
 import { formatDistance } from '@/Utils/formatDistance'
 import { useAuth } from '@/Auth/AuthProvider'
 import { useTheme } from '@/theme'
+import { useDistanceUnit } from '@/preferences'
 import {
   acceptBackgroundLocationDisclosure,
   hasAcceptedBackgroundLocationDisclosure,
@@ -42,6 +43,7 @@ const MasjidDetailsModal: React.FC<Props> = ({
 }) => {
   const { session } = useAuth()
   const { theme } = useTheme()
+  const { unit } = useDistanceUnit()
   const [loading, setLoading] = useState(false)
   const [locationPermissionGranted, setLocationPermissionGranted] =
     useState(true)
@@ -247,7 +249,7 @@ const MasjidDetailsModal: React.FC<Props> = ({
                           { color: theme.colors.textMuted },
                         ]}
                       >
-                        • {formatDistance(masjidData?.distance_m)}
+                        • {formatDistance(masjidData?.distance_m, unit)}
                       </Text>
                     )}
                   </View>
@@ -426,7 +428,7 @@ const MasjidDetailsModal: React.FC<Props> = ({
                         { color: theme.colors.textMuted },
                       ]}
                     >
-                      • {formatDistance(masjidData?.distance_m)}
+                      • {formatDistance(masjidData?.distance_m, unit)}
                     </Text>
                   </View>
                 </View>

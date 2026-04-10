@@ -66,7 +66,7 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
         updateData.display_name = user.email?.split('@')[0] || 'User'
       }
     }
-    //
+    // dv
     if (isGoogle || isApple) {
       const { data: profile } = await supabase
         .from('profiles')

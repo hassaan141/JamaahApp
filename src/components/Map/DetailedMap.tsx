@@ -23,6 +23,8 @@ import { useLocation } from '@/Utils/useLocation'
 import type { MasjidItem } from '@/Hooks/useMasjidList'
 import type { OrgPost } from '@/types'
 import AnnouncementModal from '@/components/Shared/AnnouncementModal'
+import { isAnnouncementUpcoming } from '@/Utils/announcementVisibility'
+import { announcementEventEmitter } from '@/Utils/announcementEventEmitter'
 
 // Local import for iOS only
 import mosqueIcon from '../../../assets/mosque_new.png'
@@ -151,7 +153,7 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
           setNearbyMasjids(initialList as MasjidItem[])
         } else {
           const posts = await fetchAnnouncements()
-          setEvents(posts)
+          setEvents(posts.filter((post) => isAnnouncementUpcoming(post)))
         }
       } catch (err: unknown) {
         setError((err as Error)?.message ?? 'Failed to load data')
@@ -161,6 +163,21 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
     }
     loadData()
   }, [location, mode])
+
+  useEffect(() => {
+    if (mode !== 'events') return
+
+    const unsubscribe = announcementEventEmitter.subscribe(async () => {
+      try {
+        const posts = await fetchAnnouncements()
+        setEvents(posts.filter((post) => isAnnouncementUpcoming(post)))
+      } catch (err: unknown) {
+        setError((err as Error)?.message ?? 'Failed to load data')
+      }
+    })
+
+    return unsubscribe
+  }, [mode])
 
   const groupedAndroidEvents = useMemo(() => {
     const groups = new Map<string, OrgPost[]>()

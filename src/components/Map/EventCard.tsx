@@ -5,6 +5,8 @@ import type { EventItem } from '@/Supabase/fetchEventsFromRPC'
 import type { OrgPost } from '@/types'
 import AnnouncementModal from '@/components/Shared/AnnouncementModal'
 import { useTheme } from '@/theme'
+import { useDistanceUnit } from '@/preferences'
+import { formatDistanceFromKm } from '@/Utils/distance'
 
 /**
  * Extended type to handle recurring days and organization name
@@ -92,6 +94,7 @@ export default function EventCard({
   onDirections?: (event: EventItem) => void
 }) {
   const { theme } = useTheme()
+  const { unit } = useDistanceUnit()
   const [modalVisible, setModalVisible] = useState(false)
   const iconName = getEventTypeIcon(event.post_type)
   const iconColor = getEventTypeColor(event.post_type)
@@ -206,7 +209,7 @@ export default function EventCard({
                 { color: theme.colors.primary },
               ]}
             >
-              {event.dist_km.toFixed(1)} km
+              {formatDistanceFromKm(event.dist_km, unit)}
             </Text>
           )}
         </View>

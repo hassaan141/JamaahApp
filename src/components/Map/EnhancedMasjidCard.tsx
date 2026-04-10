@@ -3,6 +3,8 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
 import type { MasjidItem } from '@/Hooks/useMasjidList'
 import { useTheme } from '@/theme'
+import { useDistanceUnit } from '@/preferences'
+import { formatDistanceFromKm } from '@/Utils/distance'
 
 export default function EnhancedMasjidCard({
   item,
@@ -16,6 +18,7 @@ export default function EnhancedMasjidCard({
   onCall?: (it: MasjidItem) => void
 }) {
   const { theme } = useTheme()
+  const { unit } = useDistanceUnit()
   return (
     <TouchableOpacity
       style={[
@@ -45,9 +48,7 @@ export default function EnhancedMasjidCard({
           </Text>
         </View>
         <Text style={[styles.distance, { color: theme.colors.textMuted }]}>
-          {item?.distance_km != null
-            ? `${item.distance_km.toFixed(1)} mi`
-            : '— mi'}
+          {formatDistanceFromKm(item?.distance_km, unit)}
         </Text>
       </View>
 

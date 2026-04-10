@@ -28,7 +28,7 @@ export async function fetchNearbyEvents(
   opts: {
     query?: string
     demographic?: string
-    postType?: string
+    postTypes?: string[]
     recurringDays?: number[]
     limit?: number
     offset?: number
@@ -37,7 +37,7 @@ export async function fetchNearbyEvents(
   const {
     query = '',
     demographic = null,
-    postType = null,
+    postTypes = null,
     recurringDays = null,
     limit = 20,
     offset = 0,
@@ -51,7 +51,7 @@ export async function fetchNearbyEvents(
     user_long: lon,
     search_query: query,
     filter_demographic: demographic,
-    filter_post_type: postType,
+    filter_post_types: postTypes,
     filter_recurring_days: recurringDays,
     limit_count: limit,
     offset_count: offset,

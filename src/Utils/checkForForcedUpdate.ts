@@ -1,9 +1,10 @@
 import Constants from 'expo-constants'
-import semver from 'semver'
+import { coerce, lt } from 'semver'
 import { fetchMinSupportedVersion } from '@/Supabase/fetchAppConfig'
 
 export async function checkForForcedUpdate(): Promise<boolean> {
-  const currentVersion = Constants.expoConfig?.version
+  const currentVersion =
+    Constants.expoConfig?.version ?? Constants.nativeAppVersion ?? null
 
   // If we can't read the app version, never hard-block
   if (!currentVersion) {
@@ -19,6 +20,17 @@ export async function checkForForcedUpdate(): Promise<boolean> {
     return false
   }
 
-  // True = must force update
-  return semver.lt(currentVersion, minSupportedVersion)
+  const parsedCurrentVersion = coerce(currentVersion)
+  const parsedMinSupportedVersion = coerce(minSupportedVersion)
+
+  if (!parsedCurrentVersion || !parsedMinSupportedVersion) {
+    console.warn('[force-update] Invalid version format', {
+      currentVersion,
+      minSupportedVersion,
+    })
+    return false
+  }
+
+  // True = must force update when the installed app is below the minimum.
+  return lt(parsedCurrentVersion, parsedMinSupportedVersion)
 }

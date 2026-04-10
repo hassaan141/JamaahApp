@@ -2,12 +2,13 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import type { EventItem } from '@/Supabase/fetchEventsFromRPC'
 import { fetchNearbyEvents } from '@/Supabase/fetchEventsFromRPC'
 import { DEFAULT_LOCATION } from '@/Utils/constants'
+import { announcementEventEmitter } from '@/Utils/announcementEventEmitter'
 
 const EVENT_FETCH_LIMIT = 20
 
 export function useEventList(
   location?: { latitude: number; longitude: number } | null,
-  opts?: { postType?: string | null },
+  opts?: { postTypes?: string[] | null },
 ) {
   const [events, setEvents] = useState<EventItem[]>([])
 
@@ -43,7 +44,7 @@ export function useEventList(
           coords.longitude,
           {
             query: query,
-            postType: opts?.postType ?? undefined,
+            postTypes: opts?.postTypes ?? undefined,
             limit: EVENT_FETCH_LIMIT,
             offset: offsetRef.current,
           },
@@ -67,12 +68,20 @@ export function useEventList(
         setRefreshing(false)
       }
     },
-    [location, opts?.postType],
+    [location, opts?.postTypes],
   )
 
   useEffect(() => {
     fetchEvents('')
   }, [location, fetchEvents])
+
+  useEffect(() => {
+    const unsubscribe = announcementEventEmitter.subscribe(() => {
+      fetchEvents(searchQuery, false)
+    })
+
+    return unsubscribe
+  }, [fetchEvents, searchQuery])
 
   const handleSearch = (text: string) => {
     setSearchQuery(text)

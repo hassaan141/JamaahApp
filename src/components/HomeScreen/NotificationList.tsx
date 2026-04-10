@@ -10,12 +10,15 @@ import {
 import Feather from '@expo/vector-icons/Feather'
 import AnnouncementCard from '@/components/Shared/AnnouncementCard'
 import { isNewAnnouncement } from '@/Utils/datetime'
+import { isAnnouncementUpcoming } from '@/Utils/announcementVisibility'
 import {
   fetchMyAnnouncements,
+  getMySubscribedOrgIds,
   type Announcement,
 } from '@/Supabase/fetchMyAnnouncements'
 import { useNavigation } from '@react-navigation/native'
 import { useTheme } from '@/theme'
+import { announcementEventEmitter } from '@/Utils/announcementEventEmitter'
 
 const TABS = [
   // { label: 'All', value: 'ALL' },
@@ -33,37 +36,48 @@ const NotificationList: React.FC<{ refreshKey?: boolean }> = ({
   const [activeTab, setActiveTab] = useState('CLASSES')
   const [isExpanded, setIsExpanded] = useState(false)
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
+  const [followedOrgCount, setFollowedOrgCount] = useState(0)
   const [loading, setLoading] = useState(true)
 
   const fadeAnim = useState(new Animated.Value(0))[0]
   const scaleAnim = useState(new Animated.Value(0.95))[0]
   const didFetchRef = React.useRef(false)
 
+  const fetchData = React.useCallback(async () => {
+    try {
+      setLoading(true)
+      const [data, orgIds] = await Promise.all([
+        fetchMyAnnouncements(),
+        getMySubscribedOrgIds().catch(() => []),
+      ])
+      setAnnouncements(data ?? [])
+      setFollowedOrgCount(orgIds.length)
+    } catch {
+      setAnnouncements([])
+      setFollowedOrgCount(0)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
     if (didFetchRef.current) return
     didFetchRef.current = true
 
-    let mounted = true
-
-    const fetchData = async () => {
-      try {
-        setLoading(true)
-        const data = await fetchMyAnnouncements()
-        if (mounted) setAnnouncements(data ?? [])
-      } catch {
-        if (mounted) setAnnouncements([])
-      } finally {
-        if (mounted) setLoading(false)
-      }
-    }
-
     fetchData()
 
     return () => {
-      mounted = false
       didFetchRef.current = false
     }
-  }, [refreshKey])
+  }, [fetchData, refreshKey])
+
+  useEffect(() => {
+    const unsubscribe = announcementEventEmitter.subscribe(() => {
+      fetchData()
+    })
+
+    return unsubscribe
+  }, [fetchData])
 
   useEffect(() => {
     Animated.parallel([
@@ -84,10 +98,15 @@ const NotificationList: React.FC<{ refreshKey?: boolean }> = ({
     setIsExpanded(false)
   }, [activeTab])
 
-  const filteredAnnouncements = useMemo(() => {
-    // if (activeTab === 'ALL') return announcements
+  const upcomingAnnouncements = useMemo(
+    () => announcements.filter((item) => isAnnouncementUpcoming(item)),
+    [announcements],
+  )
 
-    return announcements.filter((item) => {
+  const filteredAnnouncements = useMemo(() => {
+    // if (activeTab === 'ALL') return upcomingAnnouncements
+
+    return upcomingAnnouncements.filter((item) => {
       const type = item.post_type || ''
 
       if (activeTab === 'CLASSES') {
@@ -101,7 +120,7 @@ const NotificationList: React.FC<{ refreshKey?: boolean }> = ({
       }
       return true
     })
-  }, [announcements, activeTab])
+  }, [upcomingAnnouncements, activeTab])
 
   const visibleAnnouncements = isExpanded
     ? filteredAnnouncements
@@ -109,12 +128,20 @@ const NotificationList: React.FC<{ refreshKey?: boolean }> = ({
 
   const hiddenCount = Math.max(0, filteredAnnouncements.length - 2)
 
-  const newAnnouncementCount = announcements.filter((a) =>
-    isNewAnnouncement(a.created_at),
-  ).length
+  const newAnnouncementCount = upcomingAnnouncements.filter((a) => {
+    if (a.post_type === 'Janazah') return false
+    return isNewAnnouncement(a.created_at)
+  }).length
 
   const handleExpand = () => setIsExpanded(true)
   const handleCollapse = () => setIsExpanded(false)
+
+  const tabEmptyLabel = useMemo(() => {
+    if (activeTab === 'EVENTS') return 'events'
+    if (activeTab === 'CLASSES') return 'classes'
+    if (activeTab === 'VOLUNTEER') return 'volunteering'
+    return 'announcements'
+  }, [activeTab])
 
   return (
     <View
@@ -141,7 +168,7 @@ const NotificationList: React.FC<{ refreshKey?: boolean }> = ({
         )}
       </View>
 
-      {!loading && announcements.length > 0 && (
+      {!loading && upcomingAnnouncements.length > 0 && (
         <View style={styles.tabContainer}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {TABS.map((tab) => {
@@ -193,29 +220,52 @@ const NotificationList: React.FC<{ refreshKey?: boolean }> = ({
           <Text style={[styles.loadingText, { color: theme.colors.textMuted }]}>
             Loading...
           </Text>
-        ) : announcements.length === 0 ? (
+        ) : upcomingAnnouncements.length === 0 ? (
           <TouchableOpacity
             style={styles.emptyStateContainer}
             onPress={() => navigation.navigate('Organization' as never)}
             activeOpacity={0.7}
           >
             <Feather
-              name="plus-circle"
+              name={followedOrgCount > 0 ? 'inbox' : 'plus-circle'}
               size={40}
               color={theme.colors.primary}
               style={styles.emptyIcon}
             />
             <Text style={[styles.emptyText, { color: theme.colors.textMuted }]}>
-              Start following an organization to see upcoming events and classes
-              here.
+              {followedOrgCount > 0
+                ? `No ${tabEmptyLabel} yet from the organizations you follow.`
+                : 'Start following an organization to see upcoming events and classes here.'}
             </Text>
+            {followedOrgCount > 0 && (
+              <Text
+                style={[styles.emptySubtext, { color: theme.colors.textSoft }]}
+              >
+                Follow other orgs to discover more updates.
+              </Text>
+            )}
           </TouchableOpacity>
         ) : filteredAnnouncements.length === 0 ? (
-          <View style={styles.emptyStateContainer}>
+          <TouchableOpacity
+            style={styles.emptyStateContainer}
+            onPress={() => navigation.navigate('Organization' as never)}
+            activeOpacity={0.7}
+          >
+            <Feather
+              name="inbox"
+              size={40}
+              color={theme.colors.primary}
+              style={styles.emptyIcon}
+            />
             <Text style={[styles.emptyText, { color: theme.colors.textMuted }]}>
-              No {activeTab.toLowerCase()} found.
+              No {tabEmptyLabel} yet from the organizations you follow.
             </Text>
-          </View>
+            <Text
+              style={[styles.emptySubtext, { color: theme.colors.textSoft }]}
+            >
+              Follow other orgs to discover more updates.
+            </Text>
+          </TouchableOpacity>
         ) : (
           <>
             {visibleAnnouncements.map((announcement) => (
@@ -381,6 +431,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 14,
     color: '#4A5568',
+    maxWidth: 260,
+  },
+  emptySubtext: {
+    textAlign: 'center',
+    fontSize: 13,
+    marginTop: 8,
     maxWidth: 260,
   },
 })

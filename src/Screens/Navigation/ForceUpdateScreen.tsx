@@ -1,11 +1,13 @@
 import { View, Text, Pressable, Platform, Linking } from 'react-native'
+import { useTheme } from '@/theme'
 
-const IOS_STORE_URL = 'https://apps.apple.com'
+const IOS_STORE_URL = 'https://apps.apple.com/ca/app/jamaah/id6755858703'
 
 const ANDROID_STORE_URL =
   'https://play.google.com/store/apps/details?id=com.hassaan141.jamaahapp'
 
 export default function ForceUpdateScreen() {
+  const { theme } = useTheme()
   const storeUrl = Platform.OS === 'ios' ? IOS_STORE_URL : ANDROID_STORE_URL
 
   const handleUpdate = () => {
@@ -18,6 +20,7 @@ export default function ForceUpdateScreen() {
         flex: 1,
         justifyContent: 'center',
         padding: 24,
+        backgroundColor: theme.colors.background,
       }}
     >
       <Text
@@ -26,6 +29,7 @@ export default function ForceUpdateScreen() {
           fontWeight: '700',
           marginBottom: 12,
           textAlign: 'center',
+          color: theme.colors.text,
         }}
       >
         Update Required
@@ -37,6 +41,7 @@ export default function ForceUpdateScreen() {
           textAlign: 'center',
           marginBottom: 24,
           lineHeight: 22,
+          color: theme.colors.textMuted,
         }}
       >
         A newer version of Jamaah is available. Please update the app to
@@ -46,7 +51,7 @@ export default function ForceUpdateScreen() {
       <Pressable
         onPress={handleUpdate}
         style={{
-          backgroundColor: '#48BB78',
+          backgroundColor: theme.colors.primary,
           paddingVertical: 14,
           borderRadius: 12,
           alignItems: 'center',

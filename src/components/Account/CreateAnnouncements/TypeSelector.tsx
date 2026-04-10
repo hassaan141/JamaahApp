@@ -37,7 +37,7 @@ export default function TypeSelector({
           return (
             <TouchableOpacity
               key={opt.value}
-              onPress={() => setPostType(active ? null : opt.value)}
+              onPress={() => setPostType(opt.value)}
               style={{
                 backgroundColor: active
                   ? theme.colors.primary

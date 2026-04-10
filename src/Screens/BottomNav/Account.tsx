@@ -11,7 +11,7 @@ import { useNavigation } from '@react-navigation/native'
 import type { NavigationProp } from '@react-navigation/native'
 import { Feather } from '@expo/vector-icons'
 // SafeAreaView is no longer needed here
-import { useAuth, useAuthStatus } from '@/Auth/AuthProvider'
+import { useAuthStatus } from '@/Auth/AuthProvider'
 import { useProfile } from '@/Auth/fetchProfile'
 import LoadingAnimation from '@/components/Loading/Loading'
 import { supabase } from '@/Supabase/supabaseClient'
@@ -24,13 +24,11 @@ import UserProfileSection from '@/components/Account/UserProfileSection'
 import CreateAnnouncementSection from '@/components/Account/CreateAnnouncementSection'
 import AnnouncementsList from '@/components/Account/AnnouncementsList'
 import FollowedOrgsList from '@/components/Account/FollowedOrgsList'
-import SignOutButton from '@/components/Account/SignOutButton'
 // import VersionFooter from '@/components/Account/VersionFooter'
 import { useTheme } from '@/theme'
 
 export default function Account() {
   const { theme } = useTheme()
-  const { logout } = useAuth()
   const { isLoggedIn, isVerified } = useAuthStatus()
   const { profile, loading, error, refetch } = useProfile()
   const [refreshing, setRefreshing] = useState(false)
@@ -198,8 +196,6 @@ export default function Account() {
         )}
 
         <FollowedOrgsList refreshKey={refreshing} />
-
-        <SignOutButton onLogout={logout} />
       </ScrollView>
     </View>
   )

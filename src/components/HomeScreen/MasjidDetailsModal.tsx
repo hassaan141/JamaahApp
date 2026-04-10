@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   Linking,
+  Platform,
 } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
 import * as Location from 'expo-location'
@@ -15,6 +16,11 @@ import { setAuto } from '@/Utils/switchMasjidMode'
 import { formatDistance } from '@/Utils/formatDistance'
 import { useAuth } from '@/Auth/AuthProvider'
 import { useTheme } from '@/theme'
+import { useDistanceUnit } from '@/preferences'
+import {
+  acceptBackgroundLocationDisclosure,
+  hasAcceptedBackgroundLocationDisclosure,
+} from '@/Utils/BackgroundLocationTask'
 
 interface Props {
   visible: boolean
@@ -37,9 +43,12 @@ const MasjidDetailsModal: React.FC<Props> = ({
 }) => {
   const { session } = useAuth()
   const { theme } = useTheme()
+  const { unit } = useDistanceUnit()
   const [loading, setLoading] = useState(false)
   const [locationPermissionGranted, setLocationPermissionGranted] =
     useState(true)
+  const [showBackgroundDisclosure, setShowBackgroundDisclosure] =
+    useState(false)
 
   const isGuest = !session
 
@@ -64,6 +73,20 @@ const MasjidDetailsModal: React.FC<Props> = ({
     navigation.navigate('Masjids', { showBackButton: true })
   }
 
+  const proceedWithNearestMasjid = async () => {
+    setLoading(true)
+    try {
+      const userID = await getUserId()
+      await setAuto(userID)
+      onClose?.()
+      onRefreshPrayerTimes?.()
+    } catch (e) {
+      console.log('Use nearest failed:', e)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleUseNearestMasjid = async () => {
     if (isGuest) {
       onClose()
@@ -80,17 +103,21 @@ const MasjidDetailsModal: React.FC<Props> = ({
       return
     }
 
-    setLoading(true)
-    try {
-      const userID = await getUserId()
-      await setAuto(userID)
-      onClose?.()
-      onRefreshPrayerTimes?.()
-    } catch (e) {
-      console.log('Use nearest failed:', e)
-    } finally {
-      setLoading(false)
+    if (Platform.OS === 'android') {
+      const disclosureAccepted = await hasAcceptedBackgroundLocationDisclosure()
+      if (!disclosureAccepted) {
+        setShowBackgroundDisclosure(true)
+        return
+      }
     }
+
+    await proceedWithNearestMasjid()
+  }
+
+  const handleAcceptDisclosure = async () => {
+    setShowBackgroundDisclosure(false)
+    await acceptBackgroundLocationDisclosure()
+    await proceedWithNearestMasjid()
   }
 
   const handleGuestSignIn = () => {
@@ -103,305 +130,399 @@ const MasjidDetailsModal: React.FC<Props> = ({
   const isGuestMode = activeMode === 'guest'
 
   return (
-    <Modal
-      animationType="slide"
-      transparent
-      visible={visible}
-      onRequestClose={onClose}
-    >
-      <View
-        style={[
-          styles.modalContainer,
-          { backgroundColor: theme.colors.overlay },
-        ]}
+    <>
+      <Modal
+        animationType="slide"
+        transparent
+        visible={visible}
+        onRequestClose={onClose}
       >
         <View
           style={[
-            styles.modalContent,
-            {
-              backgroundColor: theme.colors.surfaceElevated,
-              borderColor: theme.colors.border,
-              shadowColor: theme.colors.shadow,
-            },
+            styles.modalContainer,
+            { backgroundColor: theme.colors.overlay },
           ]}
         >
-          <View style={styles.modalHeader}>
-            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
-              Masjid Settings
-            </Text>
-            <TouchableOpacity
-              style={[
-                styles.closeIconButton,
-                {
-                  backgroundColor: theme.colors.surfaceMuted,
-                  borderColor: theme.colors.borderSoft,
-                },
-              ]}
-              onPress={onClose}
-            >
-              <Feather name="x" size={24} color={theme.colors.textMuted} />
-            </TouchableOpacity>
-          </View>
+          <View
+            style={[
+              styles.modalContent,
+              {
+                backgroundColor: theme.colors.surfaceElevated,
+                borderColor: theme.colors.border,
+                shadowColor: theme.colors.shadow,
+              },
+            ]}
+          >
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
+                Masjid Settings
+              </Text>
+              <TouchableOpacity
+                style={[
+                  styles.closeIconButton,
+                  {
+                    backgroundColor: theme.colors.surfaceMuted,
+                    borderColor: theme.colors.borderSoft,
+                  },
+                ]}
+                onPress={onClose}
+              >
+                <Feather name="x" size={24} color={theme.colors.textMuted} />
+              </TouchableOpacity>
+            </View>
 
-          {isGuest ? (
-            // Guest mode: Show sign-up prompt
-            <>
-              <View style={styles.guestPromptContainer}>
-                <View
+            {isGuest ? (
+              // Guest mode: Show sign-up prompt
+              <>
+                <View style={styles.guestPromptContainer}>
+                  <View
+                    style={[
+                      styles.guestIconCircle,
+                      {
+                        backgroundColor: theme.colors.primarySoft,
+                        borderColor: theme.colors.primaryBorder,
+                      },
+                    ]}
+                  >
+                    <Feather
+                      name="user"
+                      size={24}
+                      color={theme.colors.primary}
+                    />
+                  </View>
+                  <Text
+                    style={[
+                      styles.guestPromptTitle,
+                      { color: theme.colors.text },
+                    ]}
+                  >
+                    Sign up to customize
+                  </Text>
+                  <Text
+                    style={[
+                      styles.guestPromptText,
+                      { color: theme.colors.textMuted },
+                    ]}
+                  >
+                    Create an account to pin your favorite masjid and get
+                    personalized prayer notifications
+                  </Text>
+                  <TouchableOpacity
+                    style={[
+                      styles.guestSignUpButton,
+                      { backgroundColor: theme.colors.primary },
+                    ]}
+                    onPress={handleGuestSignIn}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.guestSignUpButtonText}>Sign Up</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.currentMasjidSection}>
+                  <Text
+                    style={[
+                      styles.currentLabel,
+                      { color: theme.colors.textMuted },
+                    ]}
+                  >
+                    Currently showing:
+                  </Text>
+                  <View style={styles.currentMasjidInfo}>
+                    <Feather
+                      name="map-pin"
+                      size={16}
+                      color={theme.colors.primary}
+                    />
+                    <Text
+                      style={[
+                        styles.currentMasjidName,
+                        { color: theme.colors.text },
+                      ]}
+                    >
+                      {masjidData?.org?.name || 'Nearest Masjid'}
+                    </Text>
+                    {masjidData?.distance_m != null && (
+                      <Text
+                        style={[
+                          styles.currentDistance,
+                          { color: theme.colors.textMuted },
+                        ]}
+                      >
+                        • {formatDistance(masjidData?.distance_m, unit)}
+                      </Text>
+                    )}
+                  </View>
+                </View>
+              </>
+            ) : (
+              // Logged-in user: Show normal options
+              <>
+                <Text
+                  style={[styles.subtitle, { color: theme.colors.textMuted }]}
+                >
+                  Choose how you'd like to receive prayer times and
+                  notifications
+                </Text>
+
+                {/* Option 1: Pinned / Specific */}
+                <TouchableOpacity
                   style={[
-                    styles.guestIconCircle,
+                    styles.optionButton,
                     {
+                      backgroundColor: theme.colors.surfaceMuted,
+                      borderColor: theme.colors.border,
+                    },
+                    isPinnedActive && styles.activeOptionPinned,
+                    isPinnedActive && {
                       backgroundColor: theme.colors.primarySoft,
                       borderColor: theme.colors.primaryBorder,
                     },
                   ]}
+                  onPress={handleChooseSpecificMasjid}
+                  disabled={loading}
                 >
-                  <Feather name="user" size={24} color={theme.colors.primary} />
-                </View>
-                <Text
-                  style={[
-                    styles.guestPromptTitle,
-                    { color: theme.colors.text },
-                  ]}
-                >
-                  Sign up to customize
-                </Text>
-                <Text
-                  style={[
-                    styles.guestPromptText,
-                    { color: theme.colors.textMuted },
-                  ]}
-                >
-                  Create an account to pin your favorite masjid and get
-                  personalized prayer notifications
-                </Text>
-                <TouchableOpacity
-                  style={[
-                    styles.guestSignUpButton,
-                    { backgroundColor: theme.colors.primary },
-                  ]}
-                  onPress={handleGuestSignIn}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.guestSignUpButtonText}>Sign Up</Text>
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.currentMasjidSection}>
-                <Text
-                  style={[
-                    styles.currentLabel,
-                    { color: theme.colors.textMuted },
-                  ]}
-                >
-                  Currently showing:
-                </Text>
-                <View style={styles.currentMasjidInfo}>
-                  <Feather
-                    name="map-pin"
-                    size={16}
-                    color={theme.colors.primary}
-                  />
-                  <Text
+                  <View
                     style={[
-                      styles.currentMasjidName,
-                      { color: theme.colors.text },
+                      styles.optionIcon,
+                      {
+                        backgroundColor: theme.colors.surface,
+                        borderColor: theme.colors.borderSoft,
+                      },
                     ]}
                   >
-                    {masjidData?.org?.name || 'Nearest Masjid'}
+                    <Feather
+                      name="map-pin"
+                      size={20}
+                      color={theme.colors.primary}
+                    />
+                  </View>
+                  <View style={styles.optionContent}>
+                    <Text
+                      style={[styles.optionTitle, { color: theme.colors.text }]}
+                    >
+                      Choose Specific Masjid
+                    </Text>
+                    <Text
+                      style={[
+                        styles.optionDescription,
+                        { color: theme.colors.textMuted },
+                      ]}
+                    >
+                      Select a masjid to always get its prayer times
+                    </Text>
+                  </View>
+                  {isPinnedActive ? (
+                    <Feather
+                      name="chevron-right"
+                      size={20}
+                      color={theme.colors.primary}
+                    />
+                  ) : (
+                    <Feather
+                      name="chevron-right"
+                      size={20}
+                      color={theme.colors.textSoft}
+                    />
+                  )}
+                </TouchableOpacity>
+
+                {/* Option 2: Auto / Nearest */}
+                <TouchableOpacity
+                  style={[
+                    styles.optionButton,
+                    {
+                      backgroundColor: theme.colors.surfaceMuted,
+                      borderColor: theme.colors.border,
+                    },
+                    isAutoActive && styles.activeOptionAuto,
+                    isAutoActive && {
+                      backgroundColor: '#4C3A1F',
+                      borderColor: '#7A5A2A',
+                    },
+                    !locationPermissionGranted && styles.disabledOption,
+                  ]}
+                  onPress={handleUseNearestMasjid}
+                  disabled={loading}
+                >
+                  <View
+                    style={[
+                      styles.optionIcon,
+                      {
+                        backgroundColor: theme.colors.surface,
+                        borderColor: theme.colors.borderSoft,
+                      },
+                    ]}
+                  >
+                    <Feather
+                      name="navigation"
+                      size={20}
+                      color={locationPermissionGranted ? '#F6AD55' : '#A0AEC0'}
+                    />
+                  </View>
+                  <View style={styles.optionContent}>
+                    <Text
+                      style={[
+                        styles.optionTitle,
+                        { color: theme.colors.text },
+                        !locationPermissionGranted && styles.disabledText,
+                      ]}
+                    >
+                      Use Nearest Masjid
+                    </Text>
+                    <Text
+                      style={[
+                        styles.optionDescription,
+                        { color: theme.colors.textMuted },
+                      ]}
+                    >
+                      {locationPermissionGranted
+                        ? 'Always show the closest masjid to your location'
+                        : 'Location permission required'}
+                    </Text>
+                  </View>
+
+                  {loading ? (
+                    <ActivityIndicator size="small" color="#F6AD55" />
+                  ) : !locationPermissionGranted ? (
+                    <Feather name="lock" size={18} color="#A0AEC0" />
+                  ) : (
+                    <Feather
+                      name="chevron-right"
+                      size={20}
+                      color={isAutoActive ? '#F6AD55' : theme.colors.textSoft}
+                    />
+                  )}
+                </TouchableOpacity>
+
+                <View style={styles.currentMasjidSection}>
+                  <Text
+                    style={[
+                      styles.currentLabel,
+                      { color: theme.colors.textMuted },
+                    ]}
+                  >
+                    Currently using:
                   </Text>
-                  {masjidData?.distance_m != null && (
+                  <View style={styles.currentMasjidInfo}>
+                    <Feather
+                      name={
+                        isAutoActive || isGuestMode ? 'navigation' : 'map-pin'
+                      }
+                      size={16}
+                      color={
+                        isAutoActive || isGuestMode ? '#F6AD55' : '#48BB78'
+                      }
+                    />
+                    <Text
+                      style={[
+                        styles.currentMasjidName,
+                        { color: theme.colors.text },
+                      ]}
+                    >
+                      {masjidData?.org?.name || 'Loading...'}
+                    </Text>
                     <Text
                       style={[
                         styles.currentDistance,
                         { color: theme.colors.textMuted },
                       ]}
                     >
-                      • {formatDistance(masjidData?.distance_m)}
+                      • {formatDistance(masjidData?.distance_m, unit)}
                     </Text>
-                  )}
+                  </View>
                 </View>
-              </View>
-            </>
-          ) : (
-            // Logged-in user: Show normal options
-            <>
-              <Text
-                style={[styles.subtitle, { color: theme.colors.textMuted }]}
-              >
-                Choose how you'd like to receive prayer times and notifications
-              </Text>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
 
-              {/* Option 1: Pinned / Specific */}
+      <Modal
+        animationType="fade"
+        transparent
+        visible={showBackgroundDisclosure}
+        onRequestClose={() => setShowBackgroundDisclosure(false)}
+      >
+        <View
+          style={[
+            styles.modalContainer,
+            { backgroundColor: theme.colors.overlay },
+          ]}
+        >
+          <View
+            style={[
+              styles.disclosureCard,
+              {
+                backgroundColor: theme.colors.surfaceElevated,
+                borderColor: theme.colors.border,
+                shadowColor: theme.colors.shadow,
+              },
+            ]}
+          >
+            <View
+              style={[
+                styles.disclosureIconWrap,
+                {
+                  backgroundColor: theme.colors.primarySoft,
+                  borderColor: theme.colors.primaryBorder,
+                },
+              ]}
+            >
+              <Feather
+                name="navigation"
+                size={20}
+                color={theme.colors.primary}
+              />
+            </View>
+
+            <Text
+              style={[styles.disclosureTitle, { color: theme.colors.text }]}
+            >
+              Background location access
+            </Text>
+            <Text
+              style={[styles.disclosureBody, { color: theme.colors.textMuted }]}
+            >
+              Jamaah collects location data to update your nearest masjid and
+              prayer times even when the app is closed or not in use.
+            </Text>
+
+            <View style={styles.disclosureActions}>
               <TouchableOpacity
                 style={[
-                  styles.optionButton,
+                  styles.disclosureSecondaryButton,
                   {
                     backgroundColor: theme.colors.surfaceMuted,
                     borderColor: theme.colors.border,
                   },
-                  isPinnedActive && styles.activeOptionPinned,
-                  isPinnedActive && {
-                    backgroundColor: theme.colors.primarySoft,
-                    borderColor: theme.colors.primaryBorder,
-                  },
                 ]}
-                onPress={handleChooseSpecificMasjid}
-                disabled={loading}
+                onPress={() => setShowBackgroundDisclosure(false)}
               >
-                <View
-                  style={[
-                    styles.optionIcon,
-                    {
-                      backgroundColor: theme.colors.surface,
-                      borderColor: theme.colors.borderSoft,
-                    },
-                  ]}
-                >
-                  <Feather
-                    name="map-pin"
-                    size={20}
-                    color={theme.colors.primary}
-                  />
-                </View>
-                <View style={styles.optionContent}>
-                  <Text
-                    style={[styles.optionTitle, { color: theme.colors.text }]}
-                  >
-                    Choose Specific Masjid
-                  </Text>
-                  <Text
-                    style={[
-                      styles.optionDescription,
-                      { color: theme.colors.textMuted },
-                    ]}
-                  >
-                    Select a masjid to always get its prayer times
-                  </Text>
-                </View>
-                {isPinnedActive ? (
-                  <Feather
-                    name="chevron-right"
-                    size={20}
-                    color={theme.colors.primary}
-                  />
-                ) : (
-                  <Feather
-                    name="chevron-right"
-                    size={20}
-                    color={theme.colors.textSoft}
-                  />
-                )}
-              </TouchableOpacity>
-
-              {/* Option 2: Auto / Nearest */}
-              <TouchableOpacity
-                style={[
-                  styles.optionButton,
-                  {
-                    backgroundColor: theme.colors.surfaceMuted,
-                    borderColor: theme.colors.border,
-                  },
-                  isAutoActive && styles.activeOptionAuto,
-                  isAutoActive && {
-                    backgroundColor: '#4C3A1F',
-                    borderColor: '#7A5A2A',
-                  },
-                  !locationPermissionGranted && styles.disabledOption,
-                ]}
-                onPress={handleUseNearestMasjid}
-                disabled={loading}
-              >
-                <View
-                  style={[
-                    styles.optionIcon,
-                    {
-                      backgroundColor: theme.colors.surface,
-                      borderColor: theme.colors.borderSoft,
-                    },
-                  ]}
-                >
-                  <Feather
-                    name="navigation"
-                    size={20}
-                    color={locationPermissionGranted ? '#F6AD55' : '#A0AEC0'}
-                  />
-                </View>
-                <View style={styles.optionContent}>
-                  <Text
-                    style={[
-                      styles.optionTitle,
-                      { color: theme.colors.text },
-                      !locationPermissionGranted && styles.disabledText,
-                    ]}
-                  >
-                    Use Nearest Masjid
-                  </Text>
-                  <Text
-                    style={[
-                      styles.optionDescription,
-                      { color: theme.colors.textMuted },
-                    ]}
-                  >
-                    {locationPermissionGranted
-                      ? 'Always show the closest masjid to your location'
-                      : 'Location permission required'}
-                  </Text>
-                </View>
-
-                {loading ? (
-                  <ActivityIndicator size="small" color="#F6AD55" />
-                ) : !locationPermissionGranted ? (
-                  <Feather name="lock" size={18} color="#A0AEC0" />
-                ) : (
-                  <Feather
-                    name="chevron-right"
-                    size={20}
-                    color={isAutoActive ? '#F6AD55' : theme.colors.textSoft}
-                  />
-                )}
-              </TouchableOpacity>
-
-              <View style={styles.currentMasjidSection}>
                 <Text
                   style={[
-                    styles.currentLabel,
+                    styles.disclosureSecondaryButtonText,
                     { color: theme.colors.textMuted },
                   ]}
                 >
-                  Currently using:
+                  Not now
                 </Text>
-                <View style={styles.currentMasjidInfo}>
-                  <Feather
-                    name={
-                      isAutoActive || isGuestMode ? 'navigation' : 'map-pin'
-                    }
-                    size={16}
-                    color={isAutoActive || isGuestMode ? '#F6AD55' : '#48BB78'}
-                  />
-                  <Text
-                    style={[
-                      styles.currentMasjidName,
-                      { color: theme.colors.text },
-                    ]}
-                  >
-                    {masjidData?.org?.name || 'Loading...'}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.currentDistance,
-                      { color: theme.colors.textMuted },
-                    ]}
-                  >
-                    • {formatDistance(masjidData?.distance_m)}
-                  </Text>
-                </View>
-              </View>
-            </>
-          )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.disclosurePrimaryButton,
+                  { backgroundColor: theme.colors.primary },
+                ]}
+                onPress={handleAcceptDisclosure}
+              >
+                <Text style={styles.disclosurePrimaryButtonText}>Continue</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
-      </View>
-    </Modal>
+      </Modal>
+    </>
   )
 }
 
@@ -560,6 +681,64 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  disclosureCard: {
+    width: '90%',
+    maxWidth: 380,
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 18,
+    elevation: 6,
+  },
+  disclosureIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
+  },
+  disclosureTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 10,
+  },
+  disclosureBody: {
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 18,
+  },
+  disclosureActions: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  disclosureSecondaryButton: {
+    flex: 1,
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingVertical: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  disclosureSecondaryButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  disclosurePrimaryButton: {
+    flex: 1,
+    borderRadius: 12,
+    paddingVertical: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  disclosurePrimaryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700',
   },
 })
 

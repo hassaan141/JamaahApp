@@ -24,6 +24,7 @@ import { checkForForcedUpdate } from './src/Utils/checkForForcedUpdate'
 import { ThemeProvider, useTheme } from './src/theme'
 import { darkTheme } from './src/theme/dark'
 import { lightTheme } from './src/theme/light'
+import { DistanceUnitProvider } from './src/preferences'
 
 const ONBOARDING_COMPLETE_KEY = '@jamaah_onboarding_complete'
 
@@ -164,34 +165,38 @@ export default function App() {
     return () => clearTimeout(timeoutId)
   }, [])
 
-  if (checkingUpdate) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: bootTheme.colors.background,
-        }}
-      >
-        <ActivityIndicator size="large" color={bootTheme.colors.primary} />
-      </View>
-    )
-  }
-
-  if (forceUpdate) {
-    return <ForceUpdateScreen />
-  }
+  useEffect(() => {
+    if (!checkingUpdate && forceUpdate) {
+      SplashScreen.hideAsync().catch(() => {})
+    }
+  }, [checkingUpdate, forceUpdate])
 
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <ErrorBoundary FallbackComponent={CustomFallback}>
-          <AuthProvider>
-            <AppNavigator />
-            <ToastHost />
-          </AuthProvider>
-        </ErrorBoundary>
+        {checkingUpdate ? (
+          <View
+            style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor: bootTheme.colors.background,
+            }}
+          >
+            <ActivityIndicator size="large" color={bootTheme.colors.primary} />
+          </View>
+        ) : forceUpdate ? (
+          <ForceUpdateScreen />
+        ) : (
+          <ErrorBoundary FallbackComponent={CustomFallback}>
+            <DistanceUnitProvider>
+              <AuthProvider>
+                <AppNavigator />
+                <ToastHost />
+              </AuthProvider>
+            </DistanceUnitProvider>
+          </ErrorBoundary>
+        )}
       </ThemeProvider>
     </SafeAreaProvider>
   )

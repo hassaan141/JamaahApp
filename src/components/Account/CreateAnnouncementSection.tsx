@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { TouchableOpacity, Text, StyleSheet } from 'react-native'
+import { TouchableOpacity, Text, StyleSheet, Alert } from 'react-native'
 import type { Profile, Database } from '@/types'
 import AnnouncementModal from '@/components/Account/AnnouncementModal'
 import { createOrgAnnouncement } from '@/Supabase/createOrgAnnouncement'
@@ -8,6 +8,7 @@ import { supabase } from '@/Supabase/supabaseClient'
 import { ENV } from '@/core/env'
 import { notifyFollowersOfPost } from '@/Supabase/sendPushNotification'
 import { useTheme } from '@/theme'
+import { announcementEventEmitter } from '@/Utils/announcementEventEmitter'
 
 type Organization = Database['public']['Tables']['organizations']['Row']
 type LocationData = {
@@ -15,6 +16,121 @@ type LocationData = {
   lat?: number | null
   lng?: number | null
   isCurrentAddress?: boolean
+}
+
+function isPastAnnouncementDate(date: string | null) {
+  if (!date) return false
+
+  const [year, month, day] = date.split('-').map(Number)
+  if (!year || !month || !day) return false
+
+  const selectedDate = new Date(year, month - 1, day)
+  const today = new Date()
+  const todayStart = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate(),
+  )
+
+  return selectedDate.getTime() < todayStart.getTime()
+}
+
+function formatAnnouncementDate(date: string) {
+  const [year, month, day] = date.split('-').map(Number)
+  if (!year || !month || !day) return date
+
+  return new Date(year, month - 1, day).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
+function getAnnouncementValidationError(input: {
+  announcementBody: string
+  postType: string | null
+  startTime: string | null
+  endTime: string | null
+  demographic: string | null
+  recurringDays: number[]
+  date: string | null
+  locationAddress: string | null
+  hasProfile: boolean
+}) {
+  if (!input.announcementBody.trim()) {
+    return {
+      title: 'Add details',
+      message: 'Announcement details cannot be empty.',
+    }
+  }
+
+  if (!input.postType) {
+    return {
+      title: 'Post type required',
+      message: 'Select a post type before posting.',
+    }
+  }
+
+  if (
+    input.postType === 'Repeating_classes' &&
+    input.recurringDays.length === 0
+  ) {
+    return {
+      title: 'Schedule required',
+      message: 'Select at least one recurring day for classes.',
+    }
+  }
+
+  if (input.postType !== 'Repeating_classes' && !input.date) {
+    return {
+      title: 'Date required',
+      message: 'Choose a date for this announcement before posting.',
+    }
+  }
+
+  if (input.date && isPastAnnouncementDate(input.date)) {
+    return {
+      title: 'Invalid date',
+      message: `${formatAnnouncementDate(input.date)} is in the past. Choose today or a future date.`,
+    }
+  }
+
+  if (!input.startTime) {
+    return {
+      title: 'Start time required',
+      message: 'Choose a start time before posting.',
+    }
+  }
+
+  if (!input.endTime) {
+    return {
+      title: 'End time required',
+      message: 'Choose an end time before posting.',
+    }
+  }
+
+  if (!input.demographic) {
+    return {
+      title: 'Audience required',
+      message: 'Select an audience before posting.',
+    }
+  }
+
+  if (!input.locationAddress?.trim()) {
+    return {
+      title: 'Location required',
+      message: 'Choose an event location before posting.',
+    }
+  }
+
+  if (!input.hasProfile) {
+    return {
+      title: 'Unable to post',
+      message: 'Your organization profile is missing required account details.',
+    }
+  }
+
+  return null
 }
 
 export default function CreateAnnouncementSection({
@@ -59,10 +175,23 @@ export default function CreateAnnouncementSection({
   }, [profile?.org_id])
 
   const handlePostAnnouncement = async () => {
-    if (!announcementBody.trim() || !profile?.org_id || !profile?.id) {
-      toast.error('Announcement details cannot be empty.', 'Add details')
+    const validationError = getAnnouncementValidationError({
+      announcementBody,
+      postType,
+      startTime,
+      endTime,
+      demographic,
+      recurringDays,
+      date,
+      locationAddress: locationData?.address ?? null,
+      hasProfile: Boolean(profile?.org_id) && Boolean(profile?.id),
+    })
+    if (validationError) {
+      Alert.alert(validationError.title, validationError.message)
       return
     }
+    if (!profile?.org_id || !profile?.id) return
+
     setPosting(true)
     try {
       let lat: number | null = locationData?.lat ?? null
@@ -160,6 +289,11 @@ export default function CreateAnnouncementSection({
         'Your announcement has been shared.',
         'Announcement posted!',
       )
+      announcementEventEmitter.emit({
+        type: 'created',
+        announcementId: data.id,
+        organizationId: profile.org_id,
+      })
       setAnnouncementTitle('')
       setAnnouncementBody('')
       setStartTime(null)

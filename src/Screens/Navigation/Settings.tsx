@@ -10,8 +10,11 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import type { NavigationProp, ParamListBase } from '@react-navigation/native'
 import { useNavigation } from '@react-navigation/native'
 import { Feather } from '@expo/vector-icons'
+import { useAuth } from '@/Auth/AuthProvider'
 import { useProfile } from '@/Auth/fetchProfile'
+import SignOutButton from '@/components/Account/SignOutButton'
 import { useTheme } from '@/theme'
+import { useDistanceUnit } from '@/preferences'
 
 type SettingsItem = {
   title: string
@@ -21,10 +24,15 @@ type SettingsItem = {
   orgOnly?: boolean
 }
 
-const APPEARANCE_OPTIONS = [
+const THEME_OPTIONS = [
   { value: 'light', label: 'Light', icon: 'sun' },
   { value: 'dark', label: 'Dark', icon: 'moon' },
   { value: 'system', label: 'Auto', icon: 'smartphone' },
+] as const
+
+const DISTANCE_OPTIONS = [
+  { value: 'km', label: 'KM', icon: 'map-pin' },
+  { value: 'mi', label: 'Miles', icon: 'navigation' },
 ] as const
 
 const SETTINGS_ITEMS: SettingsItem[] = [
@@ -57,8 +65,10 @@ const SETTINGS_ITEMS: SettingsItem[] = [
 
 export default function Settings() {
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
+  const { logout } = useAuth()
   const { profile } = useProfile()
   const { theme, mode, setMode } = useTheme()
+  const { unit, setUnit } = useDistanceUnit()
 
   const isOrganization = profile?.is_org === true && !!profile?.org_id
 
@@ -108,7 +118,7 @@ export default function Settings() {
           ]}
         >
           <Text style={[styles.appearanceTitle, { color: theme.colors.text }]}>
-            Appearance
+            Themes
           </Text>
           <Text
             style={[
@@ -116,7 +126,7 @@ export default function Settings() {
               { color: theme.colors.textMuted },
             ]}
           >
-            Choose light, dark, or follow your device setting.
+            Choose Light, Dark, or Auto (device setting).
           </Text>
           <View
             style={[
@@ -127,7 +137,7 @@ export default function Settings() {
               },
             ]}
           >
-            {APPEARANCE_OPTIONS.map((option) => {
+            {THEME_OPTIONS.map((option) => {
               const selected = mode === option.value
               return (
                 <TouchableOpacity
@@ -144,6 +154,80 @@ export default function Settings() {
                     },
                   ]}
                   onPress={() => setMode(option.value)}
+                  activeOpacity={0.8}
+                >
+                  <Feather
+                    name={option.icon}
+                    size={16}
+                    color={
+                      selected ? theme.colors.primary : theme.colors.textMuted
+                    }
+                  />
+                  <Text
+                    style={[
+                      styles.appearanceOptionText,
+                      {
+                        color: selected
+                          ? theme.colors.primary
+                          : theme.colors.textMuted,
+                      },
+                    ]}
+                  >
+                    {option.label}
+                  </Text>
+                </TouchableOpacity>
+              )
+            })}
+          </View>
+        </View>
+
+        <View
+          style={[
+            styles.appearanceSection,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+              shadowColor: theme.colors.shadow,
+            },
+          ]}
+        >
+          <Text style={[styles.appearanceTitle, { color: theme.colors.text }]}>
+            Units
+          </Text>
+          <Text
+            style={[
+              styles.appearanceSubtitle,
+              { color: theme.colors.textMuted },
+            ]}
+          >
+            Default is kilometers. Switch to miles anytime.
+          </Text>
+          <View
+            style={[
+              styles.appearanceControl,
+              {
+                backgroundColor: theme.colors.surfaceMuted,
+                borderColor: theme.colors.border,
+              },
+            ]}
+          >
+            {DISTANCE_OPTIONS.map((option) => {
+              const selected = unit === option.value
+              return (
+                <TouchableOpacity
+                  key={option.value}
+                  style={[
+                    styles.appearanceOption,
+                    {
+                      backgroundColor: selected
+                        ? theme.colors.surface
+                        : 'transparent',
+                      borderColor: selected
+                        ? theme.colors.primaryBorder
+                        : 'transparent',
+                    },
+                  ]}
+                  onPress={() => setUnit(option.value)}
                   activeOpacity={0.8}
                 >
                   <Feather
@@ -230,6 +314,8 @@ export default function Settings() {
             </TouchableOpacity>
           ))}
         </View>
+
+        <SignOutButton onLogout={logout} />
 
         <View style={{ height: 40 }} />
       </ScrollView>

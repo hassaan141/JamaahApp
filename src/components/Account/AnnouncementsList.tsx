@@ -16,10 +16,12 @@ import EditAnnouncementModal from './EditAnnouncementModal'
 import { toast } from '@/components/Toast/toast'
 import MiniLoading from '@/components/Loading/MiniLoading'
 import { useTheme } from '@/theme'
+import { announcementEventEmitter } from '@/Utils/announcementEventEmitter'
 
 const TABS = [
   { label: 'Classes', value: 'CLASSES' },
   { label: 'Events', value: 'EVENTS' },
+  { label: 'Janazah', value: 'JANAZAH' },
   { label: 'Volunteer', value: 'VOLUNTEER' },
 ]
 
@@ -41,22 +43,30 @@ export default function AnnouncementsList({
   const [activeTab, setActiveTab] = useState('CLASSES')
   const [isExpanded, setIsExpanded] = useState(false)
 
-  useEffect(() => {
-    const loadAnnouncements = async () => {
-      if (!profile?.org_id) return
-      setLoading(true)
-      try {
-        const postsData = await fetchMyOrgPosts()
-        setAnnouncements(postsData)
-      } catch (error) {
-        console.error('[AnnouncementsList] Failed to load announcements', error)
-      } finally {
-        setLoading(false)
-      }
+  const loadAnnouncements = React.useCallback(async () => {
+    if (!profile?.org_id) return
+    setLoading(true)
+    try {
+      const postsData = await fetchMyOrgPosts()
+      setAnnouncements(postsData)
+    } catch (error) {
+      console.error('[AnnouncementsList] Failed to load announcements', error)
+    } finally {
+      setLoading(false)
     }
+  }, [profile?.org_id])
 
+  useEffect(() => {
     loadAnnouncements()
-  }, [profile?.org_id, refreshKey])
+  }, [loadAnnouncements, refreshKey])
+
+  useEffect(() => {
+    const unsubscribe = announcementEventEmitter.subscribe(() => {
+      loadAnnouncements()
+    })
+
+    return unsubscribe
+  }, [loadAnnouncements])
 
   const handleEdit = (announcement: OrgPost) => {
     setEditingAnnouncement(announcement)
@@ -86,6 +96,11 @@ export default function AnnouncementsList({
       toast.success('Announcement updated successfully!', 'Success')
       const postsData = await fetchMyOrgPosts()
       setAnnouncements(postsData)
+      announcementEventEmitter.emit({
+        type: 'updated',
+        announcementId: editingAnnouncement.id,
+        organizationId: editingAnnouncement.organization_id,
+      })
     } else {
       toast.error(error || 'Failed to update announcement', 'Error')
     }
@@ -99,6 +114,11 @@ export default function AnnouncementsList({
       toast.success('Announcement deleted successfully!', 'Success')
       const postsData = await fetchMyOrgPosts()
       setAnnouncements(postsData)
+      announcementEventEmitter.emit({
+        type: 'deleted',
+        announcementId: editingAnnouncement.id,
+        organizationId: editingAnnouncement.organization_id,
+      })
     } else {
       toast.error(error || 'Failed to delete announcement', 'Error')
     }
@@ -113,10 +133,19 @@ export default function AnnouncementsList({
       const type = item.post_type || ''
       if (activeTab === 'CLASSES') return type === 'Repeating_classes'
       if (activeTab === 'EVENTS') return type === 'Event'
+      if (activeTab === 'JANAZAH') return type === 'Janazah'
       if (activeTab === 'VOLUNTEER') return type === 'Volunteerng'
       return true
     })
   }, [announcements, activeTab])
+
+  const activeTabEmptyLabel = useMemo(() => {
+    if (activeTab === 'CLASSES') return 'classes'
+    if (activeTab === 'EVENTS') return 'events'
+    if (activeTab === 'JANAZAH') return 'janazah announcements'
+    if (activeTab === 'VOLUNTEER') return 'volunteer opportunities'
+    return 'announcements'
+  }, [activeTab])
 
   const visibleAnnouncements = isExpanded
     ? filteredAnnouncements
@@ -228,7 +257,7 @@ export default function AnnouncementsList({
               <Text
                 style={[styles.emptyText, { color: theme.colors.textMuted }]}
               >
-                No {activeTab.toLowerCase()} found.
+                No {activeTabEmptyLabel} found.
               </Text>
             </View>
           ) : (

@@ -1,25 +1,150 @@
 import type Feather from '@expo/vector-icons/Feather'
 import type React from 'react'
 
-export const formatTime = (time: string | null) => {
-  if (!time) return null
-  try {
-    const [hours, minutes] = time.split(':')
-    if (!hours || !minutes) return time
-    const hour = parseInt(hours, 10)
-    const min = minutes.padStart(2, '0')
-    const ampm = hour >= 12 ? 'PM' : 'AM'
-    const displayHour = hour % 12 || 12
-    return `${displayHour}:${min} ${ampm}`
-  } catch {
-    return time
-  }
+export function isPastAnnouncementDate(date: string | null) {
+  if (!date) return false
+
+  const [year, month, day] = date.split('-').map(Number)
+  if (!year || !month || !day) return false
+
+  const selectedDate = new Date(year, month - 1, day)
+  const today = new Date()
+  const todayStart = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate(),
+  )
+
+  return selectedDate.getTime() < todayStart.getTime()
 }
 
-export const formatDaysOfWeek = (days: number[] | null) => {
+export function formatAnnouncementDate(date: string) {
+  const [year, month, day] = date.split('-').map(Number)
+  if (!year || !month || !day) return date
+
+  return new Date(year, month - 1, day).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
+export function getAnnouncementValidationError(input: {
+  announcementBody: string
+  postType: string | null
+  startTime: string | null
+  endTime: string | null
+  demographic: string | null
+  recurringDays: number[]
+  date: string | null
+  locationAddress: string | null
+  hasProfile?: boolean
+  action?: 'posting' | 'saving'
+}) {
+  const action = input.action ?? 'posting'
+
+  if (!input.announcementBody.trim()) {
+    return {
+      title: 'Add details',
+      message: 'Announcement details cannot be empty.',
+    }
+  }
+
+  if (!input.postType) {
+    return {
+      title: 'Post type required',
+      message: `Select a post type before ${action}.`,
+    }
+  }
+
+  if (
+    input.postType === 'Repeating_classes' &&
+    input.recurringDays.length === 0
+  ) {
+    return {
+      title: 'Schedule required',
+      message: 'Select at least one recurring day for classes.',
+    }
+  }
+
+  if (input.postType !== 'Repeating_classes' && !input.date) {
+    return {
+      title: 'Date required',
+      message: `Choose a date for this announcement before ${action}.`,
+    }
+  }
+
+  if (input.date && isPastAnnouncementDate(input.date)) {
+    return {
+      title: 'Invalid date',
+      message: `${formatAnnouncementDate(input.date)} is in the past. Choose today or a future date.`,
+    }
+  }
+
+  if (!input.startTime) {
+    return {
+      title: 'Start time required',
+      message: `Choose a start time before ${action}.`,
+    }
+  }
+
+  if (!input.endTime) {
+    return {
+      title: 'End time required',
+      message: `Choose an end time before ${action}.`,
+    }
+  }
+
+  if (!input.demographic) {
+    return {
+      title: 'Audience required',
+      message: `Select an audience before ${action}.`,
+    }
+  }
+
+  if (!input.locationAddress?.trim()) {
+    return {
+      title: 'Location required',
+      message: `Choose an event location before ${action}.`,
+    }
+  }
+
+  if (input.hasProfile === false) {
+    return {
+      title: 'Unable to post',
+      message: 'Your organization profile is missing required account details.',
+    }
+  }
+
+  return null
+}
+
+export const formatDaysOfWeek = (
+  days: (number | string)[] | null,
+  style: 'short' | 'long' = 'short',
+) => {
   if (!days || days.length === 0) return null
-  const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-  return days.map((day) => dayNames[day - 1])
+  const dayNames =
+    style === 'long'
+      ? [
+          'Monday',
+          'Tuesday',
+          'Wednesday',
+          'Thursday',
+          'Friday',
+          'Saturday',
+          'Sunday',
+        ]
+      : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+  return days
+    .map((day) => {
+      const dayNumber = typeof day === 'string' ? parseInt(day, 10) : day
+      if (!Number.isFinite(dayNumber) || dayNumber < 1 || dayNumber > 7) {
+        return null
+      }
+      return dayNames[dayNumber - 1]
+    })
+    .filter(Boolean) as string[]
 }
 
 export const chunkIntoPairs = (items: string[] | null) => {

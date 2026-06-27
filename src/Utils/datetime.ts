@@ -47,12 +47,20 @@ export function isNewAnnouncement(dateString?: string): boolean {
 }
 
 // Format a time string (e.g., '13:05.00') to '1:05 PM' style
-export function formatTime(time?: string, prayerName = ''): string {
-  if (!time) return ''
+export function formatTime(
+  time?: string | null,
+  prayerName = '',
+  fallback: string | null = '',
+): string | null {
+  if (!time) return fallback
   const [timeStr] = time.split('.')
   const [hoursStr, minutesStr] = timeStr.split(':')
+  if (!hoursStr || !minutesStr) return time
+
   const hours = Number.parseInt(hoursStr, 10)
   const minutes = Number.parseInt(minutesStr, 10)
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) return time
+
   let period: 'AM' | 'PM' = 'AM'
   if (['Dhuhr', 'Asr', 'Maghrib', 'Isha'].includes(prayerName)) {
     period = 'PM'

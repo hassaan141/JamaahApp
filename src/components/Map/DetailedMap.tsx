@@ -25,44 +25,14 @@ import type { OrgPost } from '@/types'
 import AnnouncementModal from '@/components/Shared/AnnouncementModal'
 import { isAnnouncementUpcoming } from '@/Utils/announcementVisibility'
 import { announcementEventEmitter } from '@/Utils/announcementEventEmitter'
+import {
+  getEventTypeColor,
+  getEventTypeIcon,
+} from '@/components/Shared/announcementUtils'
 
 // Local import for iOS only
 import mosqueIcon from '../../../assets/mosque_new.png'
 import { DEFAULT_LOCATION } from '@/Utils/constants'
-
-const getEventTypeIcon = (
-  postType: string | null,
-): React.ComponentProps<typeof Feather>['name'] => {
-  switch (postType) {
-    case 'Event':
-      return 'calendar'
-    case 'Repeating_classes':
-      return 'book-open'
-    case 'Janazah':
-      return 'heart'
-    case 'Volunteerng':
-    case 'Volunteering':
-      return 'users'
-    default:
-      return 'calendar'
-  }
-}
-
-const getEventTypeColor = (postType: string | null) => {
-  switch (postType) {
-    case 'Event':
-      return '#2F855A'
-    case 'Repeating_classes':
-      return '#3182CE'
-    case 'Janazah':
-      return '#E53E3E'
-    case 'Volunteerng':
-    case 'Volunteering':
-      return '#805AD5'
-    default:
-      return '#2F855A'
-  }
-}
 
 const OPEN_STREET_MAP_STYLE = {
   version: 8,

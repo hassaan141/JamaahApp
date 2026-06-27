@@ -4,6 +4,7 @@ import Feather from '@expo/vector-icons/Feather'
 import PrayerDetailModal from './PrayerDetailModal'
 import type { Database } from '@/types/supabase'
 import { useTheme } from '@/theme'
+import { formatTime } from '@/Utils/datetime'
 
 type PrayerTimeRow = Database['public']['Tables']['daily_prayer_times']['Row']
 
@@ -74,17 +75,6 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
   })
 
   const [timeRemaining, setTimeRemaining] = useState('')
-
-  // UPDATED: Now includes AM/PM
-  const formatTime = (time?: string) => {
-    if (!time) return ''
-    const [h, minutes] = time.split(':')
-    const hours = parseInt(h, 10)
-    if (isNaN(hours)) return ''
-    const ampm = hours >= 12 ? 'PM' : 'AM'
-    const formattedHour = hours % 12 || 12
-    return `${formattedHour}:${minutes} ${ampm}`
-  }
 
   const determineNextEvent = (data: PrayerTimeRow | null) => {
     if (!data)

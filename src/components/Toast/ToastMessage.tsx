@@ -7,24 +7,37 @@ import {
   TouchableOpacity,
   Easing,
 } from 'react-native'
+import type { ToastKind } from './toast'
 
 type Props = {
   visible: boolean
+  variant: ToastKind
   message?: string
   onHide?: () => void
   duration?: number
   title?: string
 }
 
-export default function ToastInfo({
+const VARIANTS: Record<
+  ToastKind,
+  { title: string; color: string; messageColor: string }
+> = {
+  success: { title: 'Success', color: '#2F855A', messageColor: '#1D4732' },
+  error: { title: 'Error', color: '#DC3545', messageColor: '#1D4732' },
+  info: { title: 'Info', color: '#3182CE', messageColor: '#2C5282' },
+}
+
+export default function Toast({
   visible,
+  variant,
   message,
   onHide,
   duration = 3000,
-  title = 'Info',
+  title,
 }: Props) {
   const opacity = useRef(new Animated.Value(0)).current
   const translateY = useRef(new Animated.Value(-20)).current
+  const colors = VARIANTS[variant]
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined
@@ -79,10 +92,16 @@ export default function ToastInfo({
       pointerEvents="box-none"
     >
       <View style={styles.toast}>
-        <View style={styles.leftStripe} />
+        <View style={[styles.leftStripe, { backgroundColor: colors.color }]} />
         <View style={styles.content}>
-          <Text style={styles.title}>{title}</Text>
-          {!!message && <Text style={styles.message}>{message}</Text>}
+          <Text style={[styles.title, { color: colors.color }]}>
+            {title ?? colors.title}
+          </Text>
+          {!!message && (
+            <Text style={[styles.message, { color: colors.messageColor }]}>
+              {message}
+            </Text>
+          )}
         </View>
         <TouchableOpacity onPress={() => hide()} style={styles.closeBtn}>
           <Text style={styles.closeText}>×</Text>
@@ -91,8 +110,6 @@ export default function ToastInfo({
     </Animated.View>
   )
 }
-
-const BLUE = '#3182CE'
 
 const styles = StyleSheet.create({
   container: {
@@ -120,7 +137,6 @@ const styles = StyleSheet.create({
   leftStripe: {
     width: 4,
     height: '100%',
-    backgroundColor: BLUE,
     borderTopLeftRadius: 10,
     borderBottomLeftRadius: 10,
     marginRight: 10,
@@ -129,13 +145,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    color: BLUE,
     fontWeight: '700',
     fontSize: 14,
     marginBottom: 2,
   },
   message: {
-    color: '#2C5282',
     fontSize: 13,
   },
   closeBtn: {

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { View, Text, StyleSheet } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
 import { useTheme } from '@/theme'
+import { formatTime } from '@/Utils/datetime'
 
 export interface PrayerTimes {
   fajr_azan: string
@@ -60,23 +61,6 @@ const NextPrayerCard: React.FC<NextPrayerCardProps> = ({ prayerTimes }) => {
         </View>
       </View>
     )
-  }
-
-  const formatTime = (time?: string, prayerName = '') => {
-    if (!time) return ''
-    const [timeStr] = time.split('.')
-    const [hoursStr, minutesStr] = timeStr.split(':')
-    const hours = Number.parseInt(hoursStr, 10)
-    const minutes = Number.parseInt(minutesStr, 10)
-    let period = 'AM'
-    if (['Dhuhr', 'Asr', 'Maghrib', 'Isha'].includes(prayerName)) {
-      period = 'PM'
-    } else if (hours >= 12) {
-      period = 'PM'
-    }
-    const formattedHours = hours % 12 || 12
-    const formattedMinutes = minutes.toString().padStart(2, '0')
-    return `${formattedHours}:${formattedMinutes} ${period}`
   }
 
   const calculateTimeRemaining = (prayerTime?: string, prayerName?: string) => {

@@ -15,6 +15,7 @@ import CommunityItem from './CommunityItem'
 import SearchBar from '@/components/SearchBar/SearchBar'
 import LoadingAnimation from '@/components/Loading/Loading'
 import { useTheme } from '@/theme'
+import GradientBackground from '@/components/GradientBackground'
 
 const FILTER_OPTIONS = [
   { label: 'Masjid', value: 'masjid' },
@@ -316,9 +317,7 @@ export default function CommunitiesTab() {
   }
 
   return (
-    <View
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-    >
+    <GradientBackground>
       {renderContent()}
 
       <FilterModal
@@ -329,14 +328,13 @@ export default function CommunitiesTab() {
         onReset={handleResetFilters}
         theme={theme}
       />
-    </View>
+    </GradientBackground>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F7FAFC',
   },
   scrollContainer: { flex: 1 },
   searchInput: {

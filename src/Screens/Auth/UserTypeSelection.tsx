@@ -9,6 +9,7 @@ import {
 import Feather from '@expo/vector-icons/Feather'
 import { useSafeAreaInsets } from 'react-native-safe-area-context' // Added import
 import { useTheme } from '@/theme'
+import GradientBackground from '@/components/GradientBackground'
 
 type Nav = { navigate: (route: string) => void; goBack: () => void }
 
@@ -25,9 +26,7 @@ export default function UserTypeSelection({ navigation }: { navigation: Nav }) {
   }
 
   return (
-    <View
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-    >
+    <GradientBackground>
       {/* FIX: Header top padding based on safe area */}
       <View style={[styles.headerContainer, { paddingTop: insets.top + 10 }]}>
         <TouchableOpacity
@@ -135,14 +134,13 @@ export default function UserTypeSelection({ navigation }: { navigation: Nav }) {
           </Text>
         </TouchableOpacity>
       </ScrollView>
-    </View>
+    </GradientBackground>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F7FAFC',
   },
   headerContainer: {
     paddingHorizontal: 20,

@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useState, useRef } from 'react'
+import React, { useEffect, useCallback, useMemo, useState, useRef } from 'react'
 import {
   View,
   StyleSheet,
@@ -7,10 +7,16 @@ import {
   ActivityIndicator,
   useColorScheme,
 } from 'react-native'
-import { NavigationContainer, CommonActions } from '@react-navigation/native'
+import {
+  NavigationContainer,
+  CommonActions,
+  DefaultTheme,
+  DarkTheme,
+} from '@react-navigation/native'
 import type { NavigationContainerRef } from '@react-navigation/native'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import * as SplashScreen from 'expo-splash-screen'
+import { StatusBar } from 'expo-status-bar'
 import ErrorBoundary from 'react-native-error-boundary'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
@@ -33,6 +39,12 @@ SplashScreen.preventAutoHideAsync().catch(() => {})
 const CustomFallback = (props: { error: Error; resetError: () => void }) => (
   <ThemedFallback {...props} />
 )
+
+function ThemedStatusBar() {
+  const { theme } = useTheme()
+
+  return <StatusBar style={theme.mode === 'dark' ? 'light' : 'dark'} />
+}
 
 function ThemedFallback(props: { error: Error; resetError: () => void }) {
   const { theme } = useTheme()
@@ -112,6 +124,23 @@ function AppNavigator() {
     }
   }, [loading, onboardingChecked])
 
+  const navigationTheme = useMemo(() => {
+    const baseTheme = theme.mode === 'dark' ? DarkTheme : DefaultTheme
+
+    return {
+      ...baseTheme,
+      colors: {
+        ...baseTheme.colors,
+        primary: theme.colors.primary,
+        background: theme.colors.background,
+        card: theme.colors.surface,
+        text: theme.colors.text,
+        border: theme.colors.border,
+        notification: theme.colors.danger,
+      },
+    }
+  }, [theme])
+
   if (loading || !onboardingChecked) {
     return null
   }
@@ -127,7 +156,7 @@ function AppNavigator() {
       style={{ flex: 1, backgroundColor: theme.colors.background }}
       onLayout={onLayoutRootView}
     >
-      <NavigationContainer ref={navigationRef}>
+      <NavigationContainer ref={navigationRef} theme={navigationTheme}>
         <RootNavigator initialRouteName={initialRoute} />
       </NavigationContainer>
     </View>
@@ -174,6 +203,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
+        <ThemedStatusBar />
         {checkingUpdate ? (
           <View
             style={{

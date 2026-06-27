@@ -75,6 +75,7 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
   })
 
   const [timeRemaining, setTimeRemaining] = useState('')
+  const isSunrise = nextEvent.name === 'Sunrise'
 
   const determineNextEvent = (data: PrayerTimeRow | null) => {
     if (!data)
@@ -222,7 +223,7 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
             {/* LEFT: Title */}
             <View>
               <Text style={[styles.nextLabel, { color: cardColors.textSoft }]}>
-                NEXT PRAYER
+                {isSunrise ? 'NEXT TIME' : 'NEXT PRAYER'}
               </Text>
               <Text style={[styles.prayerTitle, { color: cardColors.text }]}>
                 {nextEvent.name.toUpperCase()}
@@ -240,7 +241,11 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
                 <Text
                   style={[styles.timerLabel, { color: cardColors.textMuted }]}
                 >
-                  {nextEvent.type === 'Iqamah' ? 'IQAMAH IN' : 'ADHAN IN'}
+                  {isSunrise
+                    ? 'SUNRISE IN'
+                    : nextEvent.type === 'Iqamah'
+                      ? 'IQAMAH IN'
+                      : 'ADHAN IN'}
                 </Text>
                 <Text style={[styles.timerText, { color: cardColors.text }]}>
                   {timeRemaining}
@@ -264,14 +269,19 @@ const CombinedPrayerCard: React.FC<CombinedPrayerCardProps> = ({
             ]}
           >
             <View style={styles.detailItem}>
-              <Feather name="volume-2" size={14} color={cardColors.textSoft} />
+              <Feather
+                name={isSunrise ? 'sunrise' : 'volume-2'}
+                size={isSunrise ? 18 : 14}
+                color={cardColors.textSoft}
+              />
               {/* Using formatTime to show AM/PM */}
               <Text style={[styles.detailText, { color: cardColors.text }]}>
-                Adhan: {formatTime(nextEvent.adhanTime)}
+                {isSunrise ? 'Sunrise' : 'Adhan'}:{' '}
+                {formatTime(nextEvent.adhanTime)}
               </Text>
             </View>
 
-            {nextEvent.name !== 'Sunrise' && (
+            {!isSunrise && (
               <>
                 <View
                   style={[

@@ -1,6 +1,7 @@
 import React from 'react'
 import { View, Text, TouchableOpacity } from 'react-native'
 import { useTheme } from '@/theme'
+import RequiredLabel from './RequiredLabel'
 
 interface DaySelectorProps {
   selectedDays: number[]
@@ -32,7 +33,7 @@ export default function DaySelector({
 
   return (
     <View>
-      <Text
+      <RequiredLabel
         style={{
           fontSize: 14,
           fontWeight: '600',
@@ -41,7 +42,7 @@ export default function DaySelector({
         }}
       >
         Recurring Days
-      </Text>
+      </RequiredLabel>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
         {days.map((day) => {
           const isSelected = selectedDays.includes(day.value)

@@ -26,6 +26,7 @@ import {
 import type { NotificationPreference } from '@/types/supabase'
 import type { RootStackParamList } from '@/Screens/Navigation/RootNavigator'
 import { useTheme } from '@/theme'
+import GradientBackground from '@/components/GradientBackground'
 
 export default function Notifications() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>()
@@ -144,14 +145,96 @@ export default function Notifications() {
 
   if (!session) {
     return (
-      <SafeAreaView
-        style={[styles.container, { backgroundColor: theme.colors.background }]}
-      >
+      <GradientBackground>
+        <SafeAreaView style={styles.container}>
+          <View
+            style={[
+              styles.header,
+              {
+                borderBottomColor: theme.colors.border,
+              },
+            ]}
+          >
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              style={[
+                styles.backButton,
+                {
+                  backgroundColor: theme.colors.surface,
+                  borderColor: theme.colors.border,
+                },
+              ]}
+            >
+              <Feather name="arrow-left" size={20} color={theme.colors.text} />
+            </TouchableOpacity>
+            <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
+              Notifications
+            </Text>
+          </View>
+
+          <View style={styles.guestContainer}>
+            <View
+              style={[
+                styles.guestCard,
+                {
+                  backgroundColor: theme.colors.surface,
+                  borderColor: theme.colors.border,
+                  shadowColor: theme.colors.shadow,
+                },
+              ]}
+            >
+              <View
+                style={[
+                  styles.guestIconCircle,
+                  { backgroundColor: theme.colors.primarySoft },
+                ]}
+              >
+                <Feather name="bell" size={22} color={theme.colors.primary} />
+              </View>
+              <Text style={[styles.guestTitle, { color: theme.colors.text }]}>
+                Sign in to get notifications
+              </Text>
+              <Text
+                style={[styles.guestText, { color: theme.colors.textMuted }]}
+              >
+                Create an account to enable prayer time and event alerts.
+              </Text>
+              <TouchableOpacity
+                style={[
+                  styles.guestSignInButton,
+                  { backgroundColor: theme.colors.primary },
+                ]}
+                onPress={() => navigation.navigate('SignIn')}
+              >
+                <Text style={styles.guestSignInButtonText}>Sign In</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </SafeAreaView>
+      </GradientBackground>
+    )
+  }
+
+  if (profileLoading) {
+    return (
+      <GradientBackground>
+        <SafeAreaView style={styles.container}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+          </View>
+        </SafeAreaView>
+      </GradientBackground>
+    )
+  }
+
+  // ... (Rest of your JSX is exactly the same as before) ...
+  return (
+    <GradientBackground>
+      <SafeAreaView style={styles.container}>
         <View
           style={[
             styles.header,
             {
-              backgroundColor: theme.colors.background,
               borderBottomColor: theme.colors.border,
             },
           ]}
@@ -173,10 +256,48 @@ export default function Notifications() {
           </Text>
         </View>
 
-        <View style={styles.guestContainer}>
+        <ScrollView
+          style={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
+        >
+          {permissionStatus === 'denied' && (
+            <TouchableOpacity
+              style={[
+                styles.permissionBanner,
+                {
+                  backgroundColor: '#4A2626',
+                  borderColor: '#7F3434',
+                },
+              ]}
+              onPress={openSettings}
+            >
+              <View
+                style={[
+                  styles.permissionIconContainer,
+                  { backgroundColor: '#6B2D2D' },
+                ]}
+              >
+                <Feather name="bell-off" size={24} color="#DC2626" />
+              </View>
+              <View style={styles.permissionTextContainer}>
+                <Text style={styles.permissionTitle}>
+                  Notifications Disabled
+                </Text>
+                <Text style={styles.permissionDescription}>
+                  Tap here to enable notifications in Settings
+                </Text>
+              </View>
+              <Feather
+                name="external-link"
+                size={20}
+                color={theme.colors.textSoft}
+              />
+            </TouchableOpacity>
+          )}
+
           <View
             style={[
-              styles.guestCard,
+              styles.section,
               {
                 backgroundColor: theme.colors.surface,
                 borderColor: theme.colors.border,
@@ -184,240 +305,129 @@ export default function Notifications() {
               },
             ]}
           >
-            <View
-              style={[
-                styles.guestIconCircle,
-                { backgroundColor: theme.colors.primarySoft },
-              ]}
-            >
-              <Feather name="bell" size={22} color={theme.colors.primary} />
-            </View>
-            <Text style={[styles.guestTitle, { color: theme.colors.text }]}>
-              Sign in to get notifications
-            </Text>
-            <Text style={[styles.guestText, { color: theme.colors.textMuted }]}>
-              Create an account to enable prayer time and event alerts.
-            </Text>
-            <TouchableOpacity
-              style={[
-                styles.guestSignInButton,
-                { backgroundColor: theme.colors.primary },
-              ]}
-              onPress={() => navigation.navigate('SignIn')}
-            >
-              <Text style={styles.guestSignInButtonText}>Sign In</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </SafeAreaView>
-    )
-  }
-
-  if (profileLoading) {
-    return (
-      <SafeAreaView
-        style={[styles.container, { backgroundColor: theme.colors.background }]}
-      >
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-        </View>
-      </SafeAreaView>
-    )
-  }
-
-  // ... (Rest of your JSX is exactly the same as before) ...
-  return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-    >
-      <View
-        style={[
-          styles.header,
-          {
-            backgroundColor: theme.colors.background,
-            borderBottomColor: theme.colors.border,
-          },
-        ]}
-      >
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={[
-            styles.backButton,
-            {
-              backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.border,
-            },
-          ]}
-        >
-          <Feather name="arrow-left" size={20} color={theme.colors.text} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
-          Notifications
-        </Text>
-      </View>
-
-      <ScrollView
-        style={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
-      >
-        {permissionStatus === 'denied' && (
-          <TouchableOpacity
-            style={[
-              styles.permissionBanner,
-              {
-                backgroundColor: '#4A2626',
-                borderColor: '#7F3434',
-              },
-            ]}
-            onPress={openSettings}
-          >
-            <View
-              style={[
-                styles.permissionIconContainer,
-                { backgroundColor: '#6B2D2D' },
-              ]}
-            >
-              <Feather name="bell-off" size={24} color="#DC2626" />
-            </View>
-            <View style={styles.permissionTextContainer}>
-              <Text style={styles.permissionTitle}>Notifications Disabled</Text>
-              <Text style={styles.permissionDescription}>
-                Tap here to enable notifications in Settings
+            <View style={styles.sectionHeader}>
+              <Feather name="bell" size={20} color={theme.colors.primary} />
+              <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+                Notification Preferences
               </Text>
             </View>
-            <Feather
-              name="external-link"
-              size={20}
-              color={theme.colors.textSoft}
-            />
-          </TouchableOpacity>
-        )}
-
-        <View
-          style={[
-            styles.section,
-            {
-              backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.border,
-              shadowColor: theme.colors.shadow,
-            },
-          ]}
-        >
-          <View style={styles.sectionHeader}>
-            <Feather name="bell" size={20} color={theme.colors.primary} />
-            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-              Notification Preferences
-            </Text>
-          </View>
-          <Text
-            style={[styles.sectionSubtitle, { color: theme.colors.textMuted }]}
-          >
-            {permissionStatus === 'denied'
-              ? 'Enable notifications in Settings to receive alerts'
-              : "Choose what notifications you'd like to receive"}
-          </Text>
-
-          {notificationOptions.map((option) => (
-            <TouchableOpacity
-              key={option.type}
+            <Text
               style={[
-                styles.optionCard,
-                {
-                  borderColor: theme.colors.border,
-                  backgroundColor: theme.colors.surfaceMuted,
-                },
-                notificationType === option.type && styles.selectedOption,
-                notificationType === option.type && {
-                  borderColor: theme.colors.primaryBorder,
-                  backgroundColor: theme.colors.primarySoft,
-                },
-                permissionStatus === 'denied' && styles.optionDisabled,
+                styles.sectionSubtitle,
+                { color: theme.colors.textMuted },
               ]}
-              onPress={() => setNotificationType(option.type)}
-              disabled={permissionStatus === 'denied'}
             >
-              <View style={styles.optionContent}>
-                <View
-                  style={[
-                    styles.optionIconContainer,
-                    { backgroundColor: `${option.color}15` },
-                  ]}
-                >
-                  <Feather name={option.icon} size={24} color={option.color} />
-                </View>
-                <View style={styles.optionText}>
-                  <Text
-                    style={[styles.optionTitle, { color: theme.colors.text }]}
-                  >
-                    {option.title}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.optionDescription,
-                      { color: theme.colors.textMuted },
-                    ]}
-                  >
-                    {option.description}
-                  </Text>
-                </View>
-                <View style={styles.radioContainer}>
+              {permissionStatus === 'denied'
+                ? 'Enable notifications in Settings to receive alerts'
+                : "Choose what notifications you'd like to receive"}
+            </Text>
+
+            {notificationOptions.map((option) => (
+              <TouchableOpacity
+                key={option.type}
+                style={[
+                  styles.optionCard,
+                  {
+                    borderColor: theme.colors.border,
+                    backgroundColor: theme.colors.surfaceMuted,
+                  },
+                  notificationType === option.type && styles.selectedOption,
+                  notificationType === option.type && {
+                    borderColor: theme.colors.primaryBorder,
+                    backgroundColor: theme.colors.primarySoft,
+                  },
+                  permissionStatus === 'denied' && styles.optionDisabled,
+                ]}
+                onPress={() => setNotificationType(option.type)}
+                disabled={permissionStatus === 'denied'}
+              >
+                <View style={styles.optionContent}>
                   <View
                     style={[
-                      styles.radioOuter,
-                      { borderColor: theme.colors.border },
-                      notificationType === option.type && styles.radioSelected,
-                      notificationType === option.type && {
-                        borderColor: theme.colors.primary,
-                      },
+                      styles.optionIconContainer,
+                      { backgroundColor: `${option.color}15` },
                     ]}
                   >
-                    {notificationType === option.type && (
-                      <View
-                        style={[
-                          styles.radioInner,
-                          { backgroundColor: theme.colors.primary },
-                        ]}
-                      />
-                    )}
+                    <Feather
+                      name={option.icon}
+                      size={24}
+                      color={option.color}
+                    />
+                  </View>
+                  <View style={styles.optionText}>
+                    <Text
+                      style={[styles.optionTitle, { color: theme.colors.text }]}
+                    >
+                      {option.title}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.optionDescription,
+                        { color: theme.colors.textMuted },
+                      ]}
+                    >
+                      {option.description}
+                    </Text>
+                  </View>
+                  <View style={styles.radioContainer}>
+                    <View
+                      style={[
+                        styles.radioOuter,
+                        { borderColor: theme.colors.border },
+                        notificationType === option.type &&
+                          styles.radioSelected,
+                        notificationType === option.type && {
+                          borderColor: theme.colors.primary,
+                        },
+                      ]}
+                    >
+                      {notificationType === option.type && (
+                        <View
+                          style={[
+                            styles.radioInner,
+                            { backgroundColor: theme.colors.primary },
+                          ]}
+                        />
+                      )}
+                    </View>
                   </View>
                 </View>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>
+              </TouchableOpacity>
+            ))}
+          </View>
 
-        <TouchableOpacity
-          style={[
-            styles.saveButton,
-            {
-              backgroundColor: theme.colors.primary,
-              shadowColor: theme.colors.shadow,
-            },
-            (loading || permissionStatus === 'denied') &&
-              styles.saveButtonDisabled,
-          ]}
-          onPress={handleSaveNotificationSettings}
-          disabled={loading || permissionStatus === 'denied'}
-        >
-          {loading ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : (
-            <>
-              <Feather name="check" size={20} color="#FFFFFF" />
-              <Text style={styles.saveButtonText}>Save Settings</Text>
-            </>
-          )}
-        </TouchableOpacity>
-        <View style={{ height: 40 }} />
-      </ScrollView>
-    </SafeAreaView>
+          <TouchableOpacity
+            style={[
+              styles.saveButton,
+              {
+                backgroundColor: theme.colors.primary,
+                shadowColor: theme.colors.shadow,
+              },
+              (loading || permissionStatus === 'denied') &&
+                styles.saveButtonDisabled,
+            ]}
+            onPress={handleSaveNotificationSettings}
+            disabled={loading || permissionStatus === 'denied'}
+          >
+            {loading ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <>
+                <Feather name="check" size={20} color="#FFFFFF" />
+                <Text style={styles.saveButtonText}>Save Settings</Text>
+              </>
+            )}
+          </TouchableOpacity>
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      </SafeAreaView>
+    </GradientBackground>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
   },
   header: {
     flexDirection: 'row',

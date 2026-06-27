@@ -214,7 +214,7 @@ export interface Database {
           title: string
           body: string | null
           post_type: string | null
-          demographic: string | null
+          demographic: Database['public']['Enums']['demographic_types'] | null
           recurs_on_days: number[] | null
           start_time: string | null
           end_time: string | null
@@ -233,7 +233,7 @@ export interface Database {
           title: string
           body?: string | null
           post_type?: string | null
-          demographic?: string | null
+          demographic?: Database['public']['Enums']['demographic_types'] | null
           recurs_on_days?: number[] | null
           start_time?: string | null
           end_time?: string | null
@@ -252,7 +252,7 @@ export interface Database {
           title?: string
           body?: string | null
           post_type?: string | null
-          demographic?: string | null
+          demographic?: Database['public']['Enums']['demographic_types'] | null
           recurs_on_days?: number[] | null
           start_time?: string | null
           end_time?: string | null
@@ -500,7 +500,13 @@ export interface Database {
         Returns: void
       }
     }
-    Enums: Record<string, never>
+    Enums: {
+      demographic_types:
+        | 'Brothers'
+        | 'Sisters'
+        | 'Mixed (segregated)'
+        | 'Mixed (not segregated)'
+    }
     CompositeTypes: Record<string, never>
   }
 }

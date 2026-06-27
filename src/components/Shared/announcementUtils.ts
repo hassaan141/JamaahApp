@@ -30,6 +30,7 @@ export function formatAnnouncementDate(date: string) {
 }
 
 export function getAnnouncementValidationError(input: {
+  announcementTitle: string
   announcementBody: string
   postType: string | null
   startTime: string | null
@@ -42,6 +43,13 @@ export function getAnnouncementValidationError(input: {
   action?: 'posting' | 'saving'
 }) {
   const action = input.action ?? 'posting'
+
+  if (!input.announcementTitle.trim()) {
+    return {
+      title: 'Title required',
+      message: `Add a title before ${action}.`,
+    }
+  }
 
   if (!input.announcementBody.trim()) {
     return {

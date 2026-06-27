@@ -1,11 +1,10 @@
 import React from 'react'
-import { View, StyleSheet } from 'react-native'
+import { StyleSheet } from 'react-native'
 // import TabNavigation from '@/components/ProgramsScreen/TabNavigation'
 import CommunitiesTab from '@/components/ProgramsScreen/CommunitiesTab'
-import { useTheme } from '@/theme'
+import GradientBackground from '@/components/GradientBackground'
 
 export default function Programs() {
-  const { theme } = useTheme()
   // const [activeTab, setActiveTab] = useState(0)
 
   // const tabs = ['Communities']
@@ -15,11 +14,9 @@ export default function Programs() {
   // }
 
   return (
-    <View
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-    >
+    <GradientBackground style={styles.container}>
       <CommunitiesTab />
-    </View>
+    </GradientBackground>
   )
 }
 
@@ -27,6 +24,5 @@ const styles = StyleSheet.create({
   container: {
     paddingTop: 40,
     flex: 1,
-    backgroundColor: '#F7FAFC',
   },
 })

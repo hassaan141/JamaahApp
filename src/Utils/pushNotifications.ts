@@ -1,5 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import messaging from '@react-native-firebase/messaging'
+import {
+  getMessaging,
+  subscribeToTopic,
+  unsubscribeFromTopic,
+} from '@react-native-firebase/messaging/lib/modular'
 import { AppState, PermissionsAndroid, Platform } from 'react-native'
 import { registerDeviceToken } from '@/Supabase/registerDevice'
 import { toast } from '@/components/Toast/toast'
@@ -166,7 +171,7 @@ async function forceResubscribeFromCache() {
 
     const topic = `org_${currentTopic}_prayers`
     console.log('[PrayerSub] Resubscribing to:', topic)
-    await messaging().subscribeToTopic(topic)
+    await subscribeToTopic(getMessaging(), topic)
   } catch (error) {
     console.error('[PrayerSub] Resubscribe failed:', error)
   } finally {
@@ -225,13 +230,14 @@ export async function syncPrayerSubscription(targetOrgId: string | null) {
     )
 
     if (currentSubscribedOrg) {
-      await messaging().unsubscribeFromTopic(
+      await unsubscribeFromTopic(
+        getMessaging(),
         `org_${currentSubscribedOrg}_prayers`,
       )
     }
 
     if (targetOrgId) {
-      await messaging().subscribeToTopic(`org_${targetOrgId}_prayers`)
+      await subscribeToTopic(getMessaging(), `org_${targetOrgId}_prayers`)
       await AsyncStorage.setItem(STORAGE_KEY_TOPIC, targetOrgId)
     } else {
       await AsyncStorage.removeItem(STORAGE_KEY_TOPIC)

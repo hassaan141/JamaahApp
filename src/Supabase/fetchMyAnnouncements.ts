@@ -1,5 +1,6 @@
 import { supabase } from './supabaseClient'
 import { getUserId } from '../Utils/getUserID'
+import type { Demographic } from '@/types'
 
 export async function getMySubscribedOrgIds(): Promise<string[]> {
   const profileId = await getUserId()
@@ -26,7 +27,7 @@ export type Announcement = {
   body: string | null
   created_at: string
   post_type: string | null
-  demographic: string | null
+  demographic: Demographic | null
   recurs_on_days: number[] | null
   start_time: string | null
   end_time: string | null

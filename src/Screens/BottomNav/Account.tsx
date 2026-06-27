@@ -26,6 +26,7 @@ import AnnouncementsList from '@/components/Account/AnnouncementsList'
 import FollowedOrgsList from '@/components/Account/FollowedOrgsList'
 // import VersionFooter from '@/components/Account/VersionFooter'
 import { useTheme } from '@/theme'
+import GradientBackground from '@/components/GradientBackground'
 
 export default function Account() {
   const { theme } = useTheme()
@@ -78,12 +79,7 @@ export default function Account() {
   // Guest mode: Show sign-up prompt
   if (!isLoggedIn) {
     return (
-      <View
-        style={[
-          styles.guestContainer,
-          { backgroundColor: theme.colors.background },
-        ]}
-      >
+      <GradientBackground style={styles.guestContainer}>
         <View style={styles.guestContent}>
           <View
             style={[
@@ -133,7 +129,7 @@ export default function Account() {
             </Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </GradientBackground>
     )
   }
 
@@ -161,9 +157,7 @@ export default function Account() {
 
   return (
     // We now use a standard View instead of SafeAreaView
-    <View
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-    >
+    <GradientBackground>
       <ScrollView
         style={styles.scrollContainer}
         contentContainerStyle={styles.scrollContent}
@@ -197,14 +191,13 @@ export default function Account() {
 
         <FollowedOrgsList refreshKey={refreshing} />
       </ScrollView>
-    </View>
+    </GradientBackground>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
   },
   scrollContainer: {
     flex: 1,

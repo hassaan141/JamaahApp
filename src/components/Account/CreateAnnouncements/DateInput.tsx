@@ -11,6 +11,7 @@ import DateTimePicker, {
 } from '@react-native-community/datetimepicker'
 import { Feather } from '@expo/vector-icons'
 import { useTheme } from '@/theme'
+import RequiredLabel from './RequiredLabel'
 
 interface DateInputProps {
   date: string | null
@@ -44,7 +45,9 @@ export default function DateInput({ date, setDate }: DateInputProps) {
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.label, { color: theme.colors.text }]}>Date</Text>
+      <RequiredLabel style={[styles.label, { color: theme.colors.text }]}>
+        Date
+      </RequiredLabel>
 
       <TouchableOpacity
         onPress={() => setShow((prev) => !prev)}

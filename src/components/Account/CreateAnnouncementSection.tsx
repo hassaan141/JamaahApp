@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { TouchableOpacity, Text, StyleSheet, Alert } from 'react-native'
-import type { Profile, Database } from '@/types'
+import type { Profile, Database, Demographic } from '@/types'
 import AnnouncementModal from '@/components/Account/AnnouncementModal'
 import { createOrgAnnouncement } from '@/Supabase/createOrgAnnouncement'
 import { toast } from '@/components/Toast/toast'
@@ -31,7 +31,7 @@ export default function CreateAnnouncementSection({
   const [startTime, setStartTime] = useState<string | null>(null)
   const [endTime, setEndTime] = useState<string | null>(null)
   const [postType, setPostType] = useState<string | null>(null)
-  const [demographic, setDemographic] = useState<string | null>(null)
+  const [demographic, setDemographic] = useState<Demographic | null>(null)
   const [recurringDays, setRecurringDays] = useState<number[]>([])
   const [date, setDate] = useState<string | null>(null)
   const [posting, setPosting] = useState(false)
@@ -62,6 +62,7 @@ export default function CreateAnnouncementSection({
 
   const handlePostAnnouncement = async () => {
     const validationError = getAnnouncementValidationError({
+      announcementTitle,
       announcementBody,
       postType,
       startTime,
@@ -126,7 +127,7 @@ export default function CreateAnnouncementSection({
       const { ok, error, data } = await createOrgAnnouncement({
         organization_id: profile.org_id,
         author_profile_id: profile.id,
-        title: announcementTitle.trim() || 'Announcement',
+        title: announcementTitle.trim(),
         body: announcementBody.trim(),
         post_type: postType ?? null,
         demographic: demographic ?? null,

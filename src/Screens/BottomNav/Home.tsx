@@ -15,6 +15,7 @@ import JummahCard from '@/components/HomeScreen/JummahCard'
 import { usePrayerTimes } from '@/Hooks/usePrayerTimes'
 import MiniLoading from '@/components/Loading/MiniLoading'
 import { useTheme } from '@/theme'
+import GradientBackground from '@/components/GradientBackground'
 
 type HomeRouteParams = { refreshPrayerTimes?: boolean }
 type NavigationLike = {
@@ -72,61 +73,66 @@ export default function Home({ navigation }: { navigation: NavigationLike }) {
   }, [refetchPrayerTimes])
 
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: theme.colors.background }}
-      contentContainerStyle={{ paddingBottom: 16 }}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          tintColor={theme.colors.primary}
+    <GradientBackground>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={{ paddingBottom: 16 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={theme.colors.primary}
+          />
+        }
+      >
+        <View style={{ height: 56 }} />
+        <View style={styles.topRow}>
+          <View style={styles.masjidContainer}>
+            {loading && !org ? (
+              <MiniLoading />
+            ) : (
+              <MasjidButton
+                prayerTimes={{
+                  org: org ?? undefined,
+                  distance_m: distance_m ?? undefined,
+                }}
+                navigation={navigation}
+                onRefreshPrayerTimes={refetchPrayerTimes}
+                activeMode={mode}
+              />
+            )}
+          </View>
+          <View style={styles.notificationWrapper}>
+            <NotificationCard navigation={navigation} />
+          </View>
+        </View>
+
+        <JummahCard
+          prayerTimes={todayTimes}
+          org={org ? { name: org.name, timezone: org.timezone } : null}
         />
-      }
-    >
-      <View style={{ height: 56 }} />
-      <View style={styles.topRow}>
-        <View style={styles.masjidContainer}>
-          {loading && !org ? (
-            <MiniLoading />
-          ) : (
-            <MasjidButton
-              prayerTimes={{
-                org: org ?? undefined,
-                distance_m: distance_m ?? undefined,
-              }}
-              navigation={navigation}
-              onRefreshPrayerTimes={refetchPrayerTimes}
-              activeMode={mode}
-            />
-          )}
-        </View>
-        <View style={styles.notificationWrapper}>
-          <NotificationCard navigation={navigation} />
-        </View>
-      </View>
 
-      <JummahCard
-        prayerTimes={todayTimes}
-        org={org ? { name: org.name, timezone: org.timezone } : null}
-      />
+        <CombinedPrayerCard
+          prayerTimes={todayTimes}
+          modalPrayerTimes={times}
+          orgName={org?.name}
+          currentDate={targetDate}
+          onNextDay={nextDay}
+          onPrevDay={prevDay}
+          canNextDay={canNextDay}
+          canPrevDay={canPrevDay}
+        />
 
-      <CombinedPrayerCard
-        prayerTimes={todayTimes}
-        modalPrayerTimes={times}
-        orgName={org?.name}
-        currentDate={targetDate}
-        onNextDay={nextDay}
-        onPrevDay={prevDay}
-        canNextDay={canNextDay}
-        canPrevDay={canPrevDay}
-      />
-
-      <NotificationList refreshKey={refreshing} />
-    </ScrollView>
+        <NotificationList refreshKey={refreshing} />
+      </ScrollView>
+    </GradientBackground>
   )
 }
 
 const styles = StyleSheet.create({
+  scroll: {
+    flex: 1,
+  },
   topRow: {
     flexDirection: 'row',
     paddingHorizontal: 20,

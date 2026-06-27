@@ -203,7 +203,7 @@ function TabNavigator() {
       <Tab.Screen
         name="Organization"
         component={Programs}
-        options={{ tabBarLabel: 'Programs' }}
+        options={{ tabBarLabel: 'Organizations' }}
       />
       <Tab.Screen name="Account" component={Account} />
     </Tab.Navigator>
@@ -217,9 +217,14 @@ type RootNavigatorProps = {
 export default function RootNavigator({
   initialRouteName = 'Tabs',
 }: RootNavigatorProps) {
+  const { theme } = useTheme()
+
   return (
     <Stack.Navigator
-      screenOptions={{ headerShown: false }}
+      screenOptions={{
+        headerShown: false,
+        cardStyle: { backgroundColor: theme.colors.background },
+      }}
       initialRouteName={initialRouteName}
     >
       <Stack.Screen name="Tabs" component={TabNavigator} />

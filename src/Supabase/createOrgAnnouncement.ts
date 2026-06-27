@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient'
-import type { OrgPost } from '@/types'
+import type { Demographic, OrgPost } from '@/types'
 
 export async function createOrgAnnouncement(input: {
   organization_id: string
@@ -7,7 +7,7 @@ export async function createOrgAnnouncement(input: {
   title: string
   body?: string
   post_type?: string | null
-  demographic?: string | null
+  demographic?: Demographic | null
   recurs_on_days?: number[] | null // Array of day numbers 1-7
   start_time?: string | null // HH:MM format
   end_time?: string | null // HH:MM format

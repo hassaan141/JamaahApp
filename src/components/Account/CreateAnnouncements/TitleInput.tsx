@@ -1,6 +1,7 @@
 import React from 'react'
-import { View, Text, TextInput } from 'react-native'
+import { View, TextInput } from 'react-native'
 import { useTheme } from '@/theme'
+import RequiredLabel from './RequiredLabel'
 
 interface TitleInputProps {
   title: string
@@ -12,7 +13,7 @@ export default function TitleInput({ title, setTitle }: TitleInputProps) {
 
   return (
     <View style={{ marginBottom: 16 }}>
-      <Text
+      <RequiredLabel
         style={{
           fontSize: 14,
           fontWeight: '600',
@@ -21,7 +22,7 @@ export default function TitleInput({ title, setTitle }: TitleInputProps) {
         }}
       >
         Title
-      </Text>
+      </RequiredLabel>
       <TextInput
         value={title}
         onChangeText={setTitle}

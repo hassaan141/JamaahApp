@@ -15,6 +15,7 @@ import { useProfile } from '@/Auth/fetchProfile'
 import SignOutButton from '@/components/Account/SignOutButton'
 import { useTheme } from '@/theme'
 import { useDistanceUnit } from '@/preferences'
+import GradientBackground from '@/components/GradientBackground'
 
 type SettingsItem = {
   title: string
@@ -81,252 +82,257 @@ export default function Settings() {
   }
 
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-    >
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={[
-            styles.backButton,
-            {
-              backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.border,
-            },
-          ]}
-          activeOpacity={0.7}
-        >
-          <Feather name="arrow-left" size={20} color={theme.colors.text} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
-          Settings
-        </Text>
-      </View>
-
-      <ScrollView
-        style={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
-      >
-        <View
-          style={[
-            styles.appearanceSection,
-            {
-              backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.border,
-              shadowColor: theme.colors.shadow,
-            },
-          ]}
-        >
-          <Text style={[styles.appearanceTitle, { color: theme.colors.text }]}>
-            Themes
-          </Text>
-          <Text
+    <GradientBackground>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
             style={[
-              styles.appearanceSubtitle,
-              { color: theme.colors.textMuted },
-            ]}
-          >
-            Choose Light, Dark, or Auto (device setting).
-          </Text>
-          <View
-            style={[
-              styles.appearanceControl,
+              styles.backButton,
               {
-                backgroundColor: theme.colors.surfaceMuted,
+                backgroundColor: theme.colors.surface,
                 borderColor: theme.colors.border,
               },
             ]}
+            activeOpacity={0.7}
           >
-            {THEME_OPTIONS.map((option) => {
-              const selected = mode === option.value
-              return (
-                <TouchableOpacity
-                  key={option.value}
-                  style={[
-                    styles.appearanceOption,
-                    {
-                      backgroundColor: selected
-                        ? theme.colors.surface
-                        : 'transparent',
-                      borderColor: selected
-                        ? theme.colors.primaryBorder
-                        : 'transparent',
-                    },
-                  ]}
-                  onPress={() => setMode(option.value)}
-                  activeOpacity={0.8}
-                >
-                  <Feather
-                    name={option.icon}
-                    size={16}
-                    color={
-                      selected ? theme.colors.primary : theme.colors.textMuted
-                    }
-                  />
-                  <Text
-                    style={[
-                      styles.appearanceOptionText,
-                      {
-                        color: selected
-                          ? theme.colors.primary
-                          : theme.colors.textMuted,
-                      },
-                    ]}
-                  >
-                    {option.label}
-                  </Text>
-                </TouchableOpacity>
-              )
-            })}
-          </View>
+            <Feather name="arrow-left" size={20} color={theme.colors.text} />
+          </TouchableOpacity>
+          <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
+            Settings
+          </Text>
         </View>
 
-        <View
-          style={[
-            styles.appearanceSection,
-            {
-              backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.border,
-              shadowColor: theme.colors.shadow,
-            },
-          ]}
+        <ScrollView
+          style={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
         >
-          <Text style={[styles.appearanceTitle, { color: theme.colors.text }]}>
-            Units
-          </Text>
-          <Text
-            style={[
-              styles.appearanceSubtitle,
-              { color: theme.colors.textMuted },
-            ]}
-          >
-            Default is kilometers. Switch to miles anytime.
-          </Text>
           <View
             style={[
-              styles.appearanceControl,
+              styles.appearanceSection,
               {
-                backgroundColor: theme.colors.surfaceMuted,
+                backgroundColor: theme.colors.surface,
                 borderColor: theme.colors.border,
+                shadowColor: theme.colors.shadow,
               },
             ]}
           >
-            {DISTANCE_OPTIONS.map((option) => {
-              const selected = unit === option.value
-              return (
-                <TouchableOpacity
-                  key={option.value}
-                  style={[
-                    styles.appearanceOption,
-                    {
-                      backgroundColor: selected
-                        ? theme.colors.surface
-                        : 'transparent',
-                      borderColor: selected
-                        ? theme.colors.primaryBorder
-                        : 'transparent',
-                    },
-                  ]}
-                  onPress={() => setUnit(option.value)}
-                  activeOpacity={0.8}
-                >
-                  <Feather
-                    name={option.icon}
-                    size={16}
-                    color={
-                      selected ? theme.colors.primary : theme.colors.textMuted
-                    }
-                  />
-                  <Text
-                    style={[
-                      styles.appearanceOptionText,
-                      {
-                        color: selected
-                          ? theme.colors.primary
-                          : theme.colors.textMuted,
-                      },
-                    ]}
-                  >
-                    {option.label}
-                  </Text>
-                </TouchableOpacity>
-              )
-            })}
-          </View>
-        </View>
-
-        <View
-          style={[
-            styles.section,
-            {
-              backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.border,
-              shadowColor: theme.colors.shadow,
-            },
-          ]}
-        >
-          {filteredItems.map((item, index) => (
-            <TouchableOpacity
-              key={item.screen}
-              style={[
-                styles.menuItem,
-                index === filteredItems.length - 1 && styles.menuItemLast,
-                { borderBottomColor: theme.colors.borderSoft },
-              ]}
-              onPress={() => handleNavigate(item.screen)}
-              activeOpacity={0.75}
+            <Text
+              style={[styles.appearanceTitle, { color: theme.colors.text }]}
             >
-              <View
+              Themes
+            </Text>
+            <Text
+              style={[
+                styles.appearanceSubtitle,
+                { color: theme.colors.textMuted },
+              ]}
+            >
+              Choose Light, Dark, or Auto (device setting).
+            </Text>
+            <View
+              style={[
+                styles.appearanceControl,
+                {
+                  backgroundColor: theme.colors.surfaceMuted,
+                  borderColor: theme.colors.border,
+                },
+              ]}
+            >
+              {THEME_OPTIONS.map((option) => {
+                const selected = mode === option.value
+                return (
+                  <TouchableOpacity
+                    key={option.value}
+                    style={[
+                      styles.appearanceOption,
+                      {
+                        backgroundColor: selected
+                          ? theme.colors.surface
+                          : 'transparent',
+                        borderColor: selected
+                          ? theme.colors.primaryBorder
+                          : 'transparent',
+                      },
+                    ]}
+                    onPress={() => setMode(option.value)}
+                    activeOpacity={0.8}
+                  >
+                    <Feather
+                      name={option.icon}
+                      size={16}
+                      color={
+                        selected ? theme.colors.primary : theme.colors.textMuted
+                      }
+                    />
+                    <Text
+                      style={[
+                        styles.appearanceOptionText,
+                        {
+                          color: selected
+                            ? theme.colors.primary
+                            : theme.colors.textMuted,
+                        },
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                  </TouchableOpacity>
+                )
+              })}
+            </View>
+          </View>
+
+          <View
+            style={[
+              styles.appearanceSection,
+              {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+                shadowColor: theme.colors.shadow,
+              },
+            ]}
+          >
+            <Text
+              style={[styles.appearanceTitle, { color: theme.colors.text }]}
+            >
+              Units
+            </Text>
+            <Text
+              style={[
+                styles.appearanceSubtitle,
+                { color: theme.colors.textMuted },
+              ]}
+            >
+              Default is kilometers. Switch to miles anytime.
+            </Text>
+            <View
+              style={[
+                styles.appearanceControl,
+                {
+                  backgroundColor: theme.colors.surfaceMuted,
+                  borderColor: theme.colors.border,
+                },
+              ]}
+            >
+              {DISTANCE_OPTIONS.map((option) => {
+                const selected = unit === option.value
+                return (
+                  <TouchableOpacity
+                    key={option.value}
+                    style={[
+                      styles.appearanceOption,
+                      {
+                        backgroundColor: selected
+                          ? theme.colors.surface
+                          : 'transparent',
+                        borderColor: selected
+                          ? theme.colors.primaryBorder
+                          : 'transparent',
+                      },
+                    ]}
+                    onPress={() => setUnit(option.value)}
+                    activeOpacity={0.8}
+                  >
+                    <Feather
+                      name={option.icon}
+                      size={16}
+                      color={
+                        selected ? theme.colors.primary : theme.colors.textMuted
+                      }
+                    />
+                    <Text
+                      style={[
+                        styles.appearanceOptionText,
+                        {
+                          color: selected
+                            ? theme.colors.primary
+                            : theme.colors.textMuted,
+                        },
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                  </TouchableOpacity>
+                )
+              })}
+            </View>
+          </View>
+
+          <View
+            style={[
+              styles.section,
+              {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+                shadowColor: theme.colors.shadow,
+              },
+            ]}
+          >
+            {filteredItems.map((item, index) => (
+              <TouchableOpacity
+                key={item.screen}
                 style={[
-                  styles.iconContainer,
-                  {
-                    backgroundColor: theme.colors.primarySoft,
-                    borderColor: theme.colors.primaryBorder,
-                  },
+                  styles.menuItem,
+                  index === filteredItems.length - 1 && styles.menuItemLast,
+                  { borderBottomColor: theme.colors.borderSoft },
                 ]}
+                onPress={() => handleNavigate(item.screen)}
+                activeOpacity={0.75}
               >
-                <Feather
-                  name={item.icon}
-                  size={18}
-                  color={theme.colors.primary}
-                />
-              </View>
-              <View style={styles.menuTextContainer}>
-                <Text style={[styles.menuTitle, { color: theme.colors.text }]}>
-                  {item.title}
-                </Text>
-                <Text
+                <View
                   style={[
-                    styles.menuSubtitle,
-                    { color: theme.colors.textMuted },
+                    styles.iconContainer,
+                    {
+                      backgroundColor: theme.colors.primarySoft,
+                      borderColor: theme.colors.primaryBorder,
+                    },
                   ]}
                 >
-                  {item.subtitle}
-                </Text>
-              </View>
-              <View style={styles.chevronWrap}>
-                <Feather
-                  name="chevron-right"
-                  size={18}
-                  color={theme.colors.textSoft}
-                />
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>
+                  <Feather
+                    name={item.icon}
+                    size={18}
+                    color={theme.colors.primary}
+                  />
+                </View>
+                <View style={styles.menuTextContainer}>
+                  <Text
+                    style={[styles.menuTitle, { color: theme.colors.text }]}
+                  >
+                    {item.title}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.menuSubtitle,
+                      { color: theme.colors.textMuted },
+                    ]}
+                  >
+                    {item.subtitle}
+                  </Text>
+                </View>
+                <View style={styles.chevronWrap}>
+                  <Feather
+                    name="chevron-right"
+                    size={18}
+                    color={theme.colors.textSoft}
+                  />
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
 
-        <SignOutButton onLogout={logout} />
+          <SignOutButton onLogout={logout} />
 
-        <View style={{ height: 40 }} />
-      </ScrollView>
-    </SafeAreaView>
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      </SafeAreaView>
+    </GradientBackground>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
   },
   header: {
     flexDirection: 'row',

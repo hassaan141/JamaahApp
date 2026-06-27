@@ -20,6 +20,7 @@ import { updateProfile } from '@/Supabase/updateProfile'
 import { deleteAccount } from '@/Supabase/deleteAccount'
 import { toast } from '@/components/Toast/toast'
 import { useTheme } from '@/theme'
+import GradientBackground from '@/components/GradientBackground'
 
 export default function ProfileSettings() {
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
@@ -97,162 +98,162 @@ export default function ProfileSettings() {
 
   if (profileLoading) {
     return (
-      <SafeAreaView
-        style={[styles.container, { backgroundColor: theme.colors.background }]}
-      >
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={[styles.loadingText, { color: theme.colors.textMuted }]}>
-            Loading...
-          </Text>
-        </View>
-      </SafeAreaView>
+      <GradientBackground>
+        <SafeAreaView style={styles.container}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+            <Text
+              style={[styles.loadingText, { color: theme.colors.textMuted }]}
+            >
+              Loading...
+            </Text>
+          </View>
+        </SafeAreaView>
+      </GradientBackground>
     )
   }
 
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-    >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1 }}
-      >
-        <View
-          style={[
-            styles.header,
-            {
-              backgroundColor: theme.colors.background,
-              borderBottomColor: theme.colors.border,
-            },
-          ]}
-        >
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={[
-              styles.backButton,
-              {
-                backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.border,
-              },
-            ]}
-          >
-            <Feather name="arrow-left" size={20} color={theme.colors.text} />
-          </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
-            Profile Settings
-          </Text>
-        </View>
-
-        <ScrollView
-          style={styles.scrollContainer}
-          showsVerticalScrollIndicator={false}
+    <GradientBackground>
+      <SafeAreaView style={styles.container}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1 }}
         >
           <View
             style={[
-              styles.section,
+              styles.header,
               {
-                backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.border,
-                shadowColor: theme.colors.shadow,
+                borderBottomColor: theme.colors.border,
               },
             ]}
           >
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: theme.colors.text }]}>
-                First Name
-              </Text>
-              <TextInput
-                style={[
-                  styles.input,
-                  {
-                    borderColor: theme.colors.border,
-                    backgroundColor: theme.colors.surfaceMuted,
-                    color: theme.colors.text,
-                  },
-                ]}
-                value={firstName}
-                onChangeText={setFirstName}
-                placeholder="Enter your first name"
-                placeholderTextColor={theme.colors.textSoft}
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: theme.colors.text }]}>
-                Last Name
-              </Text>
-              <TextInput
-                style={[
-                  styles.input,
-                  {
-                    borderColor: theme.colors.border,
-                    backgroundColor: theme.colors.surfaceMuted,
-                    color: theme.colors.text,
-                  },
-                ]}
-                value={lastName}
-                onChangeText={setLastName}
-                placeholder="Enter your last name"
-                placeholderTextColor={theme.colors.textSoft}
-              />
-            </View>
-
             <TouchableOpacity
+              onPress={() => navigation.goBack()}
               style={[
-                styles.button,
-                styles.primaryButton,
-                { backgroundColor: theme.colors.primary },
+                styles.backButton,
+                {
+                  backgroundColor: theme.colors.surface,
+                  borderColor: theme.colors.border,
+                },
               ]}
-              onPress={handleUpdateProfile}
-              disabled={loading}
             >
-              {loading ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <Text style={styles.primaryButtonText}>Update Profile</Text>
-              )}
+              <Feather name="arrow-left" size={20} color={theme.colors.text} />
             </TouchableOpacity>
+            <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
+              Profile Settings
+            </Text>
           </View>
 
-          <View
-            style={[
-              styles.dangerSection,
-              {
-                backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.border,
-                shadowColor: theme.colors.shadow,
-              },
-            ]}
+          <ScrollView
+            style={styles.scrollContainer}
+            showsVerticalScrollIndicator={false}
           >
-            <View style={styles.dangerHeader}>
-              <Feather name="alert-triangle" size={20} color="#E53E3E" />
-              <Text style={styles.dangerTitle}>Danger Zone</Text>
-            </View>
-            <TouchableOpacity
-              style={styles.dangerButton}
-              onPress={handleDeleteAccount}
-              disabled={loading}
+            <View
+              style={[
+                styles.section,
+                {
+                  backgroundColor: theme.colors.surface,
+                  borderColor: theme.colors.border,
+                  shadowColor: theme.colors.shadow,
+                },
+              ]}
             >
-              {loading ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <Text style={styles.dangerButtonText}>Delete Account</Text>
-              )}
-            </TouchableOpacity>
-          </View>
+              <View style={styles.inputGroup}>
+                <Text style={[styles.label, { color: theme.colors.text }]}>
+                  First Name
+                </Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    {
+                      borderColor: theme.colors.border,
+                      backgroundColor: theme.colors.surfaceMuted,
+                      color: theme.colors.text,
+                    },
+                  ]}
+                  value={firstName}
+                  onChangeText={setFirstName}
+                  placeholder="Enter your first name"
+                  placeholderTextColor={theme.colors.textSoft}
+                />
+              </View>
 
-          <View style={{ height: 40 }} />
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+              <View style={styles.inputGroup}>
+                <Text style={[styles.label, { color: theme.colors.text }]}>
+                  Last Name
+                </Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    {
+                      borderColor: theme.colors.border,
+                      backgroundColor: theme.colors.surfaceMuted,
+                      color: theme.colors.text,
+                    },
+                  ]}
+                  value={lastName}
+                  onChangeText={setLastName}
+                  placeholder="Enter your last name"
+                  placeholderTextColor={theme.colors.textSoft}
+                />
+              </View>
+
+              <TouchableOpacity
+                style={[
+                  styles.button,
+                  styles.primaryButton,
+                  { backgroundColor: theme.colors.primary },
+                ]}
+                onPress={handleUpdateProfile}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.primaryButtonText}>Update Profile</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+
+            <View
+              style={[
+                styles.dangerSection,
+                {
+                  backgroundColor: theme.colors.surface,
+                  borderColor: theme.colors.border,
+                  shadowColor: theme.colors.shadow,
+                },
+              ]}
+            >
+              <View style={styles.dangerHeader}>
+                <Feather name="alert-triangle" size={20} color="#E53E3E" />
+                <Text style={styles.dangerTitle}>Danger Zone</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.dangerButton}
+                onPress={handleDeleteAccount}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.dangerButtonText}>Delete Account</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+
+            <View style={{ height: 40 }} />
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </GradientBackground>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
   },
   header: {
     flexDirection: 'row',

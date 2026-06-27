@@ -15,7 +15,7 @@ import TimeInputSection from './CreateAnnouncements/TimeInputSection'
 import AudienceSelector from './CreateAnnouncements/AudienceSelector'
 import DescriptionInput from './CreateAnnouncements/DescriptionInput'
 import LocationSelector from './CreateAnnouncements/LocationSelector'
-import type { Organization, OrgPost } from '@/types'
+import type { Demographic, Organization, OrgPost } from '@/types'
 import { ENV } from '@/core/env'
 import { useTheme } from '@/theme'
 import { getAnnouncementValidationError } from '@/components/Shared/announcementUtils'
@@ -36,7 +36,7 @@ export default function EditAnnouncementModal({
     title: string
     body: string
     post_type: string | null
-    demographic: string | null
+    demographic: Demographic | null
     recurs_on_days: number[] | null
     start_time: string | null
     end_time: string | null
@@ -53,7 +53,7 @@ export default function EditAnnouncementModal({
   const [startTime, setStartTime] = useState<string | null>(null)
   const [endTime, setEndTime] = useState<string | null>(null)
   const [postType, setPostType] = useState<string | null>(null)
-  const [demographic, setDemographic] = useState<string | null>(null)
+  const [demographic, setDemographic] = useState<Demographic | null>(null)
   const [recurringDays, setRecurringDays] = useState<number[]>([])
   const [date, setDate] = useState<string | null>(null)
   const [locationData, setLocationData] = useState<{
@@ -115,6 +115,7 @@ export default function EditAnnouncementModal({
 
   const handleUpdate = async () => {
     const validationError = getAnnouncementValidationError({
+      announcementTitle,
       announcementBody,
       postType,
       startTime,
@@ -177,7 +178,7 @@ export default function EditAnnouncementModal({
       }
 
       await onUpdate({
-        title: announcementTitle.trim() || 'Announcement',
+        title: announcementTitle.trim(),
         body: announcementBody.trim(),
         post_type: postType,
         demographic: demographic,

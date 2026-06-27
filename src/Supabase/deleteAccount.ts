@@ -2,6 +2,7 @@ import { supabase } from './supabaseClient'
 import { getUserId } from '@/Utils/getUserID'
 import { syncPrayerSubscription } from '@/Utils/pushNotifications'
 import messaging from '@react-native-firebase/messaging'
+import { cleanupInvalidToken } from './registerDevice'
 
 export async function deleteAccount() {
   try {
@@ -19,7 +20,7 @@ export async function deleteAccount() {
     try {
       const token = await messaging().getToken()
       if (token) {
-        await supabase.from('devices').delete().eq('fcm_token', token)
+        await cleanupInvalidToken(userId, token)
       }
     } catch (e) {
       console.warn('[deleteAccount] Failed to cleanup token:', e)

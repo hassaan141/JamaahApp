@@ -147,12 +147,7 @@ export default function CreateAnnouncementSection({
         console.log(
           `[CreateAnnouncement] Sending notifications for post ${data.id} to org ${profile.org_id}`,
         )
-        notifyFollowersOfPost(
-          data.id,
-          profile.org_id,
-          announcementTitle.trim() || 'Announcement',
-          announcementBody.trim(),
-        )
+        notifyFollowersOfPost(data.id, profile.org_id)
           .then((res) => {
             if (!res.success) {
               console.error('Failed to send push:', res.error)

@@ -493,6 +493,12 @@ export interface Database {
         Args: Record<string, never>
         Returns: void
       }
+      approve_organization_application: {
+        Args: {
+          p_application_id: string
+        }
+        Returns: void
+      }
     }
     Enums: Record<string, never>
     CompositeTypes: Record<string, never>

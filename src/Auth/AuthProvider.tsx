@@ -16,6 +16,7 @@ import {
 import messaging from '@react-native-firebase/messaging'
 import * as Location from 'expo-location'
 import { resolveOrgForTimes } from '../Utils/organizationResolver'
+import { cleanupInvalidToken } from '../Supabase/registerDevice'
 
 const DEFAULT_ORG_ID = '840ffdd4-a1d2-4025-8b79-46bb4b18f457'
 
@@ -175,11 +176,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           const fcmToken = await messaging().getToken()
           if (fcmToken) {
-            await supabase
-              .from('devices')
-              .delete()
-              .eq('profile_id', userId)
-              .eq('fcm_token', fcmToken)
+            await cleanupInvalidToken(userId, fcmToken)
             console.log('[AuthProvider] FCM token cleaned up successfully')
           }
         } catch (tokenError) {

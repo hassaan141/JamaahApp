@@ -13,7 +13,6 @@ import Feather from '@expo/vector-icons/Feather'
 import { supabase } from '../../Supabase/supabaseClient'
 import { toast } from '@/components/Toast/toast'
 import { useTheme } from '@/theme'
-import GradientBackground from '@/components/GradientBackground'
 
 type Nav = { navigate: (route: string) => void; goBack: () => void }
 
@@ -49,77 +48,83 @@ export default function ForgotPassword({ navigation }: { navigation: Nav }) {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
-      <GradientBackground>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContent,
+          { backgroundColor: theme.colors.background },
+        ]}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View
+          style={[
+            styles.headerContainer,
+            { backgroundColor: theme.colors.background },
+          ]}
         >
-          <View style={styles.headerContainer}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => navigation.goBack()}
-            >
-              <Feather name="arrow-left" size={24} color={theme.colors.text} />
-            </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Feather name="arrow-left" size={24} color={theme.colors.text} />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.formContainer}>
+          <Text style={[styles.title, { color: theme.colors.text }]}>
+            Reset Password
+          </Text>
+          <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>
+            Enter your email to receive a reset link
+          </Text>
+
+          <View
+            style={[
+              styles.inputContainer,
+              {
+                borderColor: theme.colors.border,
+                backgroundColor: theme.colors.surface,
+              },
+            ]}
+          >
+            <Feather
+              name="mail"
+              size={20}
+              color={theme.colors.primary}
+              style={styles.inputIcon}
+            />
+            <TextInput
+              style={[styles.input, { color: theme.colors.text }]}
+              placeholder="Email"
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              placeholderTextColor={theme.colors.textSoft}
+            />
           </View>
 
-          <View style={styles.formContainer}>
-            <Text style={[styles.title, { color: theme.colors.text }]}>
-              Reset Password
-            </Text>
-            <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>
-              Enter your email to receive a reset link
-            </Text>
-
-            <View
-              style={[
-                styles.inputContainer,
-                {
-                  borderColor: theme.colors.border,
-                  backgroundColor: theme.colors.surface,
-                },
-              ]}
-            >
-              <Feather
-                name="mail"
-                size={20}
-                color={theme.colors.primary}
-                style={styles.inputIcon}
-              />
-              <TextInput
-                style={[styles.input, { color: theme.colors.text }]}
-                placeholder="Email"
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                keyboardType="email-address"
-                placeholderTextColor={theme.colors.textSoft}
-              />
-            </View>
-
-            <TouchableOpacity
-              style={[
-                styles.button,
-                {
-                  backgroundColor: theme.colors.primary,
-                  shadowColor: theme.colors.primary,
-                },
-              ]}
-              onPress={handleResetPassword}
-              disabled={loading}
-            >
-              {loading ? (
-                <Feather name="loader" size={20} color="#FFFFFF" />
-              ) : (
-                <Text style={styles.buttonText}>Send Reset Link</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </GradientBackground>
+          <TouchableOpacity
+            style={[
+              styles.button,
+              {
+                backgroundColor: theme.colors.primary,
+                shadowColor: theme.colors.primary,
+              },
+            ]}
+            onPress={handleResetPassword}
+            disabled={loading}
+          >
+            {loading ? (
+              <Feather name="loader" size={20} color="#FFFFFF" />
+            ) : (
+              <Text style={styles.buttonText}>Send Reset Link</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   )
 }

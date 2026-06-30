@@ -13,7 +13,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import AuthHeader from '../../components/Auth/AuthHeader'
 import type { RootStackParamList } from '@/Screens/Navigation/RootNavigator'
 import { useTheme } from '@/theme'
-import GradientBackground from '@/components/GradientBackground'
 
 const ONBOARDING_COMPLETE_KEY = '@jamaah_onboarding_complete'
 
@@ -41,7 +40,9 @@ export default function WelcomeScreen() {
   }
 
   return (
-    <GradientBackground>
+    <View
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       <View
         pointerEvents="none"
         style={[
@@ -60,7 +61,10 @@ export default function WelcomeScreen() {
         <AuthHeader />
 
         <View
-          style={[styles.contentContainer, { backgroundColor: 'transparent' }]}
+          style={[
+            styles.contentContainer,
+            { backgroundColor: theme.colors.background },
+          ]}
         >
           <Text style={[styles.title, { color: theme.colors.text }]}>
             Welcome to Jamaah
@@ -127,7 +131,7 @@ export default function WelcomeScreen() {
                     </Text> */}
         </View>
       </ScrollView>
-    </GradientBackground>
+    </View>
   )
 }
 

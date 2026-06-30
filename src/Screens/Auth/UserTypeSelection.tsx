@@ -9,7 +9,6 @@ import {
 import Feather from '@expo/vector-icons/Feather'
 import { useSafeAreaInsets } from 'react-native-safe-area-context' // Added import
 import { useTheme } from '@/theme'
-import GradientBackground from '@/components/GradientBackground'
 
 type Nav = { navigate: (route: string) => void; goBack: () => void }
 
@@ -26,9 +25,19 @@ export default function UserTypeSelection({ navigation }: { navigation: Nav }) {
   }
 
   return (
-    <GradientBackground>
+    <View
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       {/* FIX: Header top padding based on safe area */}
-      <View style={[styles.headerContainer, { paddingTop: insets.top + 10 }]}>
+      <View
+        style={[
+          styles.headerContainer,
+          {
+            paddingTop: insets.top + 10,
+            backgroundColor: theme.colors.background,
+          },
+        ]}
+      >
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
@@ -42,7 +51,10 @@ export default function UserTypeSelection({ navigation }: { navigation: Nav }) {
         contentContainerStyle={[
           styles.contentContainer,
           // FIX: Add dynamic bottom padding for navigation bar/home indicator
-          { paddingBottom: 20 + insets.bottom },
+          {
+            paddingBottom: 20 + insets.bottom,
+            backgroundColor: theme.colors.background,
+          },
         ]}
         showsVerticalScrollIndicator={false}
       >
@@ -134,7 +146,7 @@ export default function UserTypeSelection({ navigation }: { navigation: Nav }) {
           </Text>
         </TouchableOpacity>
       </ScrollView>
-    </GradientBackground>
+    </View>
   )
 }
 

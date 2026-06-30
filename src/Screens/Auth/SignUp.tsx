@@ -23,7 +23,6 @@ import * as AppleAuthentication from 'expo-apple-authentication'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import googleLogo from '../../../assets/google-logo.png'
 import { useTheme } from '@/theme'
-import GradientBackground from '@/components/GradientBackground'
 
 type Nav = { navigate: (route: string) => void; goBack: () => void }
 
@@ -262,314 +261,313 @@ export default function SignUp({ navigation }: { navigation: Nav }) {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
-      <GradientBackground>
-        <View style={styles.headerContainer}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Feather name="arrow-left" size={24} color={theme.colors.text} />
-          </TouchableOpacity>
-        </View>
-
-        <ScrollView
-          contentContainerStyle={[
-            styles.scrollContent,
-            { paddingBottom: insets.bottom + 20 },
-          ]}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
+      <View
+        style={[
+          styles.headerContainer,
+          { backgroundColor: theme.colors.background },
+        ]}
+      >
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
         >
-          <View style={styles.formContainer}>
-            <Text style={[styles.title, { color: theme.colors.text }]}>
-              Create Account
-            </Text>
-            <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>
-              Sign up to get started
-            </Text>
+          <Feather name="arrow-left" size={24} color={theme.colors.text} />
+        </TouchableOpacity>
+      </View>
 
-            {/* Apple Button */}
-            {Platform.OS === 'ios' && (
-              <View style={styles.appleButtonWrapper}>
-                <AppleAuthentication.AppleAuthenticationButton
-                  buttonType={
-                    AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN
-                  }
-                  buttonStyle={
-                    theme.mode === 'dark'
-                      ? AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
-                      : AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
-                  }
-                  cornerRadius={10}
-                  style={styles.appleAuthButton}
-                  onPress={() => {
-                    if (loading) return
-                    void handleAppleSignUp()
-                  }}
-                />
-              </View>
-            )}
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContent,
+          { backgroundColor: theme.colors.background },
+          { paddingBottom: insets.bottom + 20 },
+        ]}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.formContainer}>
+          <Text style={[styles.title, { color: theme.colors.text }]}>
+            Create Account
+          </Text>
+          <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>
+            Sign up to get started
+          </Text>
 
-            {/* Google Button */}
-            <TouchableOpacity
-              style={[
-                styles.googleButton,
-                {
-                  backgroundColor: theme.colors.surface,
-                  borderColor: theme.colors.border,
-                },
-              ]}
-              onPress={handleGoogleSignUp}
-              disabled={loading}
-            >
-              <Image
-                source={googleLogo} // FIX 1 Usage
-                style={styles.googleIcon}
-                fadeDuration={0}
-              />
-              <Text
-                style={[styles.googleButtonText, { color: theme.colors.text }]}
-              >
-                Sign up with Google
-              </Text>
-            </TouchableOpacity>
-
-            <View style={styles.dividerContainer}>
-              <View
-                style={[
-                  styles.dividerLine,
-                  { backgroundColor: theme.colors.border },
-                ]}
-              />
-              <Text
-                style={[styles.dividerText, { color: theme.colors.textSoft }]}
-              >
-                OR
-              </Text>
-              <View
-                style={[
-                  styles.dividerLine,
-                  { backgroundColor: theme.colors.border },
-                ]}
-              />
-            </View>
-
-            <View
-              style={[
-                styles.inputContainer,
-                {
-                  borderColor: theme.colors.border,
-                  backgroundColor: theme.colors.surface,
-                },
-              ]}
-            >
-              <Feather
-                name="user"
-                size={20}
-                color={theme.colors.primary}
-                style={styles.inputIcon}
-              />
-              <TextInput
-                style={[styles.input, { color: theme.colors.text }]}
-                placeholder="First Name"
-                value={firstName}
-                onChangeText={setFirstName}
-                autoCapitalize="words"
-                placeholderTextColor={theme.colors.textSoft}
-              />
-            </View>
-
-            {/* Last Name */}
-            <View
-              style={[
-                styles.inputContainer,
-                {
-                  borderColor: theme.colors.border,
-                  backgroundColor: theme.colors.surface,
-                },
-              ]}
-            >
-              <Feather
-                name="user"
-                size={20}
-                color={theme.colors.primary}
-                style={styles.inputIcon}
-              />
-              <TextInput
-                style={[styles.input, { color: theme.colors.text }]}
-                placeholder="Last Name"
-                value={lastName}
-                onChangeText={setLastName}
-                autoCapitalize="words"
-                placeholderTextColor={theme.colors.textSoft}
-              />
-            </View>
-
-            {/* Email */}
-            <View
-              style={[
-                styles.inputContainer,
-                {
-                  borderColor: theme.colors.border,
-                  backgroundColor: theme.colors.surface,
-                },
-              ]}
-            >
-              <Feather
-                name="mail"
-                size={20}
-                color={theme.colors.primary}
-                style={styles.inputIcon}
-              />
-              <TextInput
-                style={[styles.input, { color: theme.colors.text }]}
-                placeholder="Email *"
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                keyboardType="email-address"
-                placeholderTextColor={theme.colors.textSoft}
-              />
-            </View>
-
-            {/* Password */}
-            <View
-              style={[
-                styles.inputContainer,
-                {
-                  borderColor: theme.colors.border,
-                  backgroundColor: theme.colors.surface,
-                },
-              ]}
-            >
-              <Feather
-                name="lock"
-                size={20}
-                color={theme.colors.primary}
-                style={styles.inputIcon}
-              />
-              <TextInput
-                style={[styles.input, { color: theme.colors.text }]}
-                placeholder="Password *"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!passwordVisible}
-                autoCapitalize="none"
-                placeholderTextColor={theme.colors.textSoft}
-              />
-              <TouchableOpacity
-                onPress={() => setPasswordVisible(!passwordVisible)}
-                style={styles.eyeIcon}
-              >
-                <Feather
-                  name={passwordVisible ? 'eye-off' : 'eye'}
-                  size={20}
-                  color={theme.colors.primary}
-                />
-              </TouchableOpacity>
-            </View>
-
-            {/* Confirm Password */}
-            <View
-              style={[
-                styles.inputContainer,
-                confirmPassword &&
-                  password !== confirmPassword && {
-                    borderColor: theme.colors.danger,
-                  },
-                {
-                  borderColor:
-                    confirmPassword && password !== confirmPassword
-                      ? theme.colors.danger
-                      : theme.colors.border,
-                  backgroundColor: theme.colors.surface,
-                },
-              ]}
-            >
-              <Feather
-                name="lock"
-                size={20}
-                color={theme.colors.primary}
-                style={styles.inputIcon}
-              />
-              <TextInput
-                style={[styles.input, { color: theme.colors.text }]}
-                placeholder="Confirm Password *"
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                secureTextEntry={!confirmPasswordVisible}
-                autoCapitalize="none"
-                placeholderTextColor={theme.colors.textSoft}
-              />
-              <TouchableOpacity
-                onPress={() =>
-                  setConfirmPasswordVisible(!confirmPasswordVisible)
+          {/* Apple Button */}
+          {Platform.OS === 'ios' && (
+            <View style={styles.appleButtonWrapper}>
+              <AppleAuthentication.AppleAuthenticationButton
+                buttonType={
+                  AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN
                 }
-                style={styles.eyeIcon}
-              >
-                <Feather
-                  name={confirmPasswordVisible ? 'eye-off' : 'eye'}
-                  size={20}
-                  color={theme.colors.primary}
-                />
-              </TouchableOpacity>
+                buttonStyle={
+                  theme.mode === 'dark'
+                    ? AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
+                    : AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
+                }
+                cornerRadius={10}
+                style={styles.appleAuthButton}
+                onPress={() => {
+                  if (loading) return
+                  void handleAppleSignUp()
+                }}
+              />
             </View>
+          )}
 
-            {/* Password validation messages */}
-            {confirmPassword && password !== confirmPassword && (
-              <Text style={[styles.errorText, { color: theme.colors.danger }]}>
-                Passwords do not match
-              </Text>
-            )}
-            {password && password.length < 6 && (
-              <Text style={[styles.errorText, { color: theme.colors.danger }]}>
-                Password must be at least 6 characters
-              </Text>
-            )}
+          {/* Google Button */}
+          <TouchableOpacity
+            style={[
+              styles.googleButton,
+              {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+              },
+            ]}
+            onPress={handleGoogleSignUp}
+            disabled={loading}
+          >
+            <Image
+              source={googleLogo} // FIX 1 Usage
+              style={styles.googleIcon}
+              fadeDuration={0}
+            />
+            <Text
+              style={[styles.googleButtonText, { color: theme.colors.text }]}
+            >
+              Sign up with Google
+            </Text>
+          </TouchableOpacity>
 
-            {/* Sign Up Button */}
-            <TouchableOpacity
+          <View style={styles.dividerContainer}>
+            <View
               style={[
-                styles.button,
-                {
-                  backgroundColor: theme.colors.primary,
-                  shadowColor: theme.colors.primary,
-                },
+                styles.dividerLine,
+                { backgroundColor: theme.colors.border },
               ]}
-              onPress={handleSignUp}
-              disabled={loading}
+            />
+            <Text
+              style={[styles.dividerText, { color: theme.colors.textSoft }]}
             >
-              {loading ? (
-                <Feather name="loader" size={20} color="#FFFFFF" />
-              ) : (
-                <Text style={styles.buttonText}>Sign Up</Text>
-              )}
-            </TouchableOpacity>
+              OR
+            </Text>
+            <View
+              style={[
+                styles.dividerLine,
+                { backgroundColor: theme.colors.border },
+              ]}
+            />
+          </View>
 
+          <View
+            style={[
+              styles.inputContainer,
+              {
+                borderColor: theme.colors.border,
+                backgroundColor: theme.colors.surface,
+              },
+            ]}
+          >
+            <Feather
+              name="user"
+              size={20}
+              color={theme.colors.primary}
+              style={styles.inputIcon}
+            />
+            <TextInput
+              style={[styles.input, { color: theme.colors.text }]}
+              placeholder="First Name"
+              value={firstName}
+              onChangeText={setFirstName}
+              autoCapitalize="words"
+              placeholderTextColor={theme.colors.textSoft}
+            />
+          </View>
+
+          {/* Last Name */}
+          <View
+            style={[
+              styles.inputContainer,
+              {
+                borderColor: theme.colors.border,
+                backgroundColor: theme.colors.surface,
+              },
+            ]}
+          >
+            <Feather
+              name="user"
+              size={20}
+              color={theme.colors.primary}
+              style={styles.inputIcon}
+            />
+            <TextInput
+              style={[styles.input, { color: theme.colors.text }]}
+              placeholder="Last Name"
+              value={lastName}
+              onChangeText={setLastName}
+              autoCapitalize="words"
+              placeholderTextColor={theme.colors.textSoft}
+            />
+          </View>
+
+          {/* Email */}
+          <View
+            style={[
+              styles.inputContainer,
+              {
+                borderColor: theme.colors.border,
+                backgroundColor: theme.colors.surface,
+              },
+            ]}
+          >
+            <Feather
+              name="mail"
+              size={20}
+              color={theme.colors.primary}
+              style={styles.inputIcon}
+            />
+            <TextInput
+              style={[styles.input, { color: theme.colors.text }]}
+              placeholder="Email *"
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              placeholderTextColor={theme.colors.textSoft}
+            />
+          </View>
+
+          {/* Password */}
+          <View
+            style={[
+              styles.inputContainer,
+              {
+                borderColor: theme.colors.border,
+                backgroundColor: theme.colors.surface,
+              },
+            ]}
+          >
+            <Feather
+              name="lock"
+              size={20}
+              color={theme.colors.primary}
+              style={styles.inputIcon}
+            />
+            <TextInput
+              style={[styles.input, { color: theme.colors.text }]}
+              placeholder="Password *"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!passwordVisible}
+              autoCapitalize="none"
+              placeholderTextColor={theme.colors.textSoft}
+            />
             <TouchableOpacity
-              style={styles.switchContainer}
-              onPress={() => navigation.navigate('SignIn')}
+              onPress={() => setPasswordVisible(!passwordVisible)}
+              style={styles.eyeIcon}
             >
-              <Text
-                style={[styles.switchText, { color: theme.colors.textMuted }]}
-              >
-                Already have an account?{' '}
-                <Text
-                  style={[
-                    styles.switchTextBold,
-                    { color: theme.colors.primary },
-                  ]}
-                >
-                  {' '}
-                  Login
-                </Text>
-              </Text>
+              <Feather
+                name={passwordVisible ? 'eye-off' : 'eye'}
+                size={20}
+                color={theme.colors.primary}
+              />
             </TouchableOpacity>
           </View>
-        </ScrollView>
-      </GradientBackground>
+
+          {/* Confirm Password */}
+          <View
+            style={[
+              styles.inputContainer,
+              confirmPassword &&
+                password !== confirmPassword && {
+                  borderColor: theme.colors.danger,
+                },
+              {
+                borderColor:
+                  confirmPassword && password !== confirmPassword
+                    ? theme.colors.danger
+                    : theme.colors.border,
+                backgroundColor: theme.colors.surface,
+              },
+            ]}
+          >
+            <Feather
+              name="lock"
+              size={20}
+              color={theme.colors.primary}
+              style={styles.inputIcon}
+            />
+            <TextInput
+              style={[styles.input, { color: theme.colors.text }]}
+              placeholder="Confirm Password *"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry={!confirmPasswordVisible}
+              autoCapitalize="none"
+              placeholderTextColor={theme.colors.textSoft}
+            />
+            <TouchableOpacity
+              onPress={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
+              style={styles.eyeIcon}
+            >
+              <Feather
+                name={confirmPasswordVisible ? 'eye-off' : 'eye'}
+                size={20}
+                color={theme.colors.primary}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* Password validation messages */}
+          {confirmPassword && password !== confirmPassword && (
+            <Text style={[styles.errorText, { color: theme.colors.danger }]}>
+              Passwords do not match
+            </Text>
+          )}
+          {password && password.length < 6 && (
+            <Text style={[styles.errorText, { color: theme.colors.danger }]}>
+              Password must be at least 6 characters
+            </Text>
+          )}
+
+          {/* Sign Up Button */}
+          <TouchableOpacity
+            style={[
+              styles.button,
+              {
+                backgroundColor: theme.colors.primary,
+                shadowColor: theme.colors.primary,
+              },
+            ]}
+            onPress={handleSignUp}
+            disabled={loading}
+          >
+            {loading ? (
+              <Feather name="loader" size={20} color="#FFFFFF" />
+            ) : (
+              <Text style={styles.buttonText}>Sign Up</Text>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.switchContainer}
+            onPress={() => navigation.navigate('SignIn')}
+          >
+            <Text
+              style={[styles.switchText, { color: theme.colors.textMuted }]}
+            >
+              Already have an account?{' '}
+              <Text
+                style={[styles.switchTextBold, { color: theme.colors.primary }]}
+              >
+                {' '}
+                Login
+              </Text>
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   )
 }

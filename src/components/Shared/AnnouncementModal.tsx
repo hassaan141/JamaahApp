@@ -221,6 +221,25 @@ export default function AnnouncementModal({
                     </Text>
                   </View>
                 ))}
+
+              {!!announcement.location && (
+                <View style={styles.detailRow}>
+                  <Feather
+                    name="map-pin"
+                    size={16}
+                    color={theme.colors.textSoft}
+                    style={styles.detailIcon}
+                  />
+                  <Text
+                    style={[
+                      styles.detailText,
+                      { color: theme.colors.textMuted, flex: 1 },
+                    ]}
+                  >
+                    {announcement.location}
+                  </Text>
+                </View>
+              )}
             </View>
 
             <View

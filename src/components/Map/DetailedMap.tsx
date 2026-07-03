@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react'
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import {
   Camera as MapLibreCamera,
   MapView as MapLibreMapView,
@@ -76,13 +76,35 @@ const AndroidMapMarker = ({
   </View>
 )
 
+// Only refetch nearby data after moving this far; keeps the map usable in a
+// moving car instead of reloading on every 100m location tick.
+const REFETCH_DISTANCE_THRESHOLD = 2000 // meters
+
+function metersBetween(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number,
+): number {
+  const R = 6371000
+  const dLat = ((lat2 - lat1) * Math.PI) / 180
+  const dLon = ((lon2 - lon1) * Math.PI) / 180
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2)
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
 const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
   mode = 'masjids',
 }) => {
   const navigation = useNavigation() as unknown as {
     navigate?: (route: string, params?: Record<string, unknown>) => void
   }
-  const { location } = useLocation()
+  const { location, isLocationReady } = useLocation()
 
   const [nearbyMasjids, setNearbyMasjids] = useState<MasjidItem[]>([])
   const [events, setEvents] = useState<OrgPost[]>([])
@@ -90,49 +112,87 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
   const [selectedEventGroup, setSelectedEventGroup] = useState<OrgPost[]>([])
   const [selectedEvent, setSelectedEvent] = useState<OrgPost | null>(null)
   const [loading, setLoading] = useState(true)
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const [initialRegion, setInitialRegion] = useState<{
-    lat: number
-    lng: number
-  } | null>(null)
+  // Camera is centered on the FIRST fix only, then left alone so panning is
+  // never fought by location updates. Captured once, never reassigned.
+  const initialCenterRef = useRef<{ lat: number; lng: number } | null>(null)
+  if (!initialCenterRef.current && location) {
+    initialCenterRef.current = {
+      lat: location.latitude,
+      lng: location.longitude,
+    }
+  }
+
+  // Location + mode the nearby list was last fetched for (refetch gate).
+  const lastFetchLocation = useRef<{ lat: number; lon: number } | null>(null)
+  const lastFetchMode = useRef<string | null>(null)
 
   const mapRef = useRef<MapView>(null)
 
-  useEffect(() => {
-    if (location && !initialRegion) {
-      const start = { lat: location.latitude, lng: location.longitude }
-      setInitialRegion(start)
-    }
-  }, [location])
-
-  useEffect(() => {
-    const loadData = async () => {
-      setLoading(true)
-      try {
-        setError(null)
-        setSelectedMasjid(null)
-        setSelectedEvent(null)
-        if (mode === 'masjids') {
-          // Use user location if available, otherwise use default
-          const coords = location || DEFAULT_LOCATION
-          const initialList = await fetchNearbyMasjids(
-            coords.latitude,
-            coords.longitude,
-          )
-          setNearbyMasjids(initialList as MasjidItem[])
-        } else {
-          const posts = await fetchAnnouncements()
-          setEvents(posts.filter((post) => isAnnouncementUpcoming(post)))
-        }
-      } catch (err: unknown) {
-        setError((err as Error)?.message ?? 'Failed to load data')
-      } finally {
-        setLoading(false)
+  const loadData = useCallback(async () => {
+    setLoading(true)
+    try {
+      setError(null)
+      setSelectedMasjid(null)
+      setSelectedEvent(null)
+      if (mode === 'masjids') {
+        // Use user location if available, otherwise use default
+        const coords = location || DEFAULT_LOCATION
+        const initialList = await fetchNearbyMasjids(
+          coords.latitude,
+          coords.longitude,
+        )
+        setNearbyMasjids(initialList as MasjidItem[])
+      } else {
+        const posts = await fetchAnnouncements()
+        setEvents(posts.filter((post) => isAnnouncementUpcoming(post)))
       }
+    } catch (err: unknown) {
+      setError((err as Error)?.message ?? 'Failed to load data')
+    } finally {
+      setLoading(false)
+      setHasLoadedOnce(true)
     }
-    loadData()
   }, [location, mode])
+
+  // Refetch when the mode changes, or when the user moves far enough. Small
+  // location ticks (e.g. driving) are ignored so the data stays stable.
+  useEffect(() => {
+    // A mode switch (masjids <-> events) must always refetch, regardless of
+    // whether the user has moved.
+    const modeChanged = lastFetchMode.current !== mode
+
+    if (!location) {
+      // No fix yet. Only fall back to the default location once we know a fix
+      // isn't coming (permission denied / guest done); otherwise keep waiting
+      // so the camera can center on the real first fix instead of the default.
+      if (isLocationReady && (!hasLoadedOnce || modeChanged)) {
+        lastFetchMode.current = mode
+        loadData()
+      }
+      return
+    }
+
+    const prev = lastFetchLocation.current
+    const movedFar =
+      !prev ||
+      metersBetween(prev.lat, prev.lon, location.latitude, location.longitude) >
+        REFETCH_DISTANCE_THRESHOLD
+
+    if (movedFar || modeChanged || !hasLoadedOnce) {
+      lastFetchLocation.current = {
+        lat: location.latitude,
+        lon: location.longitude,
+      }
+      lastFetchMode.current = mode
+      loadData()
+    }
+    // Depend on the raw coords, not loadData, so a moving location updating
+    // loadData's identity doesn't itself trigger a refetch.
+     
+  }, [location?.latitude, location?.longitude, mode, isLocationReady])
 
   useEffect(() => {
     if (mode !== 'events') return
@@ -172,7 +232,10 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
     })
   }, [events])
 
-  if (loading) {
+  // Only block the whole screen on the very first load. Later refreshes
+  // (mode change, moving far) update data silently under a mounted map so
+  // the user's pan/zoom is never thrown away.
+  if (!hasLoadedOnce && (loading || !isLocationReady)) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="#2F855A" />
@@ -180,7 +243,7 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
     )
   }
 
-  if (error) {
+  if (error && !hasLoadedOnce) {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>Error: {error}</Text>
@@ -188,12 +251,12 @@ const DetailedMap: React.FC<{ mode?: 'masjids' | 'events' }> = ({
     )
   }
 
-  const mapCenter = location
-    ? { lat: location.latitude, lng: location.longitude }
-    : initialRegion || {
-        lat: DEFAULT_LOCATION.latitude,
-        lng: DEFAULT_LOCATION.longitude,
-      }
+  // Camera center is fixed at the first fix (or default) and does NOT follow
+  // live location, so location updates never recenter/fight the user's pan.
+  const mapCenter = initialCenterRef.current || {
+    lat: DEFAULT_LOCATION.latitude,
+    lng: DEFAULT_LOCATION.longitude,
+  }
 
   // --- ANDROID RENDER ---
   if (Platform.OS === 'android') {

@@ -9,13 +9,11 @@ export async function notifyFollowersOfPost(
       `[notifyFollowersOfPost] Requesting push fanout for post ${postId} in org ${organizationId}`,
     )
 
+    // sendPostPush derives the org + subscribers from the post itself
     const { data, error: functionError } = await supabase.functions.invoke(
-      'notify-followers-of-post',
+      'sendPostPush',
       {
-        body: {
-          postId,
-          organizationId,
-        },
+        body: { post_id: postId },
       },
     )
 

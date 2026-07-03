@@ -275,6 +275,7 @@ export default function MapScreen() {
               styles.compactMapContainer,
               {
                 backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
                 shadowColor: theme.colors.shadow,
               },
             ]}
@@ -326,6 +327,7 @@ export default function MapScreen() {
                 styles.masjidListContainer,
                 {
                   backgroundColor: theme.colors.surface,
+                  borderColor: theme.colors.border,
                   shadowColor: theme.colors.shadow,
                 },
               ]}
@@ -399,6 +401,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 20,
     borderRadius: 12,
+    borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -460,6 +463,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderRadius: 12,
     padding: 16,
+    borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,

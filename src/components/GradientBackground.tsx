@@ -13,8 +13,8 @@ export default function GradientBackground({
   const { theme } = useTheme()
   const colors =
     theme.mode === 'dark'
-      ? (['#1C2B24', '#284436', '#1C2B24'] as const)
-      : (['#F7FAFC', '#DDF4E7', '#F7FAFC'] as const)
+      ? (['#1C2B24', '#284436'] as const)
+      : (['#DDF4E7', '#F7FAFC'] as const)
 
   return (
     <LinearGradient colors={colors} style={[styles.container, style]}>

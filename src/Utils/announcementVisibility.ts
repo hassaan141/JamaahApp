@@ -5,6 +5,32 @@ type AnnouncementLike = {
   end_time?: string | null
 }
 
+// Re-express `now` as the wall-clock time in `timezone`, on the device-local
+// basis, so it can be compared against the announcement's naive local times.
+// ponytail: quick fix — proper solution is storing a timestamptz end instant.
+function nowInZone(now: Date, timezone: string) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
+    hour12: false,
+  }).formatToParts(now)
+  const get = (t: string) => Number(parts.find((p) => p.type === t)?.value)
+  const hour = get('hour') === 24 ? 0 : get('hour')
+  return new Date(
+    get('year'),
+    get('month') - 1,
+    get('day'),
+    hour,
+    get('minute'),
+    get('second'),
+  )
+}
+
 function parseLocalDate(dateStr: string) {
   const [year, month, day] = dateStr.split('-').map(Number)
   if (!year || !month || !day) return null
@@ -28,8 +54,13 @@ function parseTimeParts(timeStr: string | null | undefined) {
 export function isAnnouncementUpcoming<T extends AnnouncementLike>(
   announcement: T,
   now = new Date(),
+  timezone?: string | null,
 ) {
   const type = announcement.post_type
+
+  // Compare against the org's wall clock, not the device's, so a BC event
+  // stays visible to a viewer in a different timezone until it ends there.
+  if (timezone) now = nowInZone(now, timezone)
 
   // Recurring classes should remain available unless product rules change.
   if (type === 'Repeating_classes') return true

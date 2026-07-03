@@ -43,6 +43,7 @@ export type Announcement = {
     city: string | null
     province_state: string | null
     country: string | null
+    timezone: string | null
   } | null
 }
 
@@ -55,7 +56,7 @@ export async function fetchMyAnnouncements(
 
   let q = supabase
     .from('org_posts')
-    .select('*, organizations (name, address, city)') // Only join organization name
+    .select('*, organizations (name, address, city, timezone)')
     .in('organization_id', orgIds)
     .order('created_at', { ascending: false })
     .limit(limit)

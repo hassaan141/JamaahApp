@@ -274,10 +274,16 @@ const MasjidDetailsModal: React.FC<Props> = ({
                       borderColor: theme.colors.border,
                     },
                     isPinnedActive && styles.activeOptionPinned,
-                    isPinnedActive && {
-                      backgroundColor: theme.colors.primarySoft,
-                      borderColor: theme.colors.primaryBorder,
-                    },
+                    isPinnedActive &&
+                      (theme.mode === 'dark'
+                        ? {
+                            backgroundColor: theme.colors.primarySoft,
+                            borderColor: theme.colors.primaryBorder,
+                          }
+                        : {
+                            backgroundColor: '#D1FAE0',
+                            borderColor: '#68D391',
+                          }),
                   ]}
                   onPress={handleChooseSpecificMasjid}
                   disabled={loading}
@@ -336,10 +342,13 @@ const MasjidDetailsModal: React.FC<Props> = ({
                       borderColor: theme.colors.border,
                     },
                     isAutoActive && styles.activeOptionAuto,
-                    isAutoActive && {
-                      backgroundColor: '#4C3A1F',
-                      borderColor: '#7A5A2A',
-                    },
+                    isAutoActive &&
+                      (theme.mode === 'dark'
+                        ? { backgroundColor: '#4C3A1F', borderColor: '#7A5A2A' }
+                        : {
+                            backgroundColor: '#FEF3E2',
+                            borderColor: '#F6AD55',
+                          }),
                     !locationPermissionGranted && styles.disabledOption,
                   ]}
                   onPress={handleUseNearestMasjid}

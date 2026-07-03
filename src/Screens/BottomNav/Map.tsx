@@ -9,6 +9,7 @@ import {
   RefreshControl,
 } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
+import { useNavigation } from '@react-navigation/native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import DetailedMap from '@/components/Map/DetailedMap'
 import SearchBar from '@/components/SearchBar/SearchBar'
@@ -24,7 +25,7 @@ import EventList from '@/components/Map/EventList'
 import NoResults from '@/components/Map/NoResults'
 import { useLocation } from '@/Utils/useLocation'
 import MiniLoading from '@/components/Loading/MiniLoading'
-import { openDirections, openCall } from '@/Utils/links'
+import { openDirections } from '@/Utils/links'
 import { useTheme } from '@/theme'
 import GradientBackground from '@/components/GradientBackground'
 
@@ -39,6 +40,9 @@ type EventListEvent = Omit<EventItem, 'dist_km'>
 export default function MapScreen() {
   const insets = useSafeAreaInsets()
   const { theme } = useTheme()
+  const navigation = useNavigation() as unknown as {
+    navigate: (route: string, params?: Record<string, unknown>) => void
+  }
   const [isExpanded, setIsExpanded] = useState(false)
   const [mapMode, setMapMode] = useState<'masjids' | 'events'>('events')
 
@@ -97,7 +101,7 @@ export default function MapScreen() {
   // --- Handlers ---
 
   const handleMasjidPress = (masjid: MasjidItem) => {
-    console.log('Masjid selected:', masjid?.name)
+    navigation.navigate('OrganizationDetail', { org: masjid })
   }
 
   const handleDirections = (masjid: MasjidItem) => {
@@ -117,10 +121,6 @@ export default function MapScreen() {
       destAddress: fullAddress || null,
       placeLabel: masjid?.name ?? '',
     })
-  }
-
-  const handleCall = (masjid: MasjidItem) => {
-    openCall(masjid?.contact_phone || masjid?.phone)
   }
 
   // Updated to use EventListEvent type
@@ -363,7 +363,6 @@ export default function MapScreen() {
                     }
                     onPress={handleMasjidPress}
                     onDirections={handleDirections}
-                    onCall={handleCall}
                   />
                 )
               ) : eventLogic.events.length === 0 ? (

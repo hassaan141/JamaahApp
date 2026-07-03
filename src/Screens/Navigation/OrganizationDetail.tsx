@@ -57,7 +57,6 @@ const OrganizationHeader = ({
   followLoading,
   onFollowToggle,
   onDirectionsPress,
-  onCallPress,
   followerCount,
   isGuest,
   theme,
@@ -67,7 +66,6 @@ const OrganizationHeader = ({
   followLoading: boolean
   onFollowToggle: () => void
   onDirectionsPress: () => void
-  onCallPress: () => void
   followerCount?: number | null
   isGuest?: boolean
   theme: ReturnType<typeof useTheme>['theme']
@@ -79,7 +77,6 @@ const OrganizationHeader = ({
   const type = org.type ?? ''
   const hasLongDescription = description.length > 140
   const hasAddress = Boolean(org.address)
-  const hasPhone = Boolean(org.contact_phone || org.phone)
 
   const getOrgTypeIcon = (
     t?: string,
@@ -292,24 +289,6 @@ const OrganizationHeader = ({
             Directions
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.quickActionButton,
-            {
-              backgroundColor: theme.colors.surfaceMuted,
-              borderColor: theme.colors.borderSoft,
-            },
-            !hasPhone && styles.quickActionDisabled,
-          ]}
-          onPress={onCallPress}
-          disabled={!hasPhone}
-          activeOpacity={0.7}
-        >
-          <Feather name="phone" size={16} color={theme.colors.primary} />
-          <Text style={[styles.quickActionText, { color: theme.colors.text }]}>
-            Call
-          </Text>
-        </TouchableOpacity>
       </View>
     </View>
   )
@@ -392,6 +371,13 @@ const ContactInfoCard = ({
     Linking.openURL(url).catch((e) => console.error('open social', e))
   }
 
+  addLink(
+    'phone',
+    'Phone',
+    'phone',
+    org.contact_phone || org.phone || undefined,
+    () => openCall(org.contact_phone || org.phone),
+  )
   addLink('website', 'Website', 'web', org.website || undefined, () =>
     openUrl(org.website),
   )
@@ -897,10 +883,6 @@ export default function OrganizationDetail() {
     })
   }
 
-  const handleCall = () => {
-    openCall(org?.contact_phone || org?.phone)
-  }
-
   if (!org) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -938,7 +920,6 @@ export default function OrganizationDetail() {
           followLoading={followLoading}
           onFollowToggle={handleFollowToggle}
           onDirectionsPress={handleDirections}
-          onCallPress={handleCall}
           followerCount={followerCount}
           isGuest={!session}
           theme={theme}

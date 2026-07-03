@@ -41,6 +41,8 @@ type OrgParam = {
   instagram?: string | null
   facebook?: string | null
   twitter?: string | null
+  youtube?: string | null
+  whatsapp?: string | null
   donate_link?: string | null
   amenities?: {
     street_parking?: boolean
@@ -362,12 +364,17 @@ const ContactInfoCard = ({
     raw?: string | null,
   ) => {
     if (!raw) return
-    const handle = raw.trim().replace(/^@/, '')
+    const trimmed = raw.trim()
+    // Value may already be a full URL or just a handle — handle both.
+    if (trimmed.startsWith('http')) {
+      Linking.openURL(trimmed).catch((e) => console.error('open social', e))
+      return
+    }
+    const handle = trimmed.replace(/^@/, '')
     let url = ''
     if (platform === 'twitter') url = `https://twitter.com/${handle}`
     if (platform === 'instagram') url = `https://instagram.com/${handle}`
-    if (platform === 'facebook')
-      url = raw.startsWith('http') ? raw : `https://facebook.com/${handle}`
+    if (platform === 'facebook') url = `https://facebook.com/${handle}`
     Linking.openURL(url).catch((e) => console.error('open social', e))
   }
 
@@ -393,6 +400,20 @@ const ContactInfoCard = ({
   )
   addLink('facebook', 'Facebook', 'facebook', org.facebook || undefined, () =>
     openSocial('facebook', org.facebook),
+  )
+  addLink('youtube', 'YouTube', 'youtube', org.youtube || undefined, () =>
+    openUrl(org.youtube),
+  )
+  addLink('whatsapp', 'WhatsApp', 'whatsapp', org.whatsapp || undefined, () => {
+    const raw = (org.whatsapp || '').trim()
+    // Value may be a full wa.me/chat URL or just a phone number.
+    const url = raw.startsWith('http')
+      ? raw
+      : `https://wa.me/${raw.replace(/[^\d]/g, '')}`
+    Linking.openURL(url).catch((e) => console.error('open whatsapp', e))
+  })
+  addLink('donate', 'Donate', 'hand-heart', org.donate_link || undefined, () =>
+    openUrl(org.donate_link),
   )
   addLink('email', 'Email', 'email', org.contact_email || undefined, () =>
     Linking.openURL(`mailto:${org.contact_email}`),
@@ -950,10 +971,19 @@ export default function OrganizationDetail() {
             </View>
           )}
 
-        <View style={styles.section}>
+        <View
+          style={[
+            styles.card,
+            {
+              backgroundColor: theme.colors.surface,
+              shadowColor: theme.colors.shadow,
+            },
+          ]}
+        >
           <SectionHeader
             title="Recent Announcements"
             icon="bell"
+            compact={true}
             theme={theme}
           />
           <AnnouncementsSection

@@ -205,10 +205,7 @@ export default function CommunitiesTab() {
     ) {
       return (
         <ScrollView
-          style={[
-            styles.scrollContainer,
-            { backgroundColor: theme.colors.background },
-          ]}
+          style={[styles.scrollContainer, { backgroundColor: 'transparent' }]}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
@@ -264,10 +261,7 @@ export default function CommunitiesTab() {
     // If we have results
     return (
       <ScrollView
-        style={[
-          styles.scrollContainer,
-          { backgroundColor: theme.colors.background },
-        ]}
+        style={[styles.scrollContainer, { backgroundColor: 'transparent' }]}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl

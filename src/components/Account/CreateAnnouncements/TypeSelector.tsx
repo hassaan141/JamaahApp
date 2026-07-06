@@ -1,6 +1,7 @@
 import React from 'react'
 import { View, Text, TouchableOpacity } from 'react-native'
 import { useTheme } from '@/theme'
+import RequiredLabel from './RequiredLabel'
 
 interface TypeSelectorProps {
   postType: string | null
@@ -21,7 +22,7 @@ export default function TypeSelector({
 
   return (
     <View style={{ marginBottom: 16 }}>
-      <Text
+      <RequiredLabel
         style={{
           fontSize: 14,
           fontWeight: '600',
@@ -30,7 +31,7 @@ export default function TypeSelector({
         }}
       >
         Type
-      </Text>
+      </RequiredLabel>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
         {types.map((opt) => {
           const active = postType === opt.value

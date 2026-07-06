@@ -6,6 +6,7 @@ export type Organization = Database['public']['Tables']['organizations']['Row']
 export type OrganizationSubscription =
   Database['public']['Tables']['organization_subscriptions']['Row']
 export type OrgPost = Database['public']['Tables']['org_posts']['Row']
+export type Demographic = Database['public']['Enums']['demographic_types']
 
 export type NearbyMasjid = {
   id: string

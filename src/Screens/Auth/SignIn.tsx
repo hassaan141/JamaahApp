@@ -459,7 +459,7 @@ export default function SignIn({ navigation }: { navigation: Nav }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F7FAFC' },
+  container: { flex: 1 },
   scrollView: {
     flex: 1,
   },

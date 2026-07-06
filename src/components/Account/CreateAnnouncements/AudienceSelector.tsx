@@ -1,10 +1,12 @@
 import React from 'react'
 import { View, Text, TouchableOpacity } from 'react-native'
 import { useTheme } from '@/theme'
+import type { Demographic } from '@/types'
+import RequiredLabel from './RequiredLabel'
 
 interface AudienceSelectorProps {
-  demographic: string | null
-  setDemographic: (demographic: string | null) => void
+  demographic: Demographic | null
+  setDemographic: (demographic: Demographic | null) => void
 }
 
 export default function AudienceSelector({
@@ -12,15 +14,16 @@ export default function AudienceSelector({
   setDemographic,
 }: AudienceSelectorProps) {
   const { theme } = useTheme()
-  const audiences = [
+  const audiences: { label: string; value: Demographic }[] = [
     { label: 'Men', value: 'Brothers' },
     { label: 'Women', value: 'Sisters' },
-    { label: 'Mixed', value: 'Mixed' },
+    { label: 'Mixed (segregated)', value: 'Mixed (segregated)' },
+    { label: 'Mixed (not segregated)', value: 'Mixed (not segregated)' },
   ]
 
   return (
     <View style={{ marginBottom: 16 }}>
-      <Text
+      <RequiredLabel
         style={{
           fontSize: 14,
           fontWeight: '600',
@@ -29,7 +32,7 @@ export default function AudienceSelector({
         }}
       >
         Audience
-      </Text>
+      </RequiredLabel>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
         {audiences.map((opt) => {
           const active = demographic === opt.value

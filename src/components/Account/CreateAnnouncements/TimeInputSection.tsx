@@ -27,6 +27,7 @@ export default function TimeInputSection({
     <View style={{ flexDirection: 'row', marginBottom: 16 }}>
       <TimeInput
         label="Start Time"
+        required
         time={startTime}
         setTime={setStartTime}
         isOpen={showStartPicker}
@@ -40,6 +41,7 @@ export default function TimeInputSection({
 
       <TimeInput
         label="End Time"
+        required
         time={endTime}
         setTime={setEndTime}
         isOpen={showEndPicker}

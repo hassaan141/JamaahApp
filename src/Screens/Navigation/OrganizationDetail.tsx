@@ -22,6 +22,8 @@ import CombinedPrayerCard from '@/components/HomeScreen/CombinedPrayerCard'
 import { followEventEmitter } from '@/Utils/followEventEmitter'
 import { useAuth } from '@/Auth/AuthProvider'
 import { useTheme } from '@/theme'
+import GradientBackground from '@/components/GradientBackground'
+import { openCall, openDirections } from '@/Utils/links'
 
 type OrgParam = {
   id?: string | number
@@ -39,6 +41,8 @@ type OrgParam = {
   instagram?: string | null
   facebook?: string | null
   twitter?: string | null
+  youtube?: string | null
+  whatsapp?: string | null
   donate_link?: string | null
   amenities?: {
     street_parking?: boolean
@@ -54,6 +58,7 @@ const OrganizationHeader = ({
   following,
   followLoading,
   onFollowToggle,
+  onDirectionsPress,
   followerCount,
   isGuest,
   theme,
@@ -62,6 +67,7 @@ const OrganizationHeader = ({
   following: boolean
   followLoading: boolean
   onFollowToggle: () => void
+  onDirectionsPress: () => void
   followerCount?: number | null
   isGuest?: boolean
   theme: ReturnType<typeof useTheme>['theme']
@@ -72,6 +78,7 @@ const OrganizationHeader = ({
   const memberCount = org.member_count || 0
   const type = org.type ?? ''
   const hasLongDescription = description.length > 140
+  const hasAddress = Boolean(org.address)
 
   const getOrgTypeIcon = (
     t?: string,
@@ -264,6 +271,27 @@ const OrganizationHeader = ({
           </TouchableOpacity>
         )}
       </View>
+
+      <View style={styles.quickActions}>
+        <TouchableOpacity
+          style={[
+            styles.quickActionButton,
+            {
+              backgroundColor: theme.colors.primary,
+              borderColor: theme.colors.primary,
+            },
+            !hasAddress && styles.quickActionDisabled,
+          ]}
+          onPress={onDirectionsPress}
+          disabled={!hasAddress}
+          activeOpacity={0.7}
+        >
+          <Feather name="navigation" size={16} color="#FFFFFF" />
+          <Text style={[styles.quickActionText, { color: '#FFFFFF' }]}>
+            Directions
+          </Text>
+        </TouchableOpacity>
+      </View>
     </View>
   )
 }
@@ -336,15 +364,27 @@ const ContactInfoCard = ({
     raw?: string | null,
   ) => {
     if (!raw) return
-    const handle = raw.trim().replace(/^@/, '')
+    const trimmed = raw.trim()
+    // Value may already be a full URL or just a handle — handle both.
+    if (trimmed.startsWith('http')) {
+      Linking.openURL(trimmed).catch((e) => console.error('open social', e))
+      return
+    }
+    const handle = trimmed.replace(/^@/, '')
     let url = ''
     if (platform === 'twitter') url = `https://twitter.com/${handle}`
     if (platform === 'instagram') url = `https://instagram.com/${handle}`
-    if (platform === 'facebook')
-      url = raw.startsWith('http') ? raw : `https://facebook.com/${handle}`
+    if (platform === 'facebook') url = `https://facebook.com/${handle}`
     Linking.openURL(url).catch((e) => console.error('open social', e))
   }
 
+  addLink(
+    'phone',
+    'Phone',
+    'phone',
+    org.contact_phone || org.phone || undefined,
+    () => openCall(org.contact_phone || org.phone),
+  )
   addLink('website', 'Website', 'web', org.website || undefined, () =>
     openUrl(org.website),
   )
@@ -360,6 +400,20 @@ const ContactInfoCard = ({
   )
   addLink('facebook', 'Facebook', 'facebook', org.facebook || undefined, () =>
     openSocial('facebook', org.facebook),
+  )
+  addLink('youtube', 'YouTube', 'youtube', org.youtube || undefined, () =>
+    openUrl(org.youtube),
+  )
+  addLink('whatsapp', 'WhatsApp', 'whatsapp', org.whatsapp || undefined, () => {
+    const raw = (org.whatsapp || '').trim()
+    // Value may be a full wa.me/chat URL or just a phone number.
+    const url = raw.startsWith('http')
+      ? raw
+      : `https://wa.me/${raw.replace(/[^\d]/g, '')}`
+    Linking.openURL(url).catch((e) => console.error('open whatsapp', e))
+  })
+  addLink('donate', 'Donate', 'hand-heart', org.donate_link || undefined, () =>
+    openUrl(org.donate_link),
   )
   addLink('email', 'Email', 'email', org.contact_email || undefined, () =>
     Linking.openURL(`mailto:${org.contact_email}`),
@@ -843,6 +897,13 @@ export default function OrganizationDetail() {
     }
   }
 
+  const handleDirections = () => {
+    openDirections({
+      destAddress: org?.address || null,
+      placeLabel: org?.name ?? '',
+    })
+  }
+
   if (!org) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -852,78 +913,98 @@ export default function OrganizationDetail() {
   }
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-      contentContainerStyle={styles.contentContainer}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={styles.header}>
-        <View style={styles.headerRow}>
-          <TouchableOpacity
-            onPress={handleGoBack}
-            style={styles.backButton}
-            activeOpacity={0.7}
-          >
-            <Feather name="arrow-left" size={22} color={theme.colors.primary} />
-          </TouchableOpacity>
+    <GradientBackground>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
+          <View style={styles.headerRow}>
+            <TouchableOpacity
+              onPress={handleGoBack}
+              style={styles.backButton}
+              activeOpacity={0.7}
+            >
+              <Feather
+                name="arrow-left"
+                size={22}
+                color={theme.colors.primary}
+              />
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
 
-      <OrganizationHeader
-        org={org}
-        following={following}
-        followLoading={followLoading}
-        onFollowToggle={handleFollowToggle}
-        followerCount={followerCount}
-        isGuest={!session}
-        theme={theme}
-      />
+        <OrganizationHeader
+          org={org}
+          following={following}
+          followLoading={followLoading}
+          onFollowToggle={handleFollowToggle}
+          onDirectionsPress={handleDirections}
+          followerCount={followerCount}
+          isGuest={!session}
+          theme={theme}
+        />
 
-      {/* Show tiny loader if we are fetching the missing details */}
-      {detailsLoading && (
-        <View style={{ padding: 10 }}>
-          <ActivityIndicator size="small" color="#2D6A4F" />
-        </View>
-      )}
-
-      {(org.type?.toLowerCase() === 'masjid' ||
-        org.type?.toLowerCase() === 'msa') &&
-        !prayerLoading &&
-        todayTimes && (
-          <View style={{ marginVertical: 10 }}>
-            <CombinedPrayerCard
-              prayerTimes={todayTimes}
-              modalPrayerTimes={times}
-              orgName={prayerOrgName || org.name}
-              currentDate={targetDate}
-              onNextDay={nextDay}
-              onPrevDay={prevDay}
-              canNextDay={canNextDay}
-              canPrevDay={canPrevDay}
-            />
+        {/* Show tiny loader if we are fetching the missing details */}
+        {detailsLoading && (
+          <View style={{ padding: 10 }}>
+            <ActivityIndicator size="small" color="#2D6A4F" />
           </View>
         )}
 
-      <View style={styles.section}>
-        <SectionHeader title="Recent Announcements" icon="bell" theme={theme} />
-        <AnnouncementsSection
-          announcements={announcements}
-          loading={loading}
-          error={error}
-        />
-      </View>
+        {(org.type?.toLowerCase() === 'masjid' ||
+          org.type?.toLowerCase() === 'msa') &&
+          !prayerLoading &&
+          todayTimes && (
+            <View style={{ marginVertical: 10 }}>
+              <CombinedPrayerCard
+                prayerTimes={todayTimes}
+                modalPrayerTimes={times}
+                orgName={prayerOrgName || org.name}
+                currentDate={targetDate}
+                onNextDay={nextDay}
+                onPrevDay={prevDay}
+                canNextDay={canNextDay}
+                canPrevDay={canPrevDay}
+              />
+            </View>
+          )}
 
-      {org.type?.toLowerCase() === 'masjid' && (
-        <AmenitiesCard org={org} theme={theme} />
-      )}
+        <View
+          style={[
+            styles.card,
+            {
+              backgroundColor: theme.colors.surface,
+              shadowColor: theme.colors.shadow,
+            },
+          ]}
+        >
+          <SectionHeader
+            title="Recent Announcements"
+            icon="bell"
+            compact={true}
+            theme={theme}
+          />
+          <AnnouncementsSection
+            announcements={announcements}
+            loading={loading}
+            error={error}
+          />
+        </View>
 
-      <ContactInfoCard org={org} theme={theme} />
-    </ScrollView>
+        {org.type?.toLowerCase() === 'masjid' && (
+          <AmenitiesCard org={org} theme={theme} />
+        )}
+
+        <ContactInfoCard org={org} theme={theme} />
+      </ScrollView>
+    </GradientBackground>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F9FA' },
+  container: { flex: 1 },
   contentContainer: { paddingTop: 8, paddingBottom: 32 },
   header: {
     padding: 20,
@@ -1015,6 +1096,23 @@ const styles = StyleSheet.create({
   followButtonDisabled: { opacity: 0.6 },
   followButtonText: { fontSize: 14, fontWeight: '600', color: '#FFFFFF' },
   followingButtonText: { color: '#2D6A4F' },
+  quickActions: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 14,
+  },
+  quickActionButton: {
+    flex: 1,
+    minHeight: 44,
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  quickActionDisabled: { opacity: 0.45 },
+  quickActionText: { fontSize: 14, fontWeight: '600' },
   card: {
     backgroundColor: '#FFFFFF',
     marginHorizontal: 16,

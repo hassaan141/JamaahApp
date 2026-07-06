@@ -239,6 +239,7 @@ const MasjidDetailsModal: React.FC<Props> = ({
                         styles.currentMasjidName,
                         { color: theme.colors.text },
                       ]}
+                      numberOfLines={1}
                     >
                       {masjidData?.org?.name || 'Nearest Masjid'}
                     </Text>
@@ -336,10 +337,13 @@ const MasjidDetailsModal: React.FC<Props> = ({
                       borderColor: theme.colors.border,
                     },
                     isAutoActive && styles.activeOptionAuto,
-                    isAutoActive && {
-                      backgroundColor: '#4C3A1F',
-                      borderColor: '#7A5A2A',
-                    },
+                    isAutoActive &&
+                      (theme.mode === 'dark'
+                        ? { backgroundColor: '#4C3A1F', borderColor: '#7A5A2A' }
+                        : {
+                            backgroundColor: '#FEF3E2',
+                            borderColor: '#F6AD55',
+                          }),
                     !locationPermissionGranted && styles.disabledOption,
                   ]}
                   onPress={handleUseNearestMasjid}
@@ -419,6 +423,7 @@ const MasjidDetailsModal: React.FC<Props> = ({
                         styles.currentMasjidName,
                         { color: theme.colors.text },
                       ]}
+                      numberOfLines={1}
                     >
                       {masjidData?.org?.name || 'Loading...'}
                     </Text>
@@ -636,11 +641,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#2D3748',
     marginLeft: 6,
+    flexShrink: 1,
   },
   currentDistance: {
     fontSize: 14,
     color: '#718096',
     marginLeft: 4,
+    flexShrink: 0,
   },
   // Guest mode styles
   guestPromptContainer: {

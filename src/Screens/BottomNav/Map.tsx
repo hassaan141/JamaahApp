@@ -9,6 +9,7 @@ import {
   RefreshControl,
 } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
+import { useNavigation } from '@react-navigation/native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import DetailedMap from '@/components/Map/DetailedMap'
 import SearchBar from '@/components/SearchBar/SearchBar'
@@ -24,8 +25,9 @@ import EventList from '@/components/Map/EventList'
 import NoResults from '@/components/Map/NoResults'
 import { useLocation } from '@/Utils/useLocation'
 import MiniLoading from '@/components/Loading/MiniLoading'
-import { openDirections, openCall } from '@/Utils/links'
+import { openDirections } from '@/Utils/links'
 import { useTheme } from '@/theme'
+import GradientBackground from '@/components/GradientBackground'
 
 // 1. Import your new hooks and types
 import { useMasjidList, type MasjidItem } from '@/Hooks/useMasjidList'
@@ -38,6 +40,9 @@ type EventListEvent = Omit<EventItem, 'dist_km'>
 export default function MapScreen() {
   const insets = useSafeAreaInsets()
   const { theme } = useTheme()
+  const navigation = useNavigation() as unknown as {
+    navigate: (route: string, params?: Record<string, unknown>) => void
+  }
   const [isExpanded, setIsExpanded] = useState(false)
   const [mapMode, setMapMode] = useState<'masjids' | 'events'>('events')
 
@@ -96,7 +101,7 @@ export default function MapScreen() {
   // --- Handlers ---
 
   const handleMasjidPress = (masjid: MasjidItem) => {
-    console.log('Masjid selected:', masjid?.name)
+    navigation.navigate('OrganizationDetail', { org: masjid })
   }
 
   const handleDirections = (masjid: MasjidItem) => {
@@ -116,10 +121,6 @@ export default function MapScreen() {
       destAddress: fullAddress || null,
       placeLabel: masjid?.name ?? '',
     })
-  }
-
-  const handleCall = (masjid: MasjidItem) => {
-    openCall(masjid?.contact_phone || masjid?.phone)
   }
 
   // Updated to use EventListEvent type
@@ -187,208 +188,203 @@ export default function MapScreen() {
 
   if (isExpanded) {
     return (
-      <Animated.View
-        style={[
-          styles.expandedContainer,
-          { opacity: fadeAnim, backgroundColor: theme.colors.background },
-        ]}
-      >
-        <View style={styles.expandedMapContainer}>
-          <DetailedMap mode={mapMode} />
-        </View>
-        <View
-          style={[
-            styles.expandedOverlayTop,
-            { paddingTop: Math.max(insets.top, 12) },
-          ]}
-          pointerEvents="box-none"
-        >
-          <View style={styles.expandedOverlayRow}>
-            <TouchableOpacity
-              style={[
-                styles.floatingBackButton,
-                {
-                  backgroundColor: theme.colors.surface,
-                  borderColor: theme.colors.border,
-                },
-              ]}
-              onPress={collapseMap}
-              activeOpacity={0.9}
-            >
-              <Feather
-                name="chevron-left"
-                size={20}
-                color={theme.colors.text}
+      <Animated.View style={[styles.expandedContainer, { opacity: fadeAnim }]}>
+        <GradientBackground>
+          <View style={styles.expandedMapContainer}>
+            <DetailedMap mode={mapMode} />
+          </View>
+          <View
+            style={[
+              styles.expandedOverlayTop,
+              { paddingTop: Math.max(insets.top, 12) },
+            ]}
+            pointerEvents="box-none"
+          >
+            <View style={styles.expandedOverlayRow}>
+              <TouchableOpacity
+                style={[
+                  styles.floatingBackButton,
+                  {
+                    backgroundColor: theme.colors.surface,
+                    borderColor: theme.colors.border,
+                  },
+                ]}
+                onPress={collapseMap}
+                activeOpacity={0.9}
+              >
+                <Feather
+                  name="chevron-left"
+                  size={20}
+                  color={theme.colors.text}
+                />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.expandedOverlayRow}>
+              <MapTabs
+                selectedTab={mapMode}
+                onTabChange={setMapMode}
+                floating={true}
               />
-            </TouchableOpacity>
+            </View>
           </View>
-          <View style={styles.expandedOverlayRow}>
-            <MapTabs
-              selectedTab={mapMode}
-              onTabChange={setMapMode}
-              floating={true}
-            />
-          </View>
-        </View>
+        </GradientBackground>
       </Animated.View>
     )
   }
 
   return (
-    <Animated.View
-      style={[
-        styles.container,
-        { opacity: fadeAnim, backgroundColor: theme.colors.background },
-      ]}
-    >
-      <ScrollView
-        style={styles.content}
-        refreshControl={
-          <RefreshControl
-            refreshing={
-              isMasjidMode ? masjidLogic.refreshing : eventLogic.refreshing
-            }
-            onRefresh={handleUnifiedRefresh}
-          />
-        }
-      >
-        <View style={styles.searchContainer}>
-          {/* 5. Update Search Bar to use Unified Handlers */}
-          <View style={styles.searchRow}>
-            <View style={styles.searchBarWrapper}>
-              <SearchBar
-                value={currentSearchQuery}
-                onChangeText={handleUnifiedSearch}
-                onClear={handleUnifiedClear}
-                placeholder={
-                  isMasjidMode
-                    ? 'Search for masjids nearby...'
-                    : "Search events ('Quran', 'Sisters')..."
-                }
-              />
-            </View>
-            {!isMasjidMode && (
-              <EventFilterControl
-                values={eventPostTypeFilters}
-                onChange={setEventPostTypeFilters}
-              />
-            )}
-          </View>
-        </View>
-
-        <View
-          style={[
-            styles.compactMapContainer,
-            {
-              backgroundColor: theme.colors.surface,
-              shadowColor: theme.colors.shadow,
-            },
-          ]}
+    <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
+      <GradientBackground>
+        <ScrollView
+          style={styles.content}
+          refreshControl={
+            <RefreshControl
+              refreshing={
+                isMasjidMode ? masjidLogic.refreshing : eventLogic.refreshing
+              }
+              onRefresh={handleUnifiedRefresh}
+            />
+          }
         >
-          <MapHeader
-            onExpand={expandMap}
-            selectedTab={mapMode}
-            onTabChange={setMapMode}
-          />
-          <CompactMapView mode={mapMode} />
-        </View>
-
-        {currentLoading && (
-          <View
-            style={[
-              styles.loadingContainer,
-              {
-                backgroundColor: theme.colors.surface,
-                shadowColor: theme.colors.shadow,
-              },
-            ]}
-          >
-            <MiniLoading />
-            <Text
-              style={[styles.loadingText, { color: theme.colors.textMuted }]}
-            >
-              {isMasjidMode ? 'Loading masjids...' : 'Loading events...'}
-            </Text>
-          </View>
-        )}
-
-        {currentError && (
-          <View
-            style={[
-              styles.errorContainer,
-              {
-                backgroundColor: theme.colors.surface,
-                shadowColor: theme.colors.shadow,
-              },
-            ]}
-          >
-            <Text style={styles.errorText}>{currentError}</Text>
-          </View>
-        )}
-
-        {!currentLoading && !currentError && (
-          <View
-            style={[
-              styles.masjidListContainer,
-              {
-                backgroundColor: theme.colors.surface,
-                shadowColor: theme.colors.shadow,
-              },
-            ]}
-          >
-            <Text
-              style={[styles.masjidListTitle, { color: theme.colors.text }]}
-            >
-              {isMasjidMode
-                ? currentSearchQuery
-                  ? `Search Results (${masjidLogic.filteredMasjids.length})`
-                  : 'Nearest Masjids'
-                : currentSearchQuery
-                  ? `Search Results (${eventLogic.events.length})`
-                  : 'Upcoming Near You'}
-            </Text>
-
-            {/* 6. Render the Correct List based on mode */}
-            {isMasjidMode ? (
-              masjidLogic.filteredMasjids.length === 0 ? (
-                <NoResults
-                  message={
-                    currentSearchQuery.trim() === ''
-                      ? 'No masjids found in your area'
-                      : `No masjids found for "${currentSearchQuery}"`
+          <View style={styles.searchContainer}>
+            {/* 5. Update Search Bar to use Unified Handlers */}
+            <View style={styles.searchRow}>
+              <View style={styles.searchBarWrapper}>
+                <SearchBar
+                  value={currentSearchQuery}
+                  onChangeText={handleUnifiedSearch}
+                  onClear={handleUnifiedClear}
+                  placeholder={
+                    isMasjidMode
+                      ? 'Search for masjids nearby...'
+                      : "Search events ('Quran', 'Sisters')..."
                   }
                 />
+              </View>
+              {!isMasjidMode && (
+                <EventFilterControl
+                  values={eventPostTypeFilters}
+                  onChange={setEventPostTypeFilters}
+                />
+              )}
+            </View>
+          </View>
+
+          <View
+            style={[
+              styles.compactMapContainer,
+              {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+                shadowColor: theme.colors.shadow,
+              },
+            ]}
+          >
+            <MapHeader
+              onExpand={expandMap}
+              selectedTab={mapMode}
+              onTabChange={setMapMode}
+            />
+            <CompactMapView mode={mapMode} />
+          </View>
+
+          {currentLoading && (
+            <View
+              style={[
+                styles.loadingContainer,
+                {
+                  backgroundColor: theme.colors.surface,
+                  shadowColor: theme.colors.shadow,
+                },
+              ]}
+            >
+              <MiniLoading />
+              <Text
+                style={[styles.loadingText, { color: theme.colors.textMuted }]}
+              >
+                {isMasjidMode ? 'Loading masjids...' : 'Loading events...'}
+              </Text>
+            </View>
+          )}
+
+          {currentError && (
+            <View
+              style={[
+                styles.errorContainer,
+                {
+                  backgroundColor: theme.colors.surface,
+                  shadowColor: theme.colors.shadow,
+                },
+              ]}
+            >
+              <Text style={styles.errorText}>{currentError}</Text>
+            </View>
+          )}
+
+          {!currentLoading && !currentError && (
+            <View
+              style={[
+                styles.masjidListContainer,
+                {
+                  backgroundColor: theme.colors.surface,
+                  borderColor: theme.colors.border,
+                  shadowColor: theme.colors.shadow,
+                },
+              ]}
+            >
+              <Text
+                style={[styles.masjidListTitle, { color: theme.colors.text }]}
+              >
+                {isMasjidMode
+                  ? currentSearchQuery
+                    ? `Search Results (${masjidLogic.filteredMasjids.length})`
+                    : 'Nearest Masjids'
+                  : currentSearchQuery
+                    ? `Search Results (${eventLogic.events.length})`
+                    : 'Upcoming Near You'}
+              </Text>
+
+              {/* 6. Render the Correct List based on mode */}
+              {isMasjidMode ? (
+                masjidLogic.filteredMasjids.length === 0 ? (
+                  <NoResults
+                    message={
+                      currentSearchQuery.trim() === ''
+                        ? 'No masjids found in your area'
+                        : `No masjids found for "${currentSearchQuery}"`
+                    }
+                  />
+                ) : (
+                  <MasjidList
+                    items={
+                      currentSearchQuery
+                        ? masjidLogic.filteredMasjids
+                        : masjidLogic.filteredMasjids.slice(0, 3)
+                    }
+                    onPress={handleMasjidPress}
+                    onDirections={handleDirections}
+                  />
+                )
+              ) : eventLogic.events.length === 0 ? (
+                <NoResults message="No events found" />
               ) : (
-                <MasjidList
-                  items={
-                    currentSearchQuery
-                      ? masjidLogic.filteredMasjids
-                      : masjidLogic.filteredMasjids.slice(0, 3)
-                  }
-                  onPress={handleMasjidPress}
-                  onDirections={handleDirections}
-                  onCall={handleCall}
+                <EventList
+                  items={eventLogic.events.slice(0, 3)}
+                  onPress={handleEventPress}
+                  onDirections={handleEventDirections}
                 />
-              )
-            ) : eventLogic.events.length === 0 ? (
-              <NoResults message="No events found" />
-            ) : (
-              <EventList
-                items={eventLogic.events.slice(0, 3)}
-                onPress={handleEventPress}
-                onDirections={handleEventDirections}
-              />
-            )}
-          </View>
-        )}
-      </ScrollView>
+              )}
+            </View>
+          )}
+        </ScrollView>
+      </GradientBackground>
     </Animated.View>
   )
 }
 
 // ... Styles remain exactly the same ...
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F7FAFC' },
+  container: { flex: 1 },
   content: { flex: 1 },
   searchContainer: { padding: 20, paddingBottom: 10, marginTop: 40 },
   searchRow: {
@@ -404,6 +400,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 20,
     borderRadius: 12,
+    borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -465,6 +462,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderRadius: 12,
     padding: 16,
+    borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,

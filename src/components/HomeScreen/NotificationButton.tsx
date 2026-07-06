@@ -1,7 +1,10 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { View, TouchableOpacity, StyleSheet } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useTheme } from '@/theme'
+
+const NOTIFICATIONS_OPENED_STORAGE_KEY = 'hasOpenedNotifications'
 
 interface NotificationButtonProps {
   navigation: {
@@ -13,8 +16,41 @@ const NotificationButton: React.FC<NotificationButtonProps> = ({
   navigation,
 }) => {
   const { theme } = useTheme()
+  const [showBadge, setShowBadge] = useState(false)
 
-  const handlePress = () => {
+  useEffect(() => {
+    let isMounted = true
+
+    const loadOpenedState = async () => {
+      try {
+        const hasOpenedNotifications = await AsyncStorage.getItem(
+          NOTIFICATIONS_OPENED_STORAGE_KEY,
+        )
+
+        if (isMounted) {
+          setShowBadge(hasOpenedNotifications !== 'true')
+        }
+      } catch (error) {
+        console.log('Failed to load notifications opened state:', error)
+      }
+    }
+
+    loadOpenedState()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  const handlePress = async () => {
+    setShowBadge(false)
+
+    try {
+      await AsyncStorage.setItem(NOTIFICATIONS_OPENED_STORAGE_KEY, 'true')
+    } catch (error) {
+      console.log('Failed to save notifications opened state:', error)
+    }
+
     navigation.navigate('Notifications')
   }
 
@@ -32,7 +68,7 @@ const NotificationButton: React.FC<NotificationButtonProps> = ({
     >
       <View style={styles.iconContainer}>
         <Feather name="bell" size={20} color={theme.colors.text} />
-        <View style={styles.notificationBadge} />
+        {showBadge && <View style={styles.notificationBadge} />}
       </View>
     </TouchableOpacity>
   )

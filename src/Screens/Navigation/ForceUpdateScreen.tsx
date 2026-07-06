@@ -1,5 +1,6 @@
-import { View, Text, Pressable, Platform, Linking } from 'react-native'
+import { Text, Pressable, Platform, Linking } from 'react-native'
 import { useTheme } from '@/theme'
+import GradientBackground from '@/components/GradientBackground'
 
 const IOS_STORE_URL = 'https://apps.apple.com/ca/app/jamaah/id6755858703'
 
@@ -15,12 +16,10 @@ export default function ForceUpdateScreen() {
   }
 
   return (
-    <View
+    <GradientBackground
       style={{
-        flex: 1,
         justifyContent: 'center',
         padding: 24,
-        backgroundColor: theme.colors.background,
       }}
     >
       <Text
@@ -67,6 +66,6 @@ export default function ForceUpdateScreen() {
           Update App
         </Text>
       </Pressable>
-    </View>
+    </GradientBackground>
   )
 }

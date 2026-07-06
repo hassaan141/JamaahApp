@@ -99,7 +99,10 @@ const NotificationList: React.FC<{ refreshKey?: boolean }> = ({
   }, [activeTab])
 
   const upcomingAnnouncements = useMemo(
-    () => announcements.filter((item) => isAnnouncementUpcoming(item)),
+    () =>
+      announcements.filter((item) =>
+        isAnnouncementUpcoming(item, new Date(), item.organizations?.timezone),
+      ),
     [announcements],
   )
 

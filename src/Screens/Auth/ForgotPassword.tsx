@@ -58,7 +58,12 @@ export default function ForgotPassword({ navigation }: { navigation: Nav }) {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.headerContainer}>
+        <View
+          style={[
+            styles.headerContainer,
+            { backgroundColor: theme.colors.background },
+          ]}
+        >
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => navigation.goBack()}

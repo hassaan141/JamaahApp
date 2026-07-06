@@ -20,6 +20,7 @@ import MasjidListItem from '@/components/MasjidScreen/MasjidListItem'
 import LoadingAnimation from '@/components/Loading/Loading'
 import { toast } from '@/components/Toast/toast'
 import { useTheme } from '@/theme'
+import GradientBackground from '@/components/GradientBackground'
 
 interface NavProps {
   navigation: { goBack: () => void }
@@ -156,7 +157,7 @@ const Masjids: React.FC<NavProps> = ({ navigation, route }) => {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <GradientBackground>
         <LoadingAnimation />
         <Text
           style={{
@@ -167,16 +168,14 @@ const Masjids: React.FC<NavProps> = ({ navigation, route }) => {
         >
           Loading…
         </Text>
-      </View>
+      </GradientBackground>
     )
   }
 
   const hasNoResults = masjids.length === 0
 
   return (
-    <View
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-    >
+    <GradientBackground style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerRow}>
           {showBackButton && (
@@ -288,7 +287,7 @@ const Masjids: React.FC<NavProps> = ({ navigation, route }) => {
           </View>
         </ScrollView>
       )}
-    </View>
+    </GradientBackground>
   )
 }
 

@@ -4,10 +4,10 @@ import Feather from '@expo/vector-icons/Feather'
 import { useTheme } from '@/theme'
 
 export const EVENT_FILTER_OPTIONS = [
-  { label: 'Event', value: 'Event' },
-  { label: 'Repeating Classes', value: 'Repeating_classes' },
+  { label: 'Events', value: 'Event' },
+  { label: 'Classes', value: 'Repeating_classes' },
   { label: 'Janazah', value: 'Janazah' },
-  { label: 'Volunteering', value: 'Volunteerng' },
+  { label: 'Volunteer', value: 'Volunteerng' },
 ] as const
 
 export type EventFilterValue = (typeof EVENT_FILTER_OPTIONS)[number]['value']

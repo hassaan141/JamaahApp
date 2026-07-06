@@ -4,7 +4,6 @@ import Feather from '@expo/vector-icons/Feather'
 import type { OrgPost } from '@/types'
 import AnnouncementModal from './AnnouncementModal'
 import {
-  formatTime,
   formatDaysOfWeek,
   chunkIntoPairs,
   formatDate,
@@ -12,6 +11,7 @@ import {
   getEventTypeColor,
 } from './announcementUtils'
 import { useTheme } from '@/theme'
+import { formatTime } from '@/Utils/datetime'
 
 interface AnnouncementCardProps {
   announcement: OrgPost & { organizations?: { name?: string } | null }
@@ -32,8 +32,8 @@ export default function AnnouncementCard({
   const [modalVisible, setModalVisible] = useState(false)
   const eventColor = getEventTypeColor(announcement.post_type)
   const eventIcon = getEventTypeIcon(announcement.post_type)
-  const startTime = formatTime(announcement.start_time)
-  const endTime = formatTime(announcement.end_time)
+  const startTime = formatTime(announcement.start_time, '', null)
+  const endTime = formatTime(announcement.end_time, '', null)
   const recurringDays = formatDaysOfWeek(announcement.recurs_on_days)
   const recurringDayRows = chunkIntoPairs(recurringDays)
   const eventDate = formatDate(announcement.date)

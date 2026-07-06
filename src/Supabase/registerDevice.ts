@@ -59,39 +59,17 @@ export async function registerDeviceToken(
       return { success: false, error: 'No FCM token returned' }
     }
 
-    // 1. Try RPC First (Best for handling ownership transfer securely)
     const { error: rpcError } = await supabase.rpc('register_device_token', {
       p_fcm_token: fcmToken,
       p_platform: Platform.OS,
     })
 
-    if (!rpcError) {
-      console.log('[registerDeviceToken] Success via RPC')
-      return { success: true, token: fcmToken }
+    if (rpcError) {
+      console.error('[registerDeviceToken] RPC failed:', rpcError)
+      return { success: false, error: rpcError.message }
     }
 
-    console.warn(
-      '[registerDeviceToken] RPC failed, trying upsert fallback:',
-      rpcError.message,
-    )
-
-    // 2. Fallback: Standard Upsert (If RPC missing/fails)
-    const { error: upsertError } = await supabase.from('devices').upsert(
-      {
-        profile_id: profileId,
-        fcm_token: fcmToken,
-        platform: Platform.OS || 'unknown',
-        last_seen_at: new Date().toISOString(),
-      },
-      { onConflict: 'fcm_token' },
-    )
-
-    if (upsertError) {
-      console.error('[registerDeviceToken] Fallback failed:', upsertError)
-      return { success: false, error: upsertError.message }
-    }
-
-    console.log('[registerDeviceToken] Success via Upsert')
+    console.log('[registerDeviceToken] Success via RPC')
     return { success: true, token: fcmToken }
   } catch (error) {
     const errorMessage =
@@ -101,30 +79,15 @@ export async function registerDeviceToken(
   }
 }
 
-export async function updateDeviceLastSeen(profileId: string) {
-  try {
-    const { error } = await supabase
-      .from('devices')
-      .update({ last_seen_at: new Date().toISOString() })
-      .eq('profile_id', profileId)
-
-    if (error) console.error('Error updating last seen:', error)
-  } catch (error) {
-    console.error('Error in updateDeviceLastSeen:', error)
-  }
-}
-
 export async function cleanupInvalidToken(profileId: string, fcmToken: string) {
   try {
-    // Try RPC first
     const { error } = await supabase.rpc('cleanup_invalid_fcm_token', {
       p_profile_id: profileId,
       p_fcm_token: fcmToken,
     })
 
-    // Fallback delete if RPC fails
     if (error) {
-      await supabase.from('devices').delete().match({ fcm_token: fcmToken })
+      console.error('[cleanupInvalidToken] RPC failed:', error)
     }
   } catch (error) {
     console.error('Error in cleanupInvalidToken:', error)

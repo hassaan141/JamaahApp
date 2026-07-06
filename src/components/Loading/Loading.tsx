@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react'
 import { View, Text, StyleSheet, Animated, Easing } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
 import { useTheme } from '@/theme'
+import GradientBackground from '@/components/GradientBackground'
 
 export default function LoadingAnimation() {
   const { theme } = useTheme()
@@ -58,9 +59,7 @@ export default function LoadingAnimation() {
   })
 
   return (
-    <View
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-    >
+    <GradientBackground style={styles.container}>
       <View
         style={[
           styles.loadingCard,
@@ -111,7 +110,7 @@ export default function LoadingAnimation() {
           />
         </View>
       </View>
-    </View>
+    </GradientBackground>
   )
 }
 

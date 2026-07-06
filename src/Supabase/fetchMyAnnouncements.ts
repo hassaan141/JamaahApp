@@ -1,5 +1,6 @@
 import { supabase } from './supabaseClient'
 import { getUserId } from '../Utils/getUserID'
+import type { Demographic } from '@/types'
 
 export async function getMySubscribedOrgIds(): Promise<string[]> {
   const profileId = await getUserId()
@@ -26,7 +27,7 @@ export type Announcement = {
   body: string | null
   created_at: string
   post_type: string | null
-  demographic: string | null
+  demographic: Demographic | null
   recurs_on_days: number[] | null
   start_time: string | null
   end_time: string | null
@@ -42,6 +43,7 @@ export type Announcement = {
     city: string | null
     province_state: string | null
     country: string | null
+    timezone: string | null
   } | null
 }
 
@@ -54,7 +56,7 @@ export async function fetchMyAnnouncements(
 
   let q = supabase
     .from('org_posts')
-    .select('*, organizations (name, address, city)') // Only join organization name
+    .select('*, organizations (name, address, city, timezone)')
     .in('organization_id', orgIds)
     .order('created_at', { ascending: false })
     .limit(limit)

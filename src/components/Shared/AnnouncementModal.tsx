@@ -10,7 +10,6 @@ import {
 import Feather from '@expo/vector-icons/Feather'
 import type { OrgPost } from '@/types'
 import {
-  formatTime,
   formatDaysOfWeek,
   chunkIntoPairs,
   formatDate,
@@ -18,6 +17,7 @@ import {
   getEventTypeColor,
 } from './announcementUtils'
 import { useTheme } from '@/theme'
+import { formatTime } from '@/Utils/datetime'
 
 interface AnnouncementModalProps {
   visible: boolean
@@ -35,8 +35,8 @@ export default function AnnouncementModal({
   const { theme } = useTheme()
   const eventColor = getEventTypeColor(announcement.post_type)
   const eventIcon = getEventTypeIcon(announcement.post_type)
-  const startTime = formatTime(announcement.start_time)
-  const endTime = formatTime(announcement.end_time)
+  const startTime = formatTime(announcement.start_time, '', null)
+  const endTime = formatTime(announcement.end_time, '', null)
   const recurringDays = formatDaysOfWeek(announcement.recurs_on_days)
   const recurringDayRows = chunkIntoPairs(recurringDays)
   const eventDate = formatDate(announcement.date)
@@ -221,6 +221,25 @@ export default function AnnouncementModal({
                     </Text>
                   </View>
                 ))}
+
+              {!!announcement.location && (
+                <View style={styles.detailRow}>
+                  <Feather
+                    name="map-pin"
+                    size={16}
+                    color={theme.colors.textSoft}
+                    style={styles.detailIcon}
+                  />
+                  <Text
+                    style={[
+                      styles.detailText,
+                      { color: theme.colors.textMuted, flex: 1 },
+                    ]}
+                  >
+                    {announcement.location}
+                  </Text>
+                </View>
+              )}
             </View>
 
             <View

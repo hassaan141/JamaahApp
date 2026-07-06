@@ -7,12 +7,10 @@ export default function MasjidList({
   items,
   onPress,
   onDirections,
-  onCall,
 }: {
   items: MasjidItem[]
   onPress: (item: MasjidItem) => void
   onDirections: (item: MasjidItem) => void
-  onCall: (item: MasjidItem) => void
 }) {
   if (!items.length) return null
   return (
@@ -23,7 +21,6 @@ export default function MasjidList({
           item={item}
           onPress={() => onPress(item)}
           onDirections={() => onDirections(item)}
-          onCall={() => onCall(item)}
         />
       )}
       keyExtractor={(item) => String(item.id)}

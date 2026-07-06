@@ -60,10 +60,10 @@ export default function SignUp({ navigation }: { navigation: Nav }) {
         ],
       })
 
-      console.log(
-        '[AppleSignUp] Apple Native Success. Credential:',
-        JSON.stringify(credential, null, 2),
-      )
+      console.log('[AppleSignUp] Apple Native Success.', {
+        identityTokenPresent: Boolean(credential.identityToken),
+        authorizationCodePresent: Boolean(credential.authorizationCode),
+      })
 
       if (credential.identityToken) {
         console.log(
@@ -125,10 +125,9 @@ export default function SignUp({ navigation }: { navigation: Nav }) {
 
       // 2. Perform Native Sign-In
       const userInfo = await GoogleSignin.signIn()
-      console.log(
-        '[GoogleSignUp] Google Native Success. UserInfo:',
-        JSON.stringify(userInfo, null, 2),
-      ) // LOG 3
+      console.log('[GoogleSignUp] Google Native Success.', {
+        idTokenPresent: Boolean(userInfo.data?.idToken),
+      }) // LOG 3
 
       if (userInfo.data?.idToken) {
         console.log(

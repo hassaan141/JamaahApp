@@ -29,7 +29,15 @@ export default function UserTypeSelection({ navigation }: { navigation: Nav }) {
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
       {/* FIX: Header top padding based on safe area */}
-      <View style={[styles.headerContainer, { paddingTop: insets.top + 10 }]}>
+      <View
+        style={[
+          styles.headerContainer,
+          {
+            paddingTop: insets.top + 10,
+            backgroundColor: theme.colors.background,
+          },
+        ]}
+      >
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
@@ -43,7 +51,10 @@ export default function UserTypeSelection({ navigation }: { navigation: Nav }) {
         contentContainerStyle={[
           styles.contentContainer,
           // FIX: Add dynamic bottom padding for navigation bar/home indicator
-          { paddingBottom: 20 + insets.bottom },
+          {
+            paddingBottom: 20 + insets.bottom,
+            backgroundColor: theme.colors.background,
+          },
         ]}
         showsVerticalScrollIndicator={false}
       >
@@ -142,7 +153,6 @@ export default function UserTypeSelection({ navigation }: { navigation: Nav }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F7FAFC',
   },
   headerContainer: {
     paddingHorizontal: 20,

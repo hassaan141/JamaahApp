@@ -2,11 +2,13 @@ import React from 'react'
 import { View, Text, TouchableOpacity, Platform } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { useTheme } from '@/theme'
+import RequiredLabel from './RequiredLabel'
 import type { DateTimePickerEvent } from '@react-native-community/datetimepicker'
 import DateTimePicker from '@react-native-community/datetimepicker'
 
 interface TimeInputProps {
   label: string
+  required?: boolean
   time: string | null
   setTime: (t: string) => void
   isOpen: boolean
@@ -15,6 +17,7 @@ interface TimeInputProps {
 
 export default function TimeInput({
   label,
+  required = false,
   time,
   setTime,
   isOpen,
@@ -96,16 +99,29 @@ export default function TimeInput({
             />
           </View>
           <View style={{ flex: 1 }}>
-            <Text
-              style={{
-                fontSize: 10,
-                color: theme.colors.textMuted,
-                fontWeight: '600',
-                textTransform: 'uppercase',
-              }}
-            >
-              {label}
-            </Text>
+            {required ? (
+              <RequiredLabel
+                style={{
+                  fontSize: 10,
+                  color: theme.colors.textMuted,
+                  fontWeight: '600',
+                  textTransform: 'uppercase',
+                }}
+              >
+                {label}
+              </RequiredLabel>
+            ) : (
+              <Text
+                style={{
+                  fontSize: 10,
+                  color: theme.colors.textMuted,
+                  fontWeight: '600',
+                  textTransform: 'uppercase',
+                }}
+              >
+                {label}
+              </Text>
+            )}
             <Text
               numberOfLines={1}
               style={{

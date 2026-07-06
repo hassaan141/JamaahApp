@@ -7,7 +7,7 @@ import {
   ScrollView,
 } from 'react-native'
 import Feather from '@expo/vector-icons/Feather'
-import type { Profile, OrgPost, Organization } from '@/types'
+import type { Profile, OrgPost, Organization, Demographic } from '@/types'
 import { fetchMyOrgPosts } from '@/Supabase/fetchMyOrgPosts'
 import { updateOrgAnnouncement } from '@/Supabase/updateOrgAnnouncement'
 import { deleteOrgAnnouncement } from '@/Supabase/deleteOrgAnnouncement'
@@ -77,7 +77,7 @@ export default function AnnouncementsList({
     title: string
     body: string
     post_type: string | null
-    demographic: string | null
+    demographic: Demographic | null
     recurs_on_days: number[] | null
     start_time: string | null
     end_time: string | null

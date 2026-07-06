@@ -138,7 +138,6 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F7FAFC',
   },
   scrollView: {
     flex: 1,

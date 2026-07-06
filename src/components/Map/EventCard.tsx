@@ -7,6 +7,12 @@ import AnnouncementModal from '@/components/Shared/AnnouncementModal'
 import { useTheme } from '@/theme'
 import { useDistanceUnit } from '@/preferences'
 import { formatDistanceFromKm } from '@/Utils/distance'
+import { formatTime } from '@/Utils/datetime'
+import {
+  formatDaysOfWeek,
+  getEventTypeColor,
+  getEventTypeIcon,
+} from '@/components/Shared/announcementUtils'
 
 /**
  * Extended type to handle recurring days and organization name
@@ -15,24 +21,6 @@ import { formatDistanceFromKm } from '@/Utils/distance'
 type EventWithExtras = EventItem & {
   recurs_on_days?: (string | number)[] | null
   organization_name?: string | null
-}
-
-const getEventTypeIcon = (
-  postType: string | null,
-): React.ComponentProps<typeof Feather>['name'] => {
-  switch (postType) {
-    case 'Event':
-      return 'calendar'
-    case 'Repeating_classes':
-      return 'book-open'
-    case 'Janazah':
-      return 'heart'
-    case 'Volunteerng':
-    case 'Volunteering':
-      return 'users'
-    default:
-      return 'calendar'
-  }
 }
 
 /**
@@ -54,37 +42,6 @@ const formatLegibleDate = (dateStr: string | null) => {
   }
 }
 
-const formatTime = (time: string | null) => {
-  if (!time) return null
-  try {
-    const [hours, minutes] = time.split(':')
-    if (!hours || !minutes) return time
-    const hour = parseInt(hours, 10)
-    const min = minutes.padStart(2, '0')
-    const ampm = hour >= 12 ? 'PM' : 'AM'
-    const displayHour = hour % 12 || 12
-    return `${displayHour}:${min} ${ampm}`
-  } catch {
-    return time
-  }
-}
-
-const getEventTypeColor = (postType: string | null) => {
-  switch (postType) {
-    case 'Event':
-      return '#2F855A'
-    case 'Repeating_classes':
-      return '#3182CE'
-    case 'Janazah':
-      return '#E53E3E'
-    case 'Volunteerng':
-    case 'Volunteering':
-      return '#805AD5'
-    default:
-      return '#2F855A'
-  }
-}
-
 export default function EventCard({
   event,
   onDirections,
@@ -103,24 +60,7 @@ export default function EventCard({
   const recurringDisplay = (() => {
     if (!isRepeating) return ''
     const days = (event as EventWithExtras).recurs_on_days
-    if (!days || days.length === 0) return ''
-    const dayNames = [
-      'Monday',
-      'Tuesday',
-      'Wednesday',
-      'Thursday',
-      'Friday',
-      'Saturday',
-      'Sunday',
-    ]
-    const names = (days as (string | number)[])
-      .map((d) => {
-        const n = typeof d === 'string' ? parseInt(d, 10) : Number(d)
-        if (!Number.isFinite(n) || n < 1 || n > 7) return null
-        return dayNames[n - 1]
-      })
-      .filter(Boolean) as string[]
-    return names.join(', ')
+    return formatDaysOfWeek(days ?? null, 'long')?.join(', ') ?? ''
   })()
 
   const announcementData: OrgPost & {
@@ -223,8 +163,10 @@ export default function EventCard({
                 <Text
                   style={[styles.infoText, { color: theme.colors.textMuted }]}
                 >
-                  {formatTime(event.start_time)}
-                  {event.end_time ? ` - ${formatTime(event.end_time)}` : ''}
+                  {formatTime(event.start_time, '', null)}
+                  {event.end_time
+                    ? ` - ${formatTime(event.end_time, '', null)}`
+                    : ''}
                 </Text>
               ) : (
                 <Text

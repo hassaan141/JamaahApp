@@ -12,6 +12,7 @@ import Feather from '@expo/vector-icons/Feather'
 import { BlurView } from 'expo-blur'
 import type { Database } from '@/types/supabase'
 import { useTheme } from '@/theme'
+import { formatTime } from '@/Utils/datetime'
 
 type PrayerTimeRow = Database['public']['Tables']['daily_prayer_times']['Row']
 
@@ -25,17 +26,6 @@ interface PrayerDetailModalProps {
   onPrevDay: () => void
   canNextDay?: boolean
   canPrevDay?: boolean
-}
-
-const formatTime = (timeString?: string | null) => {
-  if (!timeString) return '-'
-  const [h, m] = timeString.split(':')
-  const hour = parseInt(h, 10)
-  if (isNaN(hour)) return timeString
-
-  const ampm = hour >= 12 ? 'PM' : 'AM'
-  const formattedHour = hour % 12 || 12
-  return `${formattedHour}:${m} ${ampm}`
 }
 
 const formatDatePretty = (date: Date) => {
@@ -81,14 +71,14 @@ const PrayerRow = ({
       {singleTime ? (
         <View style={styles.singleTimeContainer}>
           <Text style={[styles.cellTimeSingle, { color: theme.colors.text }]}>
-            {formatTime(singleTime)}
+            {formatTime(singleTime, '', '-')}
           </Text>
         </View>
       ) : (
         <View style={styles.timeContainer}>
           <View style={styles.timeColumn}>
             <Text style={[styles.cellTime, { color: theme.colors.textMuted }]}>
-              {formatTime(azan)}
+              {formatTime(azan, '', '-')}
             </Text>
           </View>
           <View style={styles.timeColumn}>
@@ -99,7 +89,7 @@ const PrayerRow = ({
                 { color: theme.colors.primary },
               ]}
             >
-              {formatTime(iqamah)}
+              {formatTime(iqamah, '', '-')}
             </Text>
           </View>
         </View>
@@ -154,7 +144,7 @@ const JummahRow = ({
               {j.label}
             </Text>
             <Text style={[styles.jummahTime, { color: theme.colors.text }]}>
-              {formatTime(j.time)}
+              {formatTime(j.time, '', '-')}
             </Text>
           </View>
         ))}

@@ -20,6 +20,7 @@ import { fetchOrganizationByProfileId } from '@/Supabase/fetchOrgFromProfileId'
 import { toast } from '@/components/Toast/toast'
 import type { Database } from '@/types/supabase'
 import { useTheme } from '@/theme'
+import GradientBackground from '@/components/GradientBackground'
 
 type Organization = Database['public']['Tables']['organizations']['Row']
 
@@ -99,302 +100,302 @@ export default function AccountSettings() {
 
   if (profileLoading) {
     return (
-      <SafeAreaView
-        style={[styles.container, { backgroundColor: theme.colors.background }]}
-      >
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={[styles.loadingText, { color: theme.colors.textMuted }]}>
-            Loading...
-          </Text>
-        </View>
-      </SafeAreaView>
+      <GradientBackground>
+        <SafeAreaView style={styles.container}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+            <Text
+              style={[styles.loadingText, { color: theme.colors.textMuted }]}
+            >
+              Loading...
+            </Text>
+          </View>
+        </SafeAreaView>
+      </GradientBackground>
     )
   }
 
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-    >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1 }}
-      >
-        <View
-          style={[
-            styles.header,
-            {
-              backgroundColor: theme.colors.background,
-              borderBottomColor: theme.colors.border,
-            },
-          ]}
+    <GradientBackground>
+      <SafeAreaView style={styles.container}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1 }}
         >
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
+          <View
             style={[
-              styles.backButton,
+              styles.header,
               {
-                backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.border,
+                borderBottomColor: theme.colors.border,
               },
             ]}
           >
-            <Feather name="arrow-left" size={20} color={theme.colors.text} />
-          </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
-            Account Settings
-          </Text>
-        </View>
-
-        <ScrollView
-          style={styles.scrollContainer}
-          showsVerticalScrollIndicator={false}
-        >
-          {isOrganization && (
-            <View
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
               style={[
-                styles.section,
+                styles.backButton,
                 {
                   backgroundColor: theme.colors.surface,
                   borderColor: theme.colors.border,
-                  shadowColor: theme.colors.shadow,
                 },
               ]}
             >
-              <View style={styles.sectionHeader}>
-                <Feather
-                  name="briefcase"
-                  size={20}
-                  color={theme.colors.primary}
-                />
-                <Text
-                  style={[styles.sectionTitle, { color: theme.colors.text }]}
-                >
-                  Organization Settings
-                </Text>
-              </View>
+              <Feather name="arrow-left" size={20} color={theme.colors.text} />
+            </TouchableOpacity>
+            <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
+              Account Settings
+            </Text>
+          </View>
 
-              <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: theme.colors.text }]}>
-                  Organization Name
-                </Text>
-                <TextInput
-                  style={[
-                    styles.input,
-                    {
-                      borderColor: theme.colors.border,
-                      backgroundColor: theme.colors.surfaceMuted,
-                      color: theme.colors.text,
-                    },
-                  ]}
-                  value={orgName}
-                  onChangeText={setOrgName}
-                  placeholder="Enter organization name"
-                  placeholderTextColor={theme.colors.textSoft}
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: theme.colors.text }]}>
-                  Description
-                </Text>
-                <TextInput
-                  style={[
-                    styles.input,
-                    styles.textArea,
-                    {
-                      borderColor: theme.colors.border,
-                      backgroundColor: theme.colors.surfaceMuted,
-                      color: theme.colors.text,
-                    },
-                  ]}
-                  value={orgDescription}
-                  onChangeText={setOrgDescription}
-                  placeholder="Enter organization description"
-                  placeholderTextColor={theme.colors.textSoft}
-                  multiline
-                  numberOfLines={3}
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: theme.colors.text }]}>
-                  Contact Name
-                </Text>
-                <TextInput
-                  style={[
-                    styles.input,
-                    {
-                      borderColor: theme.colors.border,
-                      backgroundColor: theme.colors.surfaceMuted,
-                      color: theme.colors.text,
-                    },
-                  ]}
-                  value={orgContactName}
-                  onChangeText={setOrgContactName}
-                  placeholder="Enter contact person name"
-                  placeholderTextColor={theme.colors.textSoft}
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: theme.colors.text }]}>
-                  Contact Phone
-                </Text>
-                <TextInput
-                  style={[
-                    styles.input,
-                    {
-                      borderColor: theme.colors.border,
-                      backgroundColor: theme.colors.surfaceMuted,
-                      color: theme.colors.text,
-                    },
-                  ]}
-                  value={orgContactPhone}
-                  onChangeText={setOrgContactPhone}
-                  placeholder="Enter contact phone"
-                  placeholderTextColor={theme.colors.textSoft}
-                  keyboardType="phone-pad"
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: theme.colors.text }]}>
-                  Contact Email
-                </Text>
-                <TextInput
-                  style={[
-                    styles.input,
-                    {
-                      borderColor: theme.colors.border,
-                      backgroundColor: theme.colors.surfaceMuted,
-                      color: theme.colors.text,
-                    },
-                  ]}
-                  value={orgContactEmail}
-                  onChangeText={setOrgContactEmail}
-                  placeholder="Enter contact email"
-                  placeholderTextColor={theme.colors.textSoft}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: theme.colors.text }]}>
-                  Website
-                </Text>
-                <TextInput
-                  style={[
-                    styles.input,
-                    {
-                      borderColor: theme.colors.border,
-                      backgroundColor: theme.colors.surfaceMuted,
-                      color: theme.colors.text,
-                    },
-                  ]}
-                  value={orgWebsite}
-                  onChangeText={setOrgWebsite}
-                  placeholder="Enter website URL"
-                  placeholderTextColor={theme.colors.textSoft}
-                  autoCapitalize="none"
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: theme.colors.text }]}>
-                  Facebook
-                </Text>
-                <TextInput
-                  style={[
-                    styles.input,
-                    {
-                      borderColor: theme.colors.border,
-                      backgroundColor: theme.colors.surfaceMuted,
-                      color: theme.colors.text,
-                    },
-                  ]}
-                  value={orgFacebook}
-                  onChangeText={setOrgFacebook}
-                  placeholder="Enter Facebook URL"
-                  placeholderTextColor={theme.colors.textSoft}
-                  autoCapitalize="none"
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: theme.colors.text }]}>
-                  Instagram
-                </Text>
-                <TextInput
-                  style={[
-                    styles.input,
-                    {
-                      borderColor: theme.colors.border,
-                      backgroundColor: theme.colors.surfaceMuted,
-                      color: theme.colors.text,
-                    },
-                  ]}
-                  value={orgInstagram}
-                  onChangeText={setOrgInstagram}
-                  placeholder="Enter Instagram URL"
-                  placeholderTextColor={theme.colors.textSoft}
-                  autoCapitalize="none"
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={[styles.label, { color: theme.colors.text }]}>
-                  Twitter
-                </Text>
-                <TextInput
-                  style={[
-                    styles.input,
-                    {
-                      borderColor: theme.colors.border,
-                      backgroundColor: theme.colors.surfaceMuted,
-                      color: theme.colors.text,
-                    },
-                  ]}
-                  value={orgTwitter}
-                  onChangeText={setOrgTwitter}
-                  placeholder="Enter Twitter URL"
-                  placeholderTextColor={theme.colors.textSoft}
-                  autoCapitalize="none"
-                />
-              </View>
-
-              <TouchableOpacity
+          <ScrollView
+            style={styles.scrollContainer}
+            showsVerticalScrollIndicator={false}
+          >
+            {isOrganization && (
+              <View
                 style={[
-                  styles.button,
-                  styles.primaryButton,
-                  { backgroundColor: theme.colors.primary },
+                  styles.section,
+                  {
+                    backgroundColor: theme.colors.surface,
+                    borderColor: theme.colors.border,
+                    shadowColor: theme.colors.shadow,
+                  },
                 ]}
-                onPress={handleUpdateOrganization}
-                disabled={loading}
               >
-                {loading ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
-                ) : (
-                  <Text style={styles.primaryButtonText}>
-                    Update Organization
+                <View style={styles.sectionHeader}>
+                  <Feather
+                    name="briefcase"
+                    size={20}
+                    color={theme.colors.primary}
+                  />
+                  <Text
+                    style={[styles.sectionTitle, { color: theme.colors.text }]}
+                  >
+                    Organization Settings
                   </Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          )}
+                </View>
 
-          <View style={{ height: 40 }} />
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+                <View style={styles.inputGroup}>
+                  <Text style={[styles.label, { color: theme.colors.text }]}>
+                    Organization Name
+                  </Text>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        borderColor: theme.colors.border,
+                        backgroundColor: theme.colors.surfaceMuted,
+                        color: theme.colors.text,
+                      },
+                    ]}
+                    value={orgName}
+                    onChangeText={setOrgName}
+                    placeholder="Enter organization name"
+                    placeholderTextColor={theme.colors.textSoft}
+                  />
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={[styles.label, { color: theme.colors.text }]}>
+                    Description
+                  </Text>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      styles.textArea,
+                      {
+                        borderColor: theme.colors.border,
+                        backgroundColor: theme.colors.surfaceMuted,
+                        color: theme.colors.text,
+                      },
+                    ]}
+                    value={orgDescription}
+                    onChangeText={setOrgDescription}
+                    placeholder="Enter organization description"
+                    placeholderTextColor={theme.colors.textSoft}
+                    multiline
+                    numberOfLines={3}
+                  />
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={[styles.label, { color: theme.colors.text }]}>
+                    Contact Name
+                  </Text>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        borderColor: theme.colors.border,
+                        backgroundColor: theme.colors.surfaceMuted,
+                        color: theme.colors.text,
+                      },
+                    ]}
+                    value={orgContactName}
+                    onChangeText={setOrgContactName}
+                    placeholder="Enter contact person name"
+                    placeholderTextColor={theme.colors.textSoft}
+                  />
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={[styles.label, { color: theme.colors.text }]}>
+                    Contact Phone
+                  </Text>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        borderColor: theme.colors.border,
+                        backgroundColor: theme.colors.surfaceMuted,
+                        color: theme.colors.text,
+                      },
+                    ]}
+                    value={orgContactPhone}
+                    onChangeText={setOrgContactPhone}
+                    placeholder="Enter contact phone"
+                    placeholderTextColor={theme.colors.textSoft}
+                    keyboardType="phone-pad"
+                  />
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={[styles.label, { color: theme.colors.text }]}>
+                    Contact Email
+                  </Text>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        borderColor: theme.colors.border,
+                        backgroundColor: theme.colors.surfaceMuted,
+                        color: theme.colors.text,
+                      },
+                    ]}
+                    value={orgContactEmail}
+                    onChangeText={setOrgContactEmail}
+                    placeholder="Enter contact email"
+                    placeholderTextColor={theme.colors.textSoft}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={[styles.label, { color: theme.colors.text }]}>
+                    Website
+                  </Text>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        borderColor: theme.colors.border,
+                        backgroundColor: theme.colors.surfaceMuted,
+                        color: theme.colors.text,
+                      },
+                    ]}
+                    value={orgWebsite}
+                    onChangeText={setOrgWebsite}
+                    placeholder="Enter website URL"
+                    placeholderTextColor={theme.colors.textSoft}
+                    autoCapitalize="none"
+                  />
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={[styles.label, { color: theme.colors.text }]}>
+                    Facebook
+                  </Text>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        borderColor: theme.colors.border,
+                        backgroundColor: theme.colors.surfaceMuted,
+                        color: theme.colors.text,
+                      },
+                    ]}
+                    value={orgFacebook}
+                    onChangeText={setOrgFacebook}
+                    placeholder="Enter Facebook URL"
+                    placeholderTextColor={theme.colors.textSoft}
+                    autoCapitalize="none"
+                  />
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={[styles.label, { color: theme.colors.text }]}>
+                    Instagram
+                  </Text>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        borderColor: theme.colors.border,
+                        backgroundColor: theme.colors.surfaceMuted,
+                        color: theme.colors.text,
+                      },
+                    ]}
+                    value={orgInstagram}
+                    onChangeText={setOrgInstagram}
+                    placeholder="Enter Instagram URL"
+                    placeholderTextColor={theme.colors.textSoft}
+                    autoCapitalize="none"
+                  />
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={[styles.label, { color: theme.colors.text }]}>
+                    Twitter
+                  </Text>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        borderColor: theme.colors.border,
+                        backgroundColor: theme.colors.surfaceMuted,
+                        color: theme.colors.text,
+                      },
+                    ]}
+                    value={orgTwitter}
+                    onChangeText={setOrgTwitter}
+                    placeholder="Enter Twitter URL"
+                    placeholderTextColor={theme.colors.textSoft}
+                    autoCapitalize="none"
+                  />
+                </View>
+
+                <TouchableOpacity
+                  style={[
+                    styles.button,
+                    styles.primaryButton,
+                    { backgroundColor: theme.colors.primary },
+                  ]}
+                  onPress={handleUpdateOrganization}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <Text style={styles.primaryButtonText}>
+                      Update Organization
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            )}
+
+            <View style={{ height: 40 }} />
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </GradientBackground>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
   },
   header: {
     flexDirection: 'row',

@@ -10,12 +10,10 @@ export default function EnhancedMasjidCard({
   item,
   onPress,
   onDirections,
-  onCall,
 }: {
   item: MasjidItem
   onPress?: () => void
   onDirections?: (it: MasjidItem) => void
-  onCall?: (it: MasjidItem) => void
 }) {
   const { theme } = useTheme()
   const { unit } = useDistanceUnit()
@@ -66,26 +64,6 @@ export default function EnhancedMasjidCard({
         >
           <Feather name="navigation" size={14} color="#FFFFFF" />
           <Text style={styles.directionsText}>Directions</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.actionButton,
-            styles.callButton,
-            {
-              backgroundColor: theme.colors.surfaceMuted,
-              borderColor: theme.colors.primaryBorder,
-            },
-          ]}
-          onPress={(e) => {
-            e.stopPropagation()
-            onCall?.(item)
-          }}
-        >
-          <Feather name="phone" size={14} color={theme.colors.primary} />
-          <Text style={[styles.callText, { color: theme.colors.primary }]}>
-            Call
-          </Text>
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
@@ -172,16 +150,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   directionsButton: {},
-  callButton: {
-    borderWidth: 1,
-  },
   directionsText: {
     color: '#FFFFFF',
-    fontWeight: '600',
-    fontSize: 12,
-    marginLeft: 4,
-  },
-  callText: {
     fontWeight: '600',
     fontSize: 12,
     marginLeft: 4,

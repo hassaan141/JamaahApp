@@ -1,4 +1,4 @@
-import { Platform, Linking } from 'react-native'
+import { Platform, Linking, Alert } from 'react-native'
 import { toast } from '@/components/Toast/toast'
 
 async function safeOpenURL(url: string, humanLabel = 'this link') {
@@ -39,24 +39,36 @@ export async function openDirections({
     ? encodeURIComponent(destAddress)
     : `${destLat},${destLon}`
 
+  const googleMapsURL = `https://www.google.com/maps/dir/?api=1${
+    hasOrigin ? `&origin=${userLat},${userLon}` : ''
+  }&destination=${destination}`
+
   if (Platform.OS === 'ios') {
     const saddr = hasOrigin ? `${userLat},${userLon}` : ''
     const daddr = destAddress
       ? encodeURIComponent(destAddress ?? '')
       : `${destLat},${destLon}`
-    const url = hasOrigin
+    const appleMapsURL = hasOrigin
       ? `http://maps.apple.com/?saddr=${saddr}&daddr=${daddr}`
       : `http://maps.apple.com/?daddr=${daddr}`
 
-    return safeOpenURL(url, 'Apple Maps')
+    // Let iOS users pick their preferred maps app
+    return new Promise<boolean>((resolve) => {
+      Alert.alert('Get Directions', 'Choose your maps app', [
+        {
+          text: 'Apple Maps',
+          onPress: () => resolve(safeOpenURL(appleMapsURL, 'Apple Maps')),
+        },
+        {
+          text: 'Google Maps',
+          onPress: () => resolve(safeOpenURL(googleMapsURL, 'Google Maps')),
+        },
+        { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
+      ])
+    })
   }
 
-  const base = 'https://www.google.com/maps/dir/?api=1'
-  const origin = hasOrigin ? `&origin=${userLat},${userLon}` : ''
-  const dest = `&destination=${destination}`
-  const fullURL = `${base}${origin}${dest}`
-
-  const opened = await safeOpenURL(fullURL, 'Google Maps')
+  const opened = await safeOpenURL(googleMapsURL, 'Google Maps')
   if (opened) return true
 
   const navURL = `google.navigation:q=${destLat},${destLon}`
@@ -76,7 +88,7 @@ export async function openCall(rawPhone?: string | null) {
     return false
   }
 
-  const normalized = rawPhone.replace(/[^\\d+]/g, '')
+  const normalized = rawPhone.replace(/[^\d+]/g, '')
   if (!normalized) {
     toast.error('The phone number provided is not valid.', 'Invalid phone')
     return false

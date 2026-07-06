@@ -3,7 +3,14 @@ import {
   resolveOrgForTimes,
   fetchPrayerData,
 } from '@/Utils/organizationResolver'
-import { getPrayerTimesRange, type DailyPrayerTimes } from '@/Utils/prayerTimes'
+import {
+  getPrayerTimesRange,
+  toYMD,
+  fromYMD,
+  getPrayerTimesWindow,
+  getPrayerDateNavigation,
+  type DailyPrayerTimes,
+} from '@/Utils/prayerTimes'
 import { useLocation } from '@/Utils/useLocation'
 import { useAuth } from '@/Auth/AuthProvider'
 import { nearestOrg } from '@/Utils/nearest'
@@ -19,31 +26,6 @@ type UIState = {
   } | null
   distance_m: number | null
   mode: 'pinned' | 'auto' | 'guest'
-}
-
-function toYMD(date: Date) {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  return `${y}-${m}-${d}`
-}
-
-function fromYMD(dateStr: string) {
-  const [year, month, day] = dateStr.split('-').map(Number)
-  return new Date(year, month - 1, day)
-}
-
-function getPrayerTimesWindow(baseDate: Date = new Date()) {
-  const start = new Date(baseDate)
-  start.setDate(start.getDate() - 1)
-
-  const end = new Date(baseDate)
-  end.setMonth(end.getMonth() + 1, 0)
-
-  return {
-    startDate: toYMD(start),
-    endDate: toYMD(end),
-  }
 }
 
 export function usePrayerTimes() {
@@ -185,15 +167,13 @@ export function usePrayerTimes() {
     )
   }, [availableDateKeys, selectedKey])
 
-  const nextDay = () => {
-    if (!canNextDay) return
-    setTargetDate(fromYMD(availableDateKeys[selectedIndex + 1]))
-  }
-
-  const prevDay = () => {
-    if (!canPrevDay) return
-    setTargetDate(fromYMD(availableDateKeys[selectedIndex - 1]))
-  }
+  const { nextDay, prevDay } = getPrayerDateNavigation(
+    availableDateKeys,
+    selectedIndex,
+    canNextDay,
+    canPrevDay,
+    setTargetDate,
+  )
 
   const todayKey = toYMD(new Date())
 

@@ -8,6 +8,7 @@ import {
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { useTheme } from '@/theme'
+import RequiredLabel from './RequiredLabel'
 
 // Updated interface to explicitly allow nulls
 interface LocationData {
@@ -104,9 +105,11 @@ export default function LocationSelector({
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+      <RequiredLabel
+        style={[styles.sectionTitle, { color: theme.colors.text }]}
+      >
         Event Location
-      </Text>
+      </RequiredLabel>
 
       <View style={styles.radioContainer}>
         <TouchableOpacity

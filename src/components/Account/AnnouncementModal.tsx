@@ -8,7 +8,7 @@ import TimeInputSection from './CreateAnnouncements/TimeInputSection'
 import AudienceSelector from './CreateAnnouncements/AudienceSelector'
 import DescriptionInput from './CreateAnnouncements/DescriptionInput'
 import LocationSelector from './CreateAnnouncements/LocationSelector'
-import type { Organization } from '@/types'
+import type { Demographic, Organization } from '@/types'
 import { useTheme } from '@/theme'
 
 export default function AnnouncementModal({
@@ -51,8 +51,8 @@ export default function AnnouncementModal({
   setDate?: (d: string | null) => void
   postType: string | null
   setPostType: (v: string | null) => void
-  demographic: string | null
-  setDemographic: (v: string | null) => void
+  demographic: Demographic | null
+  setDemographic: (v: Demographic | null) => void
   organization?: Organization | null
   locationData?: {
     address: string

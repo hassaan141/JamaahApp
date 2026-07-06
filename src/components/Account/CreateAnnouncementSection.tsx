@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { TouchableOpacity, Text, StyleSheet, Alert } from 'react-native'
-import type { Profile, Database } from '@/types'
+import type { Profile, Database, Demographic } from '@/types'
 import AnnouncementModal from '@/components/Account/AnnouncementModal'
 import { createOrgAnnouncement } from '@/Supabase/createOrgAnnouncement'
 import { toast } from '@/components/Toast/toast'
@@ -9,6 +9,7 @@ import { ENV } from '@/core/env'
 import { notifyFollowersOfPost } from '@/Supabase/sendPushNotification'
 import { useTheme } from '@/theme'
 import { announcementEventEmitter } from '@/Utils/announcementEventEmitter'
+import { getAnnouncementValidationError } from '@/components/Shared/announcementUtils'
 
 type Organization = Database['public']['Tables']['organizations']['Row']
 type LocationData = {
@@ -16,121 +17,6 @@ type LocationData = {
   lat?: number | null
   lng?: number | null
   isCurrentAddress?: boolean
-}
-
-function isPastAnnouncementDate(date: string | null) {
-  if (!date) return false
-
-  const [year, month, day] = date.split('-').map(Number)
-  if (!year || !month || !day) return false
-
-  const selectedDate = new Date(year, month - 1, day)
-  const today = new Date()
-  const todayStart = new Date(
-    today.getFullYear(),
-    today.getMonth(),
-    today.getDate(),
-  )
-
-  return selectedDate.getTime() < todayStart.getTime()
-}
-
-function formatAnnouncementDate(date: string) {
-  const [year, month, day] = date.split('-').map(Number)
-  if (!year || !month || !day) return date
-
-  return new Date(year, month - 1, day).toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  })
-}
-
-function getAnnouncementValidationError(input: {
-  announcementBody: string
-  postType: string | null
-  startTime: string | null
-  endTime: string | null
-  demographic: string | null
-  recurringDays: number[]
-  date: string | null
-  locationAddress: string | null
-  hasProfile: boolean
-}) {
-  if (!input.announcementBody.trim()) {
-    return {
-      title: 'Add details',
-      message: 'Announcement details cannot be empty.',
-    }
-  }
-
-  if (!input.postType) {
-    return {
-      title: 'Post type required',
-      message: 'Select a post type before posting.',
-    }
-  }
-
-  if (
-    input.postType === 'Repeating_classes' &&
-    input.recurringDays.length === 0
-  ) {
-    return {
-      title: 'Schedule required',
-      message: 'Select at least one recurring day for classes.',
-    }
-  }
-
-  if (input.postType !== 'Repeating_classes' && !input.date) {
-    return {
-      title: 'Date required',
-      message: 'Choose a date for this announcement before posting.',
-    }
-  }
-
-  if (input.date && isPastAnnouncementDate(input.date)) {
-    return {
-      title: 'Invalid date',
-      message: `${formatAnnouncementDate(input.date)} is in the past. Choose today or a future date.`,
-    }
-  }
-
-  if (!input.startTime) {
-    return {
-      title: 'Start time required',
-      message: 'Choose a start time before posting.',
-    }
-  }
-
-  if (!input.endTime) {
-    return {
-      title: 'End time required',
-      message: 'Choose an end time before posting.',
-    }
-  }
-
-  if (!input.demographic) {
-    return {
-      title: 'Audience required',
-      message: 'Select an audience before posting.',
-    }
-  }
-
-  if (!input.locationAddress?.trim()) {
-    return {
-      title: 'Location required',
-      message: 'Choose an event location before posting.',
-    }
-  }
-
-  if (!input.hasProfile) {
-    return {
-      title: 'Unable to post',
-      message: 'Your organization profile is missing required account details.',
-    }
-  }
-
-  return null
 }
 
 export default function CreateAnnouncementSection({
@@ -145,7 +31,7 @@ export default function CreateAnnouncementSection({
   const [startTime, setStartTime] = useState<string | null>(null)
   const [endTime, setEndTime] = useState<string | null>(null)
   const [postType, setPostType] = useState<string | null>(null)
-  const [demographic, setDemographic] = useState<string | null>(null)
+  const [demographic, setDemographic] = useState<Demographic | null>(null)
   const [recurringDays, setRecurringDays] = useState<number[]>([])
   const [date, setDate] = useState<string | null>(null)
   const [posting, setPosting] = useState(false)
@@ -176,6 +62,7 @@ export default function CreateAnnouncementSection({
 
   const handlePostAnnouncement = async () => {
     const validationError = getAnnouncementValidationError({
+      announcementTitle,
       announcementBody,
       postType,
       startTime,
@@ -240,7 +127,7 @@ export default function CreateAnnouncementSection({
       const { ok, error, data } = await createOrgAnnouncement({
         organization_id: profile.org_id,
         author_profile_id: profile.id,
-        title: announcementTitle.trim() || 'Announcement',
+        title: announcementTitle.trim(),
         body: announcementBody.trim(),
         post_type: postType ?? null,
         demographic: demographic ?? null,
@@ -261,12 +148,7 @@ export default function CreateAnnouncementSection({
         console.log(
           `[CreateAnnouncement] Sending notifications for post ${data.id} to org ${profile.org_id}`,
         )
-        notifyFollowersOfPost(
-          data.id,
-          profile.org_id,
-          announcementTitle.trim() || 'Announcement',
-          announcementBody.trim(),
-        )
+        notifyFollowersOfPost(data.id, profile.org_id)
           .then((res) => {
             if (!res.success) {
               console.error('Failed to send push:', res.error)

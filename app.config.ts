@@ -15,7 +15,7 @@ export default () => ({
     scheme: 'com.hassaan141.jamaahapp',
     icon: './assets/JamahProd.png',
     projectId: '738cfaa7-cbea-4042-b627-a2a351da154b',
-    version: '1.0.2',
+    version: '1.0.3',
     orientation: 'portrait',
     userInterfaceStyle: 'automatic',
     newArchEnabled: false,
